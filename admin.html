@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Community Care Physio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--forest:#1e4d3b;--fl:#2d6e54;--fp:#e8f2ee;--sage:#8aab97;--warm:#f8f5f0;--stone:#ede9e3;--char:#1a1f1d;--muted:#586860;--gold:#c4975a;--red:#dc2626}
+body{font-family:'Outfit',sans-serif;background:var(--warm);color:var(--char);min-height:100vh}
+
+/* LOGIN */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:40px;width:360px;box-shadow:0 20px 60px rgba(30,77,59,.1);border:1px solid rgba(30,77,59,.08)}
+.login-logo{font-family:'Playfair Display',serif;font-size:22px;color:var(--forest);margin-bottom:6px}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:28px}
+.login-box label{font-size:11px;font-weight:500;color:var(--char);display:block;margin-bottom:5px}
+.login-box input{width:100%;padding:11px 14px;border-radius:10px;border:1px solid rgba(30,77,59,.18);font-size:14px;font-family:'Outfit',sans-serif;outline:none;margin-bottom:14px;background:var(--warm)}
+.login-box input:focus{border-color:var(--forest)}
+.login-btn{width:100%;padding:12px;background:var(--forest);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif}
+.login-btn:hover{background:var(--fl)}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none}
+
+/* ADMIN */
+.admin-wrap{display:none;min-height:100vh}
+.admin-nav{background:var(--forest);padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+.admin-nav-logo{font-family:'Playfair Display',serif;font-size:18px;color:#fff}
+.admin-nav-sub{font-size:11px;color:rgba(255,255,255,.5);margin-top:2px}
+.logout-btn{background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif}
+.logout-btn:hover{background:rgba(255,255,255,.25)}
+.admin-body{padding:32px;max-width:1100px;margin:0 auto}
+.admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:28px}
+.acard{background:#fff;border-radius:16px;padding:24px;border:1px solid rgba(30,77,59,.08);box-shadow:0 4px 20px rgba(30,77,59,.05)}
+.acard-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;color:var(--char);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.acard-title span{font-size:13px;font-family:'Outfit',sans-serif;font-weight:400;color:var(--muted)}
+
+/* BOOKINGS */
+.booking-item{padding:14px;border-radius:10px;border:1px solid rgba(30,77,59,.1);margin-bottom:10px;background:var(--warm)}
+.booking-item.new{border-left:3px solid var(--forest)}
+.booking-item.pkg{border-left:3px solid var(--gold)}
+.bi-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.bi-name{font-size:14px;font-weight:500;color:var(--char)}
+.bi-appt{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;background:var(--fp);color:var(--forest)}
+.bi-appt.pkg{background:#fef3cd;color:#7c5a00}
+.bi-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:4px}
+.bi-field{font-size:11px;color:var(--muted)}<br>
+.bi-field strong{color:var(--char);font-weight:500}
+.bi-actions{display:flex;gap:8px;margin-top:10px}
+.bi-btn{font-size:11px;padding:5px 12px;border-radius:8px;border:none;cursor:pointer;font-family:'Outfit',sans-serif;font-weight:500}
+.bi-btn.confirm{background:var(--forest);color:#fff}
+.bi-btn.delete{background:#fee2e2;color:var(--red)}
+.bi-btn:hover{opacity:.85}
+.empty-state{text-align:center;padding:30px;color:var(--muted);font-size:13px}
+
+/* ROTA EDITOR */
+.rota-month{margin-bottom:20px}
+.rota-month-title{font-size:13px;font-weight:500;color:var(--char);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--stone)}
+.rota-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px}
+.rota-dh{font-size:9px;font-weight:500;color:var(--muted);text-align:center;padding:3px 0;text-transform:uppercase}
+.rota-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:7px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px solid rgba(30,77,59,.15);color:var(--muted);position:relative;transition:all .15s;background:#fff}
+.rota-day.avail{background:var(--fp);color:var(--forest);border-color:rgba(30,77,59,.3)}
+.rota-day.unavail{background:#f3f3f3;color:#ccc;border-color:#eee;cursor:default}
+.rota-day.empty{background:none;border:none;cursor:default}
+.rota-day:not(.unavail):not(.empty):hover{border-color:var(--forest)}
+.rota-shift{font-size:8px;color:var(--sage);margin-top:1px}
+.rota-day.avail .rota-shift{color:var(--forest)}
+.add-date-form{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;padding:14px;background:var(--stone);border-radius:10px}
+.add-date-form input,.add-date-form select{padding:8px 12px;border-radius:8px;border:1px solid rgba(30,77,59,.18);font-size:12px;font-family:'Outfit',sans-serif;outline:none;background:#fff}
+.add-date-form input:focus,.add-date-form select:focus{border-color:var(--forest)}
+.add-btn{background:var(--forest);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif}
+.add-btn:hover{background:var(--fl)}
+.del-btn{background:#fee2e2;color:var(--red);border:none;padding:8px 12px;border-radius:8px;font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.stat-box{background:#fff;border-radius:12px;padding:18px;border:1px solid rgba(30,77,59,.08);text-align:center}
+.stat-val{font-family:'Playfair Display',serif;font-size:28px;color:var(--forest)}
+.stat-lbl{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* NOTIFICATION BELL */
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#ef4444;margin-left:6px;display:inline-block}
+
+@media(max-width:700px){
+  .admin-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:1fr 1fr}
+  .admin-body{padding:16px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">Community Care Physio</div>
+    <div class="login-sub">Admin portal — clinician access only</div>
+    <label>Password</label>
+    <input type="password" id="pwInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Sign in →</button>
+    <div class="login-err" id="loginErr">Incorrect password. Try again.</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-wrap" id="adminWrap">
+  <div class="admin-nav">
+    <div>
+      <div class="admin-nav-logo">Community Care Physio</div>
+      <div class="admin-nav-sub">Admin portal</div>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">Sign out</button>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-val" id="statTotal">0</div>
+        <div class="stat-lbl">Total bookings</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statNew" style="color:var(--forest)">0</div>
+        <div class="stat-lbl">New patients</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" id="statPkg" style="color:var(--gold)">0</div>
+        <div class="stat-lbl">Programmes</div>
+      </div>
+    </div>
+
+    <div class="admin-grid">
+
+      <!-- BOOKINGS -->
+      <div class="acard" style="grid-column:1/-1">
+        <div class="acard-title">📋 Recent bookings <span id="newBadge"></span></div>
+        <div id="bookingsList"><div class="empty-state">No bookings yet. They'll appear here when patients book through your site.</div></div>
+      </div>
+
+      <!-- ROTA EDITOR -->
+      <div class="acard" style="grid-column:1/-1">
+        <div class="acard-title">📅 Availability rota editor</div>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Green dates are available for booking on your website. Click any available date to remove it. Add new dates using the form below.</p>
+        <div id="rotaDisplay"></div>
+        <div class="add-date-form">
+          <input type="date" id="addDateInput" min="">
+          <select id="addShiftInput">
+            <option value="FULL">Full day (9am–5pm)</option>
+            <option value="E">Early shift (6:30pm–8pm)</option>
+            <option value="L">Late shift (9am–9:30am)</option>
+          </select>
+          <button class="add-btn" onclick="addDate()">+ Add date</button>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+          Changes update your local admin view. <strong>To publish to your website, copy the updated ROTA data and send to your developer (Claude).</strong>
+        </div>
+        <button onclick="exportRota()" style="margin-top:10px;background:var(--stone);border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;color:var(--char)">📋 Copy rota for update</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── AUTH ──
+const ADMIN_PW = 'CCP2026admin'; // Change this to your own password
+
+function doLogin(){
+  const pw=document.getElementById('pwInput').value;
+  if(pw===ADMIN_PW){
+    document.getElementById('loginWrap').style.display='none';
+    document.getElementById('adminWrap').style.display='block';
+    sessionStorage.setItem('ccp_admin','1');
+    init();
+  } else {
+    document.getElementById('loginErr').style.display='block';
+  }
+}
+
+function doLogout(){
+  sessionStorage.removeItem('ccp_admin');
+  location.reload();
+}
+
+if(sessionStorage.getItem('ccp_admin')==='1'){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('adminWrap').style.display='block';
+  init();
+}
+
+// ── ROTA DATA (mirrors index.html) ──
+const E_SL=['18:30','19:00','19:30','20:00'];
+const L_SL=['09:00','09:30'];
+const FULL_SL=['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00'];
+
+let ROTA={
+  '2026-05-05':E_SL,'2026-05-06':E_SL,'2026-05-07':FULL_SL,'2026-05-08':FULL_SL,
+  '2026-05-09':E_SL,'2026-05-10':E_SL,
+  '2026-05-11':E_SL,'2026-05-12':E_SL,'2026-05-13':FULL_SL,'2026-05-14':L_SL,'2026-05-15':E_SL,
+  '2026-05-16':FULL_SL,'2026-05-17':FULL_SL,
+  '2026-05-18':E_SL,'2026-05-19':E_SL,'2026-05-20':E_SL,'2026-05-21':E_SL,'2026-05-22':E_SL,
+  '2026-05-23':FULL_SL,'2026-05-24':FULL_SL,
+  '2026-05-26':E_SL,'2026-05-27':FULL_SL,'2026-05-28':E_SL,'2026-05-29':E_SL,
+  '2026-05-30':FULL_SL,'2026-05-31':FULL_SL,
+  '2026-06-01':L_SL,'2026-06-02':FULL_SL,'2026-06-03':FULL_SL,'2026-06-04':FULL_SL,
+  '2026-06-05':FULL_SL,'2026-06-06':FULL_SL,'2026-06-07':FULL_SL,
+  '2026-06-16':E_SL,'2026-06-17':E_SL,'2026-06-18':E_SL,'2026-06-19':E_SL,
+  '2026-06-20':FULL_SL,'2026-06-21':FULL_SL,
+  '2026-06-22':E_SL,'2026-06-23':E_SL,'2026-06-25':E_SL,'2026-06-26':E_SL,
+  '2026-06-27':FULL_SL,'2026-06-28':FULL_SL,
+  '2026-06-29':L_SL,'2026-06-30':E_SL,
+  '2026-07-01':E_SL,'2026-07-02':FULL_SL,'2026-07-03':FULL_SL,'2026-07-04':E_SL,'2026-07-05':E_SL,
+  '2026-07-06':E_SL,'2026-07-07':E_SL,'2026-07-09':L_SL,'2026-07-10':E_SL,
+  '2026-07-11':FULL_SL,'2026-07-12':FULL_SL,'2026-07-13':FULL_SL,'2026-07-14':FULL_SL,
+  '2026-07-15':FULL_SL,'2026-07-16':FULL_SL,'2026-07-17':FULL_SL,
+  '2026-07-18':FULL_SL,'2026-07-19':FULL_SL,'2026-07-20':FULL_SL,'2026-07-21':FULL_SL,
+  '2026-07-22':FULL_SL,'2026-07-23':FULL_SL,'2026-07-24':FULL_SL,
+  '2026-07-25':FULL_SL,'2026-07-26':FULL_SL,
+};
+
+// Load any local edits
+const saved=localStorage.getItem('ccp_rota');
+if(saved)try{ROTA=JSON.parse(saved);}catch(e){}
+
+// ── BOOKINGS (stored locally for demo — in production use a backend) ──
+let bookings=JSON.parse(localStorage.getItem('ccp_bookings')||'[]');
+
+function init(){
+  renderBookings();
+  renderRota();
+  updateStats();
+  document.getElementById('addDateInput').min=new Date().toISOString().split('T')[0];
+}
+
+function apptType(name){
+  if(!name)return{label:'Unknown',color:'var(--muted)'};
+  if(name==='Initial Assessment')return{label:'Initial Assessment',color:'var(--forest)'};
+  if(name==='Standard Session')return{label:'Follow-up',color:'#0369a1'};
+  if(name==='Extended Session')return{label:'Extended Follow-up',color:'#0369a1'};
+  return{label:'Package',color:'#92400e'};
+}
+
+function renderBookings(){
+  const el=document.getElementById('bookingsList');
+  if(!bookings.length){
+    el.innerHTML='<div class="empty-state">No bookings yet. They\'ll appear here when patients book through your site.</div>';
+    return;
+  }
+  const sorted=[...bookings].reverse();
+  el.innerHTML=sorted.map((b,i)=>{
+    const isPkg=['Starter Programme','Full Programme','Block of 4 Sessions','Block of 6 Sessions'].includes(b.appointment);
+    const type=apptType(b.appointment);
+    const paid=b.paid!==false;
+    const confirmed=b.confirmed||false;
+    const idx=bookings.length-1-i;
+    return `<div class="booking-item ${isPkg?'pkg':'new'}" style="${confirmed?'opacity:.6':''}">
+      <div class="bi-header">
+        <div>
+          <div class="bi-name">${b.name||'Unknown patient'}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">${b.timestamp||'—'}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <div class="bi-appt ${isPkg?'pkg':''}" style="background:${type.color}15;color:${type.color}">${type.label}</div>
+          <div style="font-size:11px;font-weight:600;color:${paid?'#16a34a':'#dc2626'}">${paid?'✓ Paid':'⏳ Awaiting payment'} · £${b.price||'?'}</div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;padding:10px;background:#fff;border-radius:8px;border:1px solid rgba(30,77,59,.06)">
+        <div class="bi-field">📞 <strong>${b.phone||'—'}</strong></div>
+        <div class="bi-field">✉️ <strong>${b.email||'—'}</strong></div>
+        <div class="bi-field" style="grid-column:1/-1">📍 <strong>${b.address||'—'}, ${b.postcode||''}</strong></div>
+        <div class="bi-field">🗓 <strong>${b.preferredTime||'—'}</strong></div>
+        <div class="bi-field">👤 <strong>${b.patientType==='new'?'New patient':'Returning patient'}</strong></div>
+        ${b.reason?`<div class="bi-field" style="grid-column:1/-1">📋 <strong>Reason:</strong> ${b.reason}</div>`:''}
+        ${b.preferredDays?`<div class="bi-field" style="grid-column:1/-1">⏰ <strong>Preferred days:</strong> ${b.preferredDays}</div>`:''}
+      </div>
+      <div class="bi-actions">
+        ${!confirmed?`<button class="bi-btn confirm" onclick="confirmBooking(${idx})">✓ Mark confirmed</button>`:`<span style="font-size:11px;color:#16a34a;font-weight:500">✓ Confirmed</span>`}
+        <button class="bi-btn" style="background:#e0f2fe;color:#0369a1" onclick="markPaid(${idx})">${paid?'↩ Mark unpaid':'✓ Mark paid'}</button>
+        <button class="bi-btn delete" onclick="deleteBooking(${idx})">✕ Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function confirmBooking(i){
+  bookings[i].confirmed=true;
+  localStorage.setItem('ccp_bookings',JSON.stringify(bookings));
+  renderBookings();
+}
+
+function markPaid(i){
+  bookings[i].paid=!bookings[i].paid;
+  localStorage.setItem('ccp_bookings',JSON.stringify(bookings));
+  renderBookings();
+}
+
+function deleteBooking(i){
+  if(!confirm('Remove this booking record?'))return;
+  bookings.splice(i,1);
+  localStorage.setItem('ccp_bookings',JSON.stringify(bookings));
+  renderBookings();
+  updateStats();
+}
+
+function updateStats(){
+  document.getElementById('statTotal').textContent=bookings.length;
+  document.getElementById('statNew').textContent=bookings.filter(b=>b.patientType==='new').length;
+  document.getElementById('statPkg').textContent=bookings.filter(b=>['Starter Programme','Full Programme','Block of 4 Sessions','Block of 6 Sessions'].includes(b.appointment)).length;
+}
+
+// ── ROTA EDITOR ──
+function shiftLabel(slots){
+  if(!slots||!slots.length)return '';
+  if(slots===FULL_SL||slots[0]==='09:00'&&slots.length>4)return 'Full day';
+  if(slots[0]==='18:30')return 'Eve';
+  if(slots[0]==='09:00'&&slots.length<=2)return 'Late';
+  return '';
+}
+
+function renderRota(){
+  const months=['May 2026','June 2026','July 2026'];
+  const starts=[[2026,4],[2026,5],[2026,6]];
+  let html='';
+  starts.forEach(([yr,mo],mi)=>{
+    const MNAME=months[mi];
+    const firstDow=new Date(yr,mo,1).getDay();
+    const dim=new Date(yr,mo+1,0).getDate();
+    const offset=(firstDow+6)%7;
+    const today=new Date();today.setHours(0,0,0,0);
+    html+=`<div class="rota-month"><div class="rota-month-title">${MNAME}</div>
+    <div class="rota-grid">
+    <div class="rota-dh">Mo</div><div class="rota-dh">Tu</div><div class="rota-dh">We</div><div class="rota-dh">Th</div><div class="rota-dh">Fr</div><div class="rota-dh">Sa</div><div class="rota-dh">Su</div>`;
+    for(let i=0;i<offset;i++)html+=`<div class="rota-day empty"></div>`;
+    for(let d=1;d<=dim;d++){
+      const key=`${yr}-${String(mo+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const dt=new Date(yr,mo,d);
+      const past=dt<today;
+      const slots=ROTA[key];
+      const lbl=slots?shiftLabel(slots):'';
+      if(past)html+=`<div class="rota-day unavail">${d}</div>`;
+      else if(slots)html+=`<div class="rota-day avail" onclick="removeDate('${key}')" title="Click to remove">${d}<div class="rota-shift">${lbl}</div></div>`;
+      else html+=`<div class="rota-day" onclick="quickAdd('${key}')" title="Click to add">${d}</div>`;
+    }
+    html+=`</div></div>`;
+  });
+  document.getElementById('rotaDisplay').innerHTML=html;
+}
+
+function removeDate(key){
+  if(!confirm(`Remove ${key} from availability?`))return;
+  delete ROTA[key];
+  localStorage.setItem('ccp_rota',JSON.stringify(ROTA));
+  renderRota();
+}
+
+function quickAdd(key){
+  const shift=prompt(`Add ${key} as:\n1 = Full day\n2 = Early shift (eve)\n3 = Late shift (morning)\n\nEnter 1, 2 or 3:`);
+  const map={'1':FULL_SL,'2':E_SL,'3':L_SL};
+  if(map[shift]){ROTA[key]=map[shift];localStorage.setItem('ccp_rota',JSON.stringify(ROTA));renderRota();}
+}
+
+function addDate(){
+  const d=document.getElementById('addDateInput').value;
+  const s=document.getElementById('addShiftInput').value;
+  if(!d)return alert('Please select a date.');
+  const map={FULL:FULL_SL,E:E_SL,L:L_SL};
+  ROTA[d]=map[s];
+  localStorage.setItem('ccp_rota',JSON.stringify(ROTA));
+  renderRota();
+  document.getElementById('addDateInput').value='';
+}
+
+function exportRota(){
+  const lines=Object.entries(ROTA).sort().map(([k,v])=>{
+    let name='FULL_SL';
+    if(v===E_SL||JSON.stringify(v)===JSON.stringify(E_SL))name='E_SL';
+    else if(v===L_SL||JSON.stringify(v)===JSON.stringify(L_SL))name='L_SL';
+    return `  '${k}':${name}`;
+  });
+  const txt='const ROTA={\n'+lines.join(',\n')+'\n};';
+  navigator.clipboard.writeText(txt).then(()=>alert('Rota data copied! Send to Claude to update your website.'));
+}
+</script>
+</body>
+</html>
