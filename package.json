@@ -1,0 +1,14 @@
+{
+  "name": "community-care-physio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Community Care Physio website with serverless backend",
+  "type": "module",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "stripe": "^14.21.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
