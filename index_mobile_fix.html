@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community Care Physio | Home Visit Physiotherapy South West London</title>
+<meta name="description" content="Expert home visit physiotherapy across South West London. NHS-trained, HCPC registered. Serving Putney, Wimbledon, Tooting, Southfields, Morden and Colliers Wood. No referral needed.">
+<meta name="keywords" content="community physiotherapist London, home visit physiotherapy, physio home visits SW London, neurological rehabilitation London, elderly rehabilitation, falls prevention physio, Putney physiotherapist, Wimbledon physiotherapist, Tooting physiotherapist">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --forest:#1e4d3b;--fl:#2d6e54;--fp:#e8f2ee;
+  --sage:#8aab97;--warm:#f8f5f0;--stone:#ede9e3;
+  --char:#1a1f1d;--muted:#586860;--gold:#c4975a;
+  --W:#fff;--red:#dc2626;--wa:#25D366;--wad:#1a7a45
+}
+html{scroll-behavior:smooth}
+body{font-family:'Outfit',sans-serif;background:var(--warm);color:var(--char);overflow-x:hidden}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:14px 40px;background:rgba(248,245,240,.97);backdrop-filter:blur(16px);border-bottom:1px solid rgba(30,77,59,.1)}
+.logo-wrap{display:flex;flex-direction:column}
+.logo-main{font-family:'Playfair Display',serif;font-size:20px;font-weight:500;color:var(--forest)}
+.logo-sub{font-size:10px;color:var(--sage);letter-spacing:.14em;text-transform:uppercase;margin-top:1px}
+.nav-links{display:flex;gap:24px;list-style:none}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a:hover{color:var(--forest)}
+.nav-r{display:flex;align-items:center;gap:10px}
+.nav-wa{display:flex;align-items:center;gap:6px;background:#e7f9ef;color:var(--wad);padding:8px 14px;border-radius:40px;font-size:12px;font-weight:500;text-decoration:none;border:1px solid rgba(37,211,102,.25);transition:all .2s}
+.nav-wa:hover{background:var(--wa);color:#fff}
+.nav-wa svg{width:14px;height:14px}
+.nav-cta{background:var(--forest);color:#fff;padding:10px 20px;border-radius:40px;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s}
+.nav-cta:hover{background:var(--fl);transform:translateY(-1px)}
+
+/* ── HERO ── */
+.hero{min-height:92vh;display:grid;grid-template-columns:1.1fr 0.9fr;align-items:center;padding:60px 40px;gap:60px;position:relative;overflow:hidden;background:var(--warm)}
+.hero::after{content:'';position:absolute;right:-200px;top:-200px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(30,77,59,.06) 0%,transparent 65%);pointer-events:none}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;background:var(--fp);color:var(--forest);padding:7px 16px;border-radius:40px;font-size:11px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;margin-bottom:24px;animation:fadeUp .6s ease both}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--forest);animation:pa 2s infinite}
+@keyframes pa{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
+h1{font-family:'Playfair Display',serif;font-size:clamp(36px,4.5vw,58px);font-weight:400;line-height:1.1;color:var(--char);margin-bottom:20px;animation:fadeUp .7s .1s ease both}
+h1 em{color:var(--forest);font-style:italic}
+.hero-desc{font-size:16px;line-height:1.75;color:var(--muted);max-width:460px;margin-bottom:30px;font-weight:300;animation:fadeUp .7s .2s ease both}
+.hero-acts{display:flex;gap:12px;align-items:center;flex-wrap:wrap;animation:fadeUp .7s .3s ease both}
+.btn-p{background:var(--forest);color:#fff;padding:13px 26px;border-radius:40px;font-size:14px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:'Outfit',sans-serif;text-decoration:none}
+.btn-p:hover{background:var(--fl);transform:translateY(-2px)}
+.btn-wah{display:inline-flex;align-items:center;gap:7px;background:#e7f9ef;color:var(--wad);padding:12px 18px;border-radius:40px;font-size:13px;font-weight:500;text-decoration:none;border:1px solid rgba(37,211,102,.25);transition:all .2s}
+.btn-wah:hover{background:var(--wa);color:#fff}
+.btn-wah svg{width:15px;height:15px}
+.trust-row{margin-top:36px;padding-top:24px;border-top:1px solid rgba(30,77,59,.1);display:flex;gap:20px;flex-wrap:wrap;animation:fadeUp .7s .4s ease both}
+.tp{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.tp::before{content:'✓';color:var(--forest);font-weight:600;font-size:11px}
+
+/* HERO RIGHT */
+.hero-r{animation:fadeUp .8s .15s ease both}
+.book-panel{background:var(--W);border-radius:22px;padding:24px;border:1px solid rgba(30,77,59,.08);box-shadow:0 20px 60px rgba(30,77,59,.08);margin-bottom:12px}
+.pl{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--sage);margin-bottom:12px}
+.pt{font-family:'Playfair Display',serif;font-size:18px;font-weight:500;color:var(--char);margin-bottom:14px}
+.clin-row{display:flex;align-items:center;gap:11px;padding:12px;border-radius:12px;border:1px solid rgba(30,77,59,.15);background:var(--fp);margin-bottom:14px}
+.cav{width:40px;height:40px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;color:#fff;flex-shrink:0}
+.cn{font-size:14px;font-weight:500;color:var(--char)}
+.cr2{font-size:11px;color:var(--muted);margin-top:1px}
+.cb{margin-left:auto;font-size:10px;font-weight:500;padding:4px 10px;border-radius:20px;background:var(--forest);color:#fff;flex-shrink:0}
+.area-slot-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.mini-label{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:5px}
+select.mini{padding:8px 11px;border-radius:10px;border:1px solid rgba(30,77,59,.18);font-size:12px;font-family:'Outfit',sans-serif;color:var(--char);background:var(--warm);outline:none;width:100%}
+select.mini:focus{border-color:var(--forest)}
+.bnb{width:100%;background:var(--forest);color:#fff;padding:12px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:500;font-family:'Outfit',sans-serif;transition:all .2s}
+.bnb:hover{background:var(--fl)}
+.pbadge{background:var(--char);border-radius:14px;padding:13px 17px;display:flex;align-items:center;gap:11px}
+.pbi{width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.pbn{font-size:13px;font-weight:500;color:#fff}
+.pbs{font-size:10px;color:rgba(255,255,255,.4);margin-top:1px}
+.pbstat{font-size:15px;font-weight:500;color:var(--gold);margin-left:auto;text-align:right}
+.pbsl{font-size:9px;color:rgba(255,255,255,.3);text-align:right;margin-top:1px}
+
+/* ── STRIP ── */
+.strip{background:var(--forest);padding:16px 40px;display:flex;justify-content:center;gap:44px;flex-wrap:wrap}
+.si{color:rgba(255,255,255,.75);font-size:11px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.si::before{content:'◆';color:var(--gold);font-size:8px}
+
+/* ── SECTION BASE ── */
+.sec{padding:80px 40px}
+.sl{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--sage);margin-bottom:12px}
+.st{font-family:'Playfair Display',serif;font-size:clamp(28px,3.5vw,44px);font-weight:400;color:var(--char);line-height:1.15;margin-bottom:14px}
+.ss{font-size:15px;color:var(--muted);line-height:1.6;font-weight:300;margin-bottom:44px;display:block;max-width:100%}
+
+/* ── ABOUT ── */
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center}
+.about-body p{font-size:15px;color:var(--muted);line-height:1.8;font-weight:300;margin-bottom:14px}
+.creds{display:flex;flex-direction:column;gap:9px;margin-top:22px}
+.cred{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.cred::before{content:'✓';color:var(--forest);font-weight:600;font-size:12px}
+.vals{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.val{background:var(--stone);border-radius:14px;padding:20px;border:1px solid rgba(30,77,59,.08)}
+.val-icon{font-size:20px;margin-bottom:9px}
+.val-title{font-size:13px;font-weight:500;color:var(--forest);margin-bottom:4px}
+.val-desc{font-size:11px;color:var(--muted);line-height:1.5}
+
+/* ── SERVICES — white cards on stone ── */
+.svc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:13px}
+.fc{height:145px;cursor:pointer;perspective:1000px}
+.fi{position:relative;width:100%;height:100%;transition:transform .5s cubic-bezier(.4,0,.2,1);transform-style:preserve-3d}
+.fc.fl2 .fi{transform:rotateY(180deg)}
+.ff,.fb{position:absolute;inset:0;border-radius:13px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:17px;display:flex;flex-direction:column}
+.ff{background:var(--W);border:1px solid rgba(30,77,59,.1)}
+.fb{background:var(--forest);border:none;transform:rotateY(180deg);justify-content:center}
+.fc:hover .ff{border-color:var(--forest);box-shadow:0 6px 20px rgba(30,77,59,.12)}
+.si2{width:32px;height:32px;border-radius:8px;background:var(--fp);display:flex;align-items:center;justify-content:center;margin-bottom:9px;font-size:14px;flex-shrink:0}
+.sn{font-size:13px;font-weight:500;color:var(--char);line-height:1.3}
+.sh{font-size:10px;color:var(--sage);margin-top:auto}
+.bl{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:5px}
+.bt{font-size:11.5px;color:rgba(255,255,255,.92);line-height:1.55}
+
+/* ── AREAS ── */
+.areas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:11px;margin-top:48px}
+.ac{padding:16px;border-radius:13px;background:rgba(255,255,255,.9);border:1px solid rgba(255,255,255,.3);text-align:center;transition:all .2s;cursor:pointer}
+.ac:hover{background:var(--W);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.1)}
+.an{font-size:14px;font-weight:500;color:var(--char);margin-bottom:3px}
+.apc{font-size:11px;color:var(--sage)}
+
+/* ── PRICING ── */
+.sessions-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.pkg-div{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.pkg-div-line{flex:1;height:1px;background:rgba(30,77,59,.1)}
+.pkg-div-text{font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.pkg-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.pc{padding:22px;border-radius:16px;border:1px solid rgba(30,77,59,.1);background:var(--W);position:relative}
+.pc.feat{background:var(--forest);border-color:var(--forest)}
+.pc.pkg{background:var(--char);border-color:var(--char)}
+.pp{position:absolute;top:-11px;left:50%;transform:translateX(-50%);font-size:9px;font-weight:600;padding:3px 12px;border-radius:20px;white-space:nowrap;letter-spacing:.04em}
+.pp.gold{background:var(--gold);color:var(--char)}
+.pp.sage{background:var(--sage);color:#fff}
+.ptag{font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--sage);margin-bottom:5px}
+.pc.feat .ptag,.pc.pkg .ptag{color:rgba(255,255,255,.45)}
+.pname{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;color:var(--char);margin-bottom:2px;line-height:1.2}
+.pc.feat .pname,.pc.pkg .pname{color:#fff}
+.pdur{font-size:10px;color:var(--muted);margin-bottom:9px}
+.pc.feat .pdur,.pc.pkg .pdur{color:rgba(255,255,255,.45)}
+.pamt{font-size:32px;font-weight:300;color:var(--forest);line-height:1;margin-bottom:4px}
+.pc.feat .pamt,.pc.pkg .pamt{color:#fff}
+.psave{font-size:10px;color:var(--gold);font-weight:500;margin-bottom:10px}
+.pc.feat .psave{color:rgba(255,255,255,.6)}
+.pfl{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
+.pfl li{font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:flex-start;line-height:1.4}
+.pc.feat .pfl li,.pc.pkg .pfl li{color:rgba(255,255,255,.75)}
+.pfl li::before{content:'✓';color:var(--sage);font-size:10px;flex-shrink:0;margin-top:1px}
+.pc.feat .pfl li::before,.pc.pkg .pfl li::before{color:var(--gold)}
+.pbtn{width:100%;padding:10px;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;border:1px solid rgba(30,77,59,.2);background:transparent;color:var(--forest)}
+.pbtn:hover{background:var(--forest);color:#fff;border-color:var(--forest)}
+.pc.feat .pbtn{background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.25)}
+.pc.feat .pbtn:hover{background:rgba(255,255,255,.25)}
+.pc.pkg .pbtn{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
+.pc.pkg .pbtn:hover{background:rgba(255,255,255,.2)}
+.pay-note{display:flex;align-items:center;gap:10px;margin-top:20px;padding:14px 18px;background:var(--fp);border-radius:12px;border:1px solid rgba(30,77,59,.12)}
+.pay-note-icon{font-size:18px;flex-shrink:0}
+.pay-note-text{font-size:12px;color:var(--forest);line-height:1.5}
+.pay-note-text strong{font-weight:500}
+
+/* ── HOW IT WORKS ── */
+.how-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:14px;margin-top:48px}
+.step{padding:20px;border-radius:14px;background:var(--W);border:1px solid rgba(30,77,59,.08)}
+.step-n{font-family:'Playfair Display',serif;font-size:36px;font-weight:400;color:rgba(30,77,59,.12);line-height:1;margin-bottom:8px}
+.step-t{font-size:13px;font-weight:500;color:var(--char);margin-bottom:5px}
+.step-d{font-size:11.5px;color:var(--muted);line-height:1.6}
+.step.hi{background:var(--fp);border-color:rgba(30,77,59,.2)}
+.step.hi .step-n{color:rgba(30,77,59,.18)}
+.step.hi .step-t{color:var(--forest)}
+
+/* ── FAQ — white cards on stone ── */
+.faq-list{display:flex;flex-direction:column;gap:8px;margin-top:48px;width:100%}
+.faq-item{background:var(--W);border-radius:12px;border:1px solid rgba(30,77,59,.08);overflow:hidden;box-shadow:0 1px 4px rgba(30,77,59,.04)}
+.faq-q{padding:18px 24px;font-size:14px;font-weight:500;color:var(--char);cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:color .2s}
+.faq-q:hover{color:var(--forest)}
+.faq-tog{font-size:22px;color:var(--forest);font-weight:300;transition:transform .25s;flex-shrink:0;margin-left:14px}
+.faq-a{padding:0 24px 18px;font-size:13px;color:var(--muted);line-height:1.7;display:none}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .faq-tog{transform:rotate(45deg)}
+
+/* ── CTA ── */
+.cta-sec{padding:80px 40px;background:var(--char);text-align:center}
+.cta-sec h2{font-family:'Playfair Display',serif;font-size:clamp(28px,3.5vw,48px);font-weight:400;color:#fff;margin-bottom:14px;line-height:1.2}
+.cta-sec p{font-size:15px;color:rgba(255,255,255,.5);max-width:440px;margin:0 auto 30px;font-weight:300;line-height:1.7}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-gold{background:var(--gold);color:var(--char);padding:14px 28px;border-radius:40px;font-size:14px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:'Outfit',sans-serif}
+.btn-gold:hover{background:#d4a868;transform:translateY(-2px)}
+.btn-wa-cta{display:inline-flex;align-items:center;gap:8px;background:rgba(37,211,102,.15);color:var(--wa);padding:14px 28px;border-radius:40px;font-size:14px;font-weight:500;text-decoration:none;transition:all .2s;border:1px solid rgba(37,211,102,.3)}
+.btn-wa-cta:hover{background:var(--wa);color:#fff}
+.btn-wa-cta svg{width:16px;height:16px}
+
+/* ── FOOTER ── */
+footer{padding:40px;background:var(--char);border-top:1px solid rgba(255,255,255,.05)}
+.f-inner{display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px;margin-bottom:28px}
+.f-logo{font-family:'Playfair Display',serif;font-size:18px;color:rgba(255,255,255,.7)}
+.f-area{font-size:11px;color:rgba(255,255,255,.3);margin-top:4px;line-height:1.6}
+.f-contacts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.f-ci{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.5);text-decoration:none;transition:color .2s}
+.f-ci:hover{color:rgba(255,255,255,.9)}
+.f-ci svg{width:13px;height:13px;flex-shrink:0}
+.f-wab{display:inline-flex;align-items:center;gap:7px;background:var(--wa);color:#fff;padding:9px 16px;border-radius:40px;font-size:12px;font-weight:500;text-decoration:none;margin-top:4px;transition:all .2s}
+.f-wab:hover{background:#1eb859}
+.f-wab svg{width:13px;height:13px}
+.f-nav-title{font-size:11px;color:rgba(255,255,255,.4);margin-bottom:12px;letter-spacing:.06em;text-transform:uppercase}
+.f-links{display:flex;flex-direction:column;gap:9px}
+.f-links a{font-size:11px;color:rgba(255,255,255,.35);text-decoration:none;transition:color .2s}
+.f-links a:hover{color:rgba(255,255,255,.7)}
+.f-bottom{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:20px;border-top:1px solid rgba(255,255,255,.06)}
+.f-legal{font-size:10px;color:rgba(255,255,255,.25)}
+
+/* ── FLOATING BUTTONS ── */
+.float-wa{position:fixed;bottom:88px;right:24px;z-index:998;width:48px;height:48px;border-radius:50%;background:var(--wa);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(37,211,102,.4);transition:transform .2s;text-decoration:none}
+.float-wa:hover{transform:scale(1.08)}
+.float-wa svg{width:22px;height:22px;color:#fff}
+.chat-bub{position:fixed;bottom:24px;right:24px;z-index:999;width:52px;height:52px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(30,77,59,.4);transition:transform .2s}
+.chat-bub:hover{transform:scale(1.08)}
+.chat-bub svg{width:21px;height:21px;color:#fff}
+
+/* ── CHATBOT ── */
+.chat-win{position:fixed;bottom:88px;right:24px;z-index:997;width:316px;background:#fff;border-radius:18px;border:1px solid rgba(30,77,59,.1);box-shadow:0 20px 60px rgba(0,0,0,.1);overflow:hidden;display:none;animation:slideUp .22s ease}
+.chat-win.open{display:block}
+.chat-head{background:var(--forest);padding:13px 17px;display:flex;align-items:center;gap:10px}
+.chat-av{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:15px}
+.chat-hn{font-size:13px;font-weight:500;color:#fff}
+.chat-hs{font-size:10px;color:rgba(255,255,255,.6);margin-top:1px}
+.chat-msgs{padding:13px;height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px}
+.msg{max-width:86%;font-size:12px;line-height:1.55;border-radius:12px;padding:9px 12px}
+.mb{background:var(--fp);color:var(--char);border-radius:0 12px 12px 12px;align-self:flex-start}
+.mu{background:var(--forest);color:#fff;border-radius:12px 0 12px 12px;align-self:flex-end}
+.chat-inp-row{padding:9px;border-top:1px solid rgba(30,77,59,.08);display:flex;gap:7px}
+.chat-inp{flex:1;padding:8px 12px;border-radius:18px;border:1px solid rgba(30,77,59,.15);font-size:12px;outline:none;background:var(--warm);font-family:'Outfit',sans-serif}
+.chat-inp:focus{border-color:var(--forest)}
+.chat-send{width:32px;height:32px;border-radius:50%;background:var(--forest);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.chat-send svg{width:12px;height:12px;color:#fff}
+
+/* ── MODAL ── */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;display:none;align-items:center;justify-content:center;padding:20px}
+.mo.open{display:flex}
+.modal{background:#fff;border-radius:20px;width:480px;max-width:100%;max-height:90vh;overflow-y:auto;position:relative}
+.mc{position:absolute;top:14px;right:16px;background:none;border:none;font-size:24px;cursor:pointer;color:var(--muted);z-index:10}
+.mc:hover{color:var(--char)}
+.mp{padding:26px}
+.msteps{display:flex;align-items:center;margin-bottom:20px}
+.ms{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.ms.on{color:var(--forest);font-weight:500}
+.ms.dn{color:var(--sage)}
+.md2{width:19px;height:19px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;flex-shrink:0}
+.ms.dn .md2{background:var(--sage);border-color:var(--sage);color:#fff}
+.ms.on .md2{background:var(--forest);border-color:var(--forest);color:#fff}
+.mdiv{flex:1;height:1px;background:var(--stone);margin:0 6px}
+.pq h3{font-family:'Playfair Display',serif;font-size:21px;font-weight:400;color:var(--char);margin-bottom:8px;text-align:center}
+.pq p{font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:22px;text-align:center}
+.popts{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.popt{padding:18px 14px;border-radius:13px;border:1.5px solid rgba(30,77,59,.15);cursor:pointer;transition:all .2s;text-align:center}
+.popt:hover{border-color:var(--forest);background:var(--fp)}
+.popt-icon{font-size:24px;margin-bottom:8px}
+.popt-title{font-size:14px;font-weight:500;color:var(--char);margin-bottom:3px}
+.popt-sub{font-size:11px;color:var(--muted);line-height:1.4}
+.ast{font-size:11px;font-weight:500;color:var(--char);margin-bottom:9px;display:flex;align-items:center;gap:8px}
+.ast::after{content:'';flex:1;height:1px;background:var(--stone)}
+.ag{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+.ao{display:flex;align-items:center;gap:11px;padding:12px 13px;border-radius:11px;border:1px solid rgba(30,77,59,.15);cursor:pointer;transition:all .2s}
+.ao:hover{border-color:var(--forest);background:var(--fp)}
+.ao.sel{border-color:var(--forest);background:var(--fp)}
+.ao-left{flex:1}
+.ao-name{font-size:13px;font-weight:500;color:var(--char)}
+.ao.sel .ao-name{color:var(--forest)}
+.ao-detail{font-size:11px;color:var(--muted);margin-top:1px}
+.ao-price{font-size:14px;font-weight:500;color:var(--forest);flex-shrink:0;text-align:right}
+.ao-save{font-size:9px;color:var(--gold);font-weight:500;display:block}
+.ar{width:17px;height:17px;border-radius:50%;border:1.5px solid rgba(30,77,59,.3);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.ao.sel .ar{border-color:var(--forest);background:var(--forest)}
+.ao.sel .ar::after{content:'';width:5px;height:5px;border-radius:50%;background:#fff}
+.tg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px}
+.tc{padding:8px 5px;border-radius:9px;border:1px solid rgba(30,77,59,.15);font-size:12px;font-weight:500;color:var(--forest);text-align:center;cursor:pointer;transition:all .15s}
+.tc:hover,.tc.sel{background:var(--forest);color:#fff;border-color:var(--forest)}
+.ret-note{background:var(--fp);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--forest);line-height:1.6;margin-bottom:16px;border-left:3px solid var(--forest)}
+.fg{display:flex;flex-direction:column;gap:12px}
+.fr2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.fgrp{display:flex;flex-direction:column;gap:4px}
+label{font-size:11px;font-weight:500;color:var(--char);letter-spacing:.02em}
+input,textarea,select.formsel{padding:10px 13px;border-radius:10px;border:1px solid rgba(30,77,59,.18);font-size:13px;font-family:'Outfit',sans-serif;color:var(--char);background:var(--warm);outline:none;transition:border-color .2s;width:100%}
+input:focus,textarea:focus,select.formsel:focus{border-color:var(--forest)}
+textarea{resize:none;height:72px}
+.fn2{font-size:10px;color:var(--muted);line-height:1.5;margin-top:2px}
+.err{font-size:10px;color:var(--red);margin-top:2px;display:none}
+.err.show{display:block}
+.pay-section{background:var(--stone);border-radius:12px;padding:16px;margin-bottom:14px}
+.pay-section-title{font-size:11px;font-weight:500;color:var(--char);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.pay-section-title::after{content:'';flex:1;height:1px;background:rgba(30,77,59,.1)}
+.card-field{background:var(--W);border:1px solid rgba(30,77,59,.18);border-radius:10px;padding:12px 13px;font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.stripe-note{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:6px}
+.summary-bar{background:var(--fp);border-radius:10px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.summary-label{font-size:12px;color:var(--forest);font-weight:500}
+.summary-price{font-size:18px;font-weight:500;color:var(--forest)}
+.conf-details{background:var(--fp);border-radius:11px;padding:14px;margin:13px 0}
+.conf-row{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid rgba(30,77,59,.08)}
+.conf-row:last-child{border:none;padding-bottom:0}
+.crl{color:var(--muted)}
+.crv{font-weight:500;color:var(--char);text-align:right;max-width:200px}
+.btn-full{width:100%;padding:13px;border-radius:10px;border:none;background:var(--forest);color:#fff;font-size:14px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;margin-top:6px}
+.btn-full:hover{background:var(--fl)}
+.btn-back2{padding:11px 18px;border-radius:10px;border:1px solid rgba(30,77,59,.2);background:transparent;color:var(--forest);font-size:13px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s}
+.btn-back2:hover{background:var(--fp)}
+.btn-row2{display:flex;gap:10px;margin-top:13px}
+.btn-row2 .btn-full{margin-top:0;flex:1}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── RESPONSIVE ── */
+@media(max-width:660px){
+  nav{padding:12px 16px}.nav-links{display:none}
+  .logo-main{font-size:17px}.logo-sub{font-size:9px}
+  .nav-wa{padding:7px 10px;font-size:11px}.nav-cta{padding:9px 16px;font-size:12px}
+
+  .hero{grid-template-columns:1fr;padding:28px 18px;min-height:auto;gap:24px}.hero-r{display:none}
+  h1{font-size:34px !important;margin-bottom:14px}
+  .hero-desc{font-size:14px;margin-bottom:22px}
+  .eyebrow{font-size:10px;padding:6px 12px;margin-bottom:18px}
+  .btn-p{padding:12px 20px;font-size:13px}
+  .btn-wah{padding:11px 14px;font-size:12px}
+  .trust-row{margin-top:24px;padding-top:18px;gap:12px}
+  .tp{font-size:11px}
+
+  .strip{gap:14px;padding:12px 18px;flex-direction:column;align-items:center}
+  .si{font-size:10px}
+
+  .sec{padding:44px 18px}
+  .st{font-size:26px !important}
+  .ss{font-size:14px;margin-bottom:32px}
+  .sl{font-size:9px}
+
+  .about-grid{grid-template-columns:1fr;gap:28px}
+  .vals{grid-template-columns:1fr 1fr;gap:10px}
+  .val{padding:14px}
+  .val-title{font-size:12px}
+  .val-desc{font-size:10px}
+
+  /* 2 service cards per row on mobile */
+  .svc-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .fc{height:130px}
+  .ff,.fb{padding:13px}
+  .si2{width:28px;height:28px;font-size:12px;margin-bottom:7px}
+  .sn{font-size:11.5px}
+  .sh{font-size:9px}
+  .bt{font-size:10.5px}
+
+  .areas-grid{grid-template-columns:1fr 1fr;gap:10px;margin-top:28px}
+  .ac{padding:14px}
+  .an{font-size:13px}
+  .apc{font-size:10px}
+
+  .sessions-grid{grid-template-columns:1fr;gap:12px}
+  .pkg-grid{grid-template-columns:1fr;gap:12px}
+  .pc{padding:18px}
+  .pamt{font-size:28px}
+  .pname{font-size:15px}
+
+  .how-grid{grid-template-columns:1fr 1fr;gap:10px;margin-top:28px}
+  .step{padding:16px}
+  .step-n{font-size:30px;margin-bottom:6px}
+  .step-t{font-size:12px}
+  .step-d{font-size:11px}
+
+  .faq-list{margin-top:28px}
+  .faq-q{padding:15px 18px;font-size:13px}
+  .faq-a{padding:0 18px 15px;font-size:12px}
+
+  .cta-sec{padding:48px 18px}
+  .cta-sec h2{font-size:26px}
+  .cta-sec p{font-size:13px}
+  .cta-btns{flex-direction:column;align-items:center;gap:10px}
+  .btn-gold,.btn-wa-cta{width:100%;justify-content:center}
+
+  footer{padding:28px 18px}
+  .f-inner{gap:20px}
+  .f-logo{font-size:16px}
+
+  .fr2{grid-template-columns:1fr}.popts{grid-template-columns:1fr}
+  .modal{border-radius:16px}.mp{padding:20px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo-wrap">
+    <div class="logo-main">Community Care Physio</div>
+    <div class="logo-sub">South West London</div>
+  </div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#areas">Areas</a></li>
+    <li><a href="#faq">FAQs</a></li>
+  </ul>
+  <div class="nav-r">
+    <a href="https://wa.me/447508401627?text=Hi, I'd like to find out about booking a home visit" class="nav-wa" target="_blank">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      WhatsApp
+    </a>
+    <button class="nav-cta" onclick="openM()">Book a visit →</button>
+  </div>
+</nav>
+
+<!-- 1. HERO — warm -->
+<section class="hero">
+  <div>
+    <div class="eyebrow"><span class="pulse"></span>Accepting new patients · SW London</div>
+    <h1>Community physio<br><em>delivered to<br>your door</em></h1>
+    <p class="hero-desc">A specialist physiotherapy practice serving South West London. Expert, one-to-one rehabilitation at home — built on NHS clinical standards and a genuine commitment to your recovery.</p>
+    <div class="hero-acts">
+      <button class="btn-p" onclick="openM()">Book a home visit <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+      <a href="https://wa.me/447508401627" class="btn-wah" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        WhatsApp us
+      </a>
+    </div>
+    <div class="trust-row">
+      <span class="tp">NHS-trained clinicians</span>
+      <span class="tp">HCPC registered</span>
+      <span class="tp">No referral needed</span>
+      <span class="tp">Fully insured</span>
+    </div>
+  </div>
+  <div class="hero-r">
+    <div class="book-panel">
+      <div class="pl">Next available appointment</div>
+      <div class="pt">Book with our clinician</div>
+      <div class="clin-row">
+        <div class="cav">Z</div>
+        <div style="flex:1"><div class="cn">Zakery</div><div class="cr2">Community & Neuro Physiotherapist</div></div>
+        <span class="cb">Available</span>
+      </div>
+      <div class="area-slot-row">
+        <div>
+          <div class="mini-label">Your area</div>
+          <select class="mini">
+            <option>Select area…</option>
+            <option>Putney (SW15)</option>
+            <option>Wimbledon (SW19)</option>
+            <option>Tooting (SW17)</option>
+            <option>Southfields (SW18)</option>
+            <option>Morden (SM4)</option>
+            <option>Colliers Wood (SW19)</option>
+          </select>
+        </div>
+        <div>
+          <div class="mini-label">Preferred time</div>
+          <select class="mini">
+            <option>Wed 9am</option>
+            <option>Thu 9am</option>
+            <option>Sat 10am</option>
+            <option>Mon 9am</option>
+            <option>Tue 9am</option>
+            <option>Fri 9am</option>
+          </select>
+        </div>
+      </div>
+      <button class="bnb" onclick="openM()">Check availability & book →</button>
+    </div>
+    <div class="pbadge">
+      <div class="pbi">🏥</div>
+      <div style="flex:1"><div class="pbn">Community Care Physio</div><div class="pbs">SW London · Est. 2026</div></div>
+      <div><div class="pbstat">HCPC</div><div class="pbsl">Registered</div></div>
+    </div>
+  </div>
+</section>
+
+<div class="strip">
+  <span class="si">NHS Clinical Standards</span>
+  <span class="si">No Waiting Lists</span>
+  <span class="si">Home & Care Home Visits</span>
+  <span class="si">SW London Specialists</span>
+</div>
+
+<!-- 2. ABOUT — white -->
+<section class="sec" id="about" style="background:var(--W)">
+  <div class="about-grid">
+    <div class="about-body">
+      <div class="sl">About our practice</div>
+      <h2 class="st" style="max-width:100%">Built on NHS values.<br>Delivered in your community.</h2>
+      <p>Community Care Physio provides specialist physiotherapy across South West London, delivered directly to patients at home or in care settings. Founded by an NHS-trained community physiotherapist with extensive experience in neurological rehabilitation, elderly care, falls prevention and MSK conditions.</p>
+      <p>We believe where care is delivered matters as much as how it is delivered. The same clinical standards. The same commitment to outcomes. At your door.</p>
+      <div class="creds">
+        <div class="cred">HCPC registered & CSP member</div>
+        <div class="cred">Enhanced DBS checked</div>
+        <div class="cred">Fully insured for home & care home visits</div>
+        <div class="cred">No referral needed — self-refer directly</div>
+      </div>
+    </div>
+    <div class="vals">
+      <div class="val"><div class="val-icon">🏠</div><div class="val-title">Home first</div><div class="val-desc">The best outcomes happen in familiar surroundings, built around real life</div></div>
+      <div class="val"><div class="val-icon">🤝</div><div class="val-title">Person-centred</div><div class="val-desc">Every treatment plan built around your goals — not a template</div></div>
+      <div class="val"><div class="val-icon">🏥</div><div class="val-title">NHS standards</div><div class="val-desc">Evidence-based practice and clinical rigour in every session</div></div>
+      <div class="val"><div class="val-icon">📍</div><div class="val-title">Community rooted</div><div class="val-desc">Local clinicians who understand and care about SW London</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. SERVICES — stone, white cards -->
+<section class="sec" id="services" style="background:var(--stone)">
+  <div class="sl">What we treat</div>
+  <h2 class="st">Specialist care across a wide range of conditions</h2>
+  <span class="ss">Tap any service to learn more. All treatment delivered at your home or care setting — no travel required.</span>
+  <div class="svc-grid">
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🏘️</div><div class="sn">Community Physiotherapy</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Community Physio</div><div class="bt">NHS care is shifting community-ward — better outcomes, less hospital pressure. We bring that same standard to your door.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🏠</div><div class="sn">Home Visit Physio</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Home Visits</div><div class="bt">Rehabilitation in your own environment removes the barrier of travel. Real-life settings produce faster, more sustainable recovery.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🧠</div><div class="sn">Neurological Rehab</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Neuro Rehab</div><div class="bt">Specialist rehab for stroke, Parkinson's and MS — focused on movement, balance and quality of life at every stage.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🤝</div><div class="sn">Elderly Rehabilitation</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Elderly Care</div><div class="bt">Rebuilding strength, mobility and confidence to support independence at home — on your terms, at your pace.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">⚖️</div><div class="sn">Falls Prevention</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Falls Prevention</div><div class="bt">Structured balance and strength programmes with home environment assessment to reduce fall risk and restore confidence.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🔄</div><div class="sn">Post-Hospital Rehab</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Post-Discharge</div><div class="bt">Early physiotherapy after discharge supports healing, reduces readmission risk and restores function as efficiently as possible.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">💪</div><div class="sn">MSK Physiotherapy</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">MSK</div><div class="bt">Shoulders, knees, hips, back — assessed and treated through manual therapy, targeted exercise and self-management guidance.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🏥</div><div class="sn">Care Home Visits</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Care Homes</div><div class="bt">Regular physiotherapy for residents — supporting mobility, reducing fall risk and improving quality of life alongside care routines.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🚶</div><div class="sn">Mobility Assessments</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Mobility</div><div class="bt">Comprehensive assessment of gait, strength and daily function — with clear recommendations including mobility aid suitability.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🎯</div><div class="sn">Strength & Balance</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Strength & Balance</div><div class="bt">Evidence-based programmes tailored to your goals — whether recovering from illness or building long-term resilience.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">🧩</div><div class="sn">Parkinson's Rehabilitation</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Parkinson's</div><div class="bt">Specialist rehab addressing rigidity, balance, freezing and gait — helping people maintain independence for longer.</div></div></div></div>
+    <div class="fc" onclick="this.classList.toggle('fl2')"><div class="fi"><div class="ff"><div class="si2">⚡</div><div class="sn">Sports & Active Rehab</div><div class="sh">Tap to learn more ↓</div></div><div class="fb"><div class="bl">Sports Rehab</div><div class="bt">Return-to-sport programmes for active individuals — from injury assessment to performance-focused rehabilitation.</div></div></div></div>
+  </div>
+</section>
+
+<!-- 4. AREAS — forest green -->
+<section class="sec" id="areas" style="background:var(--forest)">
+  <div class="sl" style="color:rgba(255,255,255,.45)">Where we visit</div>
+  <h2 class="st" style="color:#fff">Serving South West London</h2>
+  <p class="ss" style="color:rgba(255,255,255,.65)">Click your area to check availability and book a home visit. Not sure if you're covered? Just ask — we'll always do our best.</p>
+  <div class="areas-grid">
+    <div class="ac" onclick="openM('Putney')"><div class="an">Putney</div><div class="apc">SW15</div></div>
+    <div class="ac" onclick="openM('Wimbledon')"><div class="an">Wimbledon</div><div class="apc">SW19</div></div>
+    <div class="ac" onclick="openM('Tooting')"><div class="an">Tooting</div><div class="apc">SW17</div></div>
+    <div class="ac" onclick="openM('Southfields')"><div class="an">Southfields</div><div class="apc">SW18</div></div>
+    <div class="ac" onclick="openM('Morden')"><div class="an">Morden</div><div class="apc">SM4</div></div>
+    <div class="ac" onclick="openM('Colliers Wood')"><div class="an">Colliers Wood</div><div class="apc">SW19</div></div>
+    <div class="ac" style="background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.3)" onclick="openChat()">
+      <div class="an" style="color:#fff">Nearby areas</div>
+      <div class="apc" style="color:rgba(255,255,255,.5)">Ask us</div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. PRICING — warm -->
+<section class="sec" id="pricing" style="background:var(--warm)">
+  <div class="sl">Transparent pricing</div>
+  <h2 class="st">Clear costs, no surprises</h2>
+  <span class="ss">All fees agreed before your appointment. Travel included within our SW London service area. Secure card payment at the time of booking.</span>
+  <div class="sessions-grid">
+    <div class="pc">
+      <div class="ptag">First visit</div>
+      <div class="pname">Initial Assessment</div>
+      <div class="pdur">60 mins · at your home</div>
+      <div class="pamt">£100</div>
+      <ul class="pfl"><li>Full clinical assessment</li><li>Movement & strength testing</li><li>Personalised treatment plan</li><li>Hands-on treatment included</li><li>GP letter if required</li></ul>
+      <button class="pbtn" onclick="openM()">Book assessment</button>
+    </div>
+    <div class="pc feat">
+      <div class="pp gold">Most popular</div>
+      <div class="ptag">Follow-up</div>
+      <div class="pname">Standard Session</div>
+      <div class="pdur">45 mins · at your home</div>
+      <div class="pamt">£75</div>
+      <ul class="pfl"><li>Progress review</li><li>Targeted hands-on treatment</li><li>Exercise prescription update</li><li>Home care guidance</li></ul>
+      <button class="pbtn" onclick="openM()">Book session</button>
+    </div>
+    <div class="pc">
+      <div class="ptag">Complex cases</div>
+      <div class="pname">Extended Session</div>
+      <div class="pdur">60 mins · at your home</div>
+      <div class="pamt">£90</div>
+      <ul class="pfl"><li>Full progress reassessment</li><li>More time for hands-on treatment</li><li>Ideal for multi-area conditions</li><li>Comprehensive exercise review</li></ul>
+      <button class="pbtn" onclick="openM()">Book session</button>
+    </div>
+  </div>
+  <div class="pkg-div">
+    <div class="pkg-div-line"></div>
+    <div class="pkg-div-text">Programme packages — includes initial assessment</div>
+    <div class="pkg-div-line"></div>
+  </div>
+  <div class="pkg-grid">
+    <div class="pc pkg">
+      <div class="pp sage">New patients</div>
+      <div class="ptag">Includes initial · best value</div>
+      <div class="pname">Starter Programme</div>
+      <div class="pdur">Initial + 3 follow-ups · 4 sessions</div>
+      <div class="pamt">£295</div>
+      <div class="psave">Save £30 vs individually</div>
+      <ul class="pfl"><li>Initial assessment included</li><li>3 × 45 min follow-up sessions</li><li>Structured rehab programme</li><li>Priority scheduling</li></ul>
+      <button class="pbtn" onclick="openM()">Book programme</button>
+    </div>
+    <div class="pc pkg">
+      <div class="pp gold">Maximum value</div>
+      <div class="ptag">Includes initial · full rehab</div>
+      <div class="pname">Full Programme</div>
+      <div class="pdur">Initial + 5 follow-ups · 6 sessions</div>
+      <div class="pamt">£435</div>
+      <div class="psave">Save £40 vs individually</div>
+      <ul class="pfl"><li>Initial assessment included</li><li>5 × 45 min follow-up sessions</li><li>Full structured rehab programme</li><li>Regular progress reviews</li><li>Priority scheduling throughout</li></ul>
+      <button class="pbtn" onclick="openM()">Book programme</button>
+    </div>
+  </div>
+  <div class="pay-note">
+    <div class="pay-note-icon">🔒</div>
+    <div class="pay-note-text"><strong>Secure payment via Stripe.</strong> Card details are encrypted and never stored on our servers. All major cards accepted. You'll only be charged once your appointment is confirmed.</div>
+  </div>
+</section>
+
+<!-- 6. HOW IT WORKS — white -->
+<section class="sec" style="background:var(--W)">
+  <div class="sl">How it works</div>
+  <h2 class="st">From first contact to lasting results</h2>
+  <div class="how-grid">
+    <div class="step"><div class="step-n">01</div><div class="step-t">Chat or WhatsApp us</div><div class="step-d">Describe your needs and we'll identify the right service and check live availability instantly.</div></div>
+    <div class="step"><div class="step-n">02</div><div class="step-t">Choose your slot</div><div class="step-d">Pick a real available appointment that fits your schedule — no calls, no waiting on hold.</div></div>
+    <div class="step"><div class="step-n">03</div><div class="step-t">Complete your intake</div><div class="step-d">A brief secure form ensures your clinician arrives fully prepared from minute one.</div></div>
+    <div class="step"><div class="step-n">04</div><div class="step-t">We come to you</div><div class="step-d">Confirmation, reminders, and expert physiotherapy delivered to your home across SW London.</div></div>
+    <div class="step hi"><div class="step-n">05</div><div class="step-t">Goal-focused treatment</div><div class="step-d">Every session built around what matters most — walking further, managing pain, returning to the activities you love.</div></div>
+    <div class="step hi"><div class="step-n">06</div><div class="step-t">Recovery & independence</div><div class="step-d">Through hands-on treatment, education and exercise, we support a return to the life you want — with confidence.</div></div>
+  </div>
+</section>
+
+<!-- 7. FAQ — stone, white cards -->
+<section class="sec" id="faq" style="background:var(--stone)">
+  <div class="sl">Common questions</div>
+  <h2 class="st">Everything you need to know</h2>
+  <div class="faq-list">
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do I need a GP referral?<span class="faq-tog">+</span></div><div class="faq-a">No — you can self-refer directly. We'll liaise with your GP if it would be clinically helpful for your care.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I know which appointment to book?<span class="faq-tog">+</span></div><div class="faq-a">If you haven't seen us before, you'll start with an initial assessment — our booking system guides you automatically. Existing patients can book follow-ups or packages directly.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Which areas do you cover?<span class="faq-tog">+</span></div><div class="faq-a">We cover Putney (SW15), Wimbledon (SW19), Tooting (SW17), Southfields (SW18), Morden (SM4) and Colliers Wood. If you're nearby, get in touch — we'll always try to help.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I book for a parent or family member?<span class="faq-tog">+</span></div><div class="faq-a">Absolutely. Many of our patients are booked by family members, carers or discharge coordinators. Just mention it's for someone else when you enquire.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Is travel included in the price?<span class="faq-tog">+</span></div><div class="faq-a">Yes — travel is included within our standard SW London service area. No additional charges for home visits in the areas listed above.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Do you visit care homes?<span class="faq-tog">+</span></div><div class="faq-a">Yes. We visit care homes across SW London. If you manage a care home and are interested in a regular arrangement, please get in touch directly to discuss options.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">How do I pay?<span class="faq-tog">+</span></div><div class="faq-a">Payment is taken securely at the time of booking via Stripe. All major debit and credit cards accepted. You'll only be charged once your appointment is confirmed. Card details are never stored on our servers.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What should I expect at a first appointment?<span class="faq-tog">+</span></div><div class="faq-a">Your clinician will carry out a thorough assessment of your condition, movement, strength and daily function. You'll leave with a clear personalised plan and initial exercises. Wear comfortable clothing and bring any relevant medical letters if you have them.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">What is your cancellation policy?<span class="faq-tog">+</span></div><div class="faq-a">We ask for 24 hours' notice where possible. Late cancellations may incur a fee. Please let us know as soon as you can and we'll always try to accommodate rescheduling.</div></div>
+    <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')">Can I contact you by WhatsApp or email?<span class="faq-tog">+</span></div><div class="faq-a">Yes — WhatsApp us on 07508 401627 or email infoccphysio@gmail.com. We respond to all enquiries promptly and are happy to answer questions before you book.</div></div>
+  </div>
+</section>
+
+<!-- 8. CTA — charcoal -->
+<section class="cta-sec">
+  <h2>Ready to get started?</h2>
+  <p>Book a home visit across South West London — or just send us a WhatsApp. We'll get back to you promptly.</p>
+  <div class="cta-btns">
+    <button class="btn-gold" onclick="openM()">Book online <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
+    <a href="https://wa.me/447508401627" class="btn-wa-cta" target="_blank">
+      <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      WhatsApp us
+    </a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-inner">
+    <div>
+      <div class="f-logo">Community Care Physio</div>
+      <div class="f-area">Putney · Wimbledon · Tooting<br>Southfields · Morden · Colliers Wood</div>
+      <div class="f-contacts">
+        <a href="https://wa.me/447508401627" class="f-ci" target="_blank">
+          <svg viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          07508 401627
+        </a>
+        <a href="mailto:infoccphysio@gmail.com" class="f-ci">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          infoccphysio@gmail.com
+        </a>
+        <a href="https://wa.me/447508401627" class="f-wab" target="_blank">
+          <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+          Message on WhatsApp
+        </a>
+      </div>
+    </div>
+    <div>
+      <div class="f-nav-title">Navigate</div>
+      <div class="f-links">
+        <a href="#about">About</a>
+        <a href="#services">Services</a>
+        <a href="#areas">Areas</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQs</a>
+      </div>
+    </div>
+    <div>
+      <div class="f-nav-title">Legal</div>
+      <div class="f-links">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms & Conditions</a>
+        <a href="#">GDPR</a>
+        <a href="#">Cookie Policy</a>
+      </div>
+    </div>
+  </div>
+  <div class="f-bottom">
+    <div class="f-legal">© 2026 Community Care Physio · HCPC Registered · Fully Insured · South West London</div>
+    <div class="f-legal">communitycarephysio.co.uk</div>
+  </div>
+</footer>
+
+<!-- FLOATING BUTTONS -->
+<a href="https://wa.me/447508401627" class="float-wa" target="_blank">
+  <svg viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+<div class="chat-bub" onclick="openChat()">
+  <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+</div>
+
+<!-- CHATBOT -->
+<div class="chat-win" id="chatWin">
+  <div class="chat-head">
+    <div class="chat-av">💬</div>
+    <div><div class="chat-hn">Community Care Physio</div><div class="chat-hs">Our assistant · replies instantly</div></div>
+  </div>
+  <div class="chat-msgs" id="chatMsgs">
+    <div class="msg mb">Hi there 👋 Welcome to Community Care Physio. What can I help you with today?</div>
+  </div>
+  <div class="chat-inp-row">
+    <input class="chat-inp" id="chatInp" placeholder="Type a message…" onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="chat-send" onclick="sendMsg()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- BOOKING MODAL -->
+<div class="mo" id="bModal" onclick="outsideClose(event)">
+  <div class="modal" id="mInner">
+    <button class="mc" onclick="closeM()">×</button>
+    <div class="mp">
+
+      <!-- S0: New or returning -->
+      <div id="s0">
+        <div class="pq">
+          <h3>Book a home visit</h3>
+          <p>Have you been seen by our practice before?</p>
+          <div class="popts">
+            <div class="popt" onclick="setT('new')">
+              <div class="popt-icon">👋</div>
+              <div class="popt-title">No — new patient</div>
+              <div class="popt-sub">First time with Community Care Physio</div>
+            </div>
+            <div class="popt" onclick="setT('ret')">
+              <div class="popt-icon">🔄</div>
+              <div class="popt-title">Yes — existing patient</div>
+              <div class="popt-sub">I've had an appointment before</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- S1: Appointment selection -->
+      <div id="s1" style="display:none">
+        <div class="msteps">
+          <div class="ms on"><div class="md2">1</div>Appointment</div>
+          <div class="mdiv"></div>
+          <div class="ms"><div class="md2">2</div>Details</div>
+          <div class="mdiv"></div>
+          <div class="ms"><div class="md2">3</div>Pay & confirm</div>
+        </div>
+
+        <!-- NEW — all in one group -->
+        <div id="newO" style="display:none">
+          <div class="ast">Select your appointment</div>
+          <div class="ag" id="newAG">
+            <div class="ao sel" onclick="selA(this,'Initial Assessment','60 mins',100)">
+              <div class="ar"></div>
+              <div class="ao-left"><div class="ao-name">Initial Assessment</div><div class="ao-detail">First appointment · 60 mins · full clinical assessment</div></div>
+              <div><div class="ao-price">£100</div></div>
+            </div>
+            <div style="margin:10px 0 8px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:1px;background:var(--stone)"></div>
+              <span>Or commit to a programme</span>
+              <div style="flex:1;height:1px;background:var(--stone)"></div>
+            </div>
+            <div class="ao" onclick="selA(this,'Starter Programme','Initial + 3 sessions',295)">
+              <div class="ar"></div>
+              <div class="ao-left"><div class="ao-name">Starter Programme</div><div class="ao-detail">Initial + 3 × 45 min follow-ups · 4 sessions total</div></div>
+              <div><div class="ao-price">£295</div><div class="ao-save">Save £30</div></div>
+            </div>
+            <div class="ao" onclick="selA(this,'Full Programme','Initial + 5 sessions',435)">
+              <div class="ar"></div>
+              <div class="ao-left"><div class="ao-name">Full Programme</div><div class="ao-detail">Initial + 5 × 45 min follow-ups · 6 sessions total</div></div>
+              <div><div class="ao-price">£435</div><div class="ao-save">Save £40</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RETURNING — all in one group -->
+        <div id="retO" style="display:none">
+          <div class="ret-note">Welcome back! Choose a session or package below.</div>
+          <div class="ast">Select your appointment</div>
+          <div class="ag" id="retAG">
+            <div class="ao sel" onclick="selA(this,'Standard Session','45 mins',75)">
+              <div class="ar"></div>
+              <div class="ao-left"><div class="ao-name">Standard Session</div><div class="ao-detail">Follow-up · 45 mins</div></div>
+              <div><div class="ao-price">£75</div></div>
+            </div>
+            <div class="ao" onclick="selA(this,'Extended Session','60 mins',90)">
+              <div class="ar"></div>
+              <div class="ao-left"><div class="ao-name">Extended Session</div><div class="ao-detail">Complex cases · 60 mins</div></div>
+              <div><div class="ao-price">£90</div></div>
+            </div>
+            <div style="margin:10px 0 8px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:8px">
+              <div style="flex:1;height:1px;background:var(--stone)"></div>
+              <span>Or book a block</span>
+              <div style="flex:1;height:1px;background:var(--stone)"></div>
+            </div>
+            <div class="ao" onclick="selA(this,'Block of 4 Sessions','4 × 45 mins',280)">
+              <div class="ar"></div>
+              <div class="ao-left"><div class="ao-name">Block of 4 Sessions</div><div class="ao-detail">4 × 45 min follow-ups · priority scheduling</div></div>
+              <div><div class="ao-price">£280</div><div class="ao-save">Save £20</div></div>
+            </div>
+            <div class="ao" onclick="selA(this,'Block of 6 Sessions','6 × 45 mins',420)">
+              <div class="ar"></div>
+              <div class="ao-left"><div class="ao-name">Block of 6 Sessions</div><div class="ao-detail">6 × 45 min follow-ups · full programme</div></div>
+              <div><div class="ao-price">£420</div><div class="ao-save">Save £30</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ast" style="margin-top:6px">Preferred time</div>
+        <div class="tg">
+          <div class="tc sel" onclick="selT2(this)">Wed 9am</div>
+          <div class="tc" onclick="selT2(this)">Thu 9am</div>
+          <div class="tc" onclick="selT2(this)">Sat 10am</div>
+          <div class="tc" onclick="selT2(this)">Mon 9am</div>
+          <div class="tc" onclick="selT2(this)">Tue 9am</div>
+          <div class="tc" onclick="selT2(this)">Fri 9am</div>
+        </div>
+        <button class="btn-full" onclick="goS(2)">Continue to your details →</button>
+        <div style="text-align:center;margin-top:8px">
+          <button style="border:none;background:none;color:var(--muted);font-size:12px;cursor:pointer" onclick="goS(0)">← Start again</button>
+        </div>
+      </div>
+
+      <!-- S2: Details -->
+      <div id="s2" style="display:none">
+        <div class="msteps">
+          <div class="ms dn"><div class="md2">✓</div>Appointment</div>
+          <div class="mdiv"></div>
+          <div class="ms on"><div class="md2">2</div>Details</div>
+          <div class="mdiv"></div>
+          <div class="ms"><div class="md2">3</div>Pay & confirm</div>
+        </div>
+        <div id="newF" style="display:none">
+          <div class="fg">
+            <div class="fr2">
+              <div class="fgrp"><label>First name *</label><input id="fn" placeholder="Sarah"><div class="err" id="efn">Required</div></div>
+              <div class="fgrp"><label>Last name *</label><input id="ln" placeholder="Johnson"><div class="err" id="eln">Required</div></div>
+            </div>
+            <div class="fgrp"><label>Phone number *</label><input id="ph" type="tel" placeholder="07700 900000"><div class="err" id="eph">Required</div></div>
+            <div class="fgrp"><label>Email address *</label><input id="em" type="email" placeholder="sarah@email.com"><div class="err" id="eem">Required</div></div>
+            <div class="fr2">
+              <div class="fgrp"><label>Postcode *</label><input id="pc" placeholder="SW15 1AA"><div class="err" id="epc">Required</div></div>
+              <div class="fgrp"><label>Booking for</label><select class="formsel" id="bf"><option>Myself</option><option>A family member</option><option>A patient / resident</option></select></div>
+            </div>
+            <div class="fgrp"><label>Reason for appointment *</label><textarea id="re" placeholder="Briefly describe the main issue, condition or symptoms…"></textarea><div class="err" id="ere">Required</div></div>
+            <div class="fn2">Your information is handled securely and in line with GDPR. We will only use your details to manage your appointment and care.</div>
+          </div>
+        </div>
+        <div id="retF" style="display:none">
+          <div class="ret-note">Just confirm your details so we can pull up your records — takes about 20 seconds.</div>
+          <div class="fg">
+            <div class="fr2">
+              <div class="fgrp"><label>First name *</label><input id="rfn" placeholder="Sarah"><div class="err" id="erfn">Required</div></div>
+              <div class="fgrp"><label>Last name *</label><input id="rln" placeholder="Johnson"><div class="err" id="erln">Required</div></div>
+            </div>
+            <div class="fgrp"><label>Phone number *</label><input id="rph" type="tel" placeholder="07700 900000"><div class="err" id="erph">Required</div></div>
+            <div class="fgrp"><label>Postcode *</label><input id="rpc" placeholder="SW15 1AA"><div class="err" id="erpc">Required</div></div>
+            <div class="fgrp"><label>Notes for this session <span style="color:var(--muted);font-weight:300">(optional)</span></label><textarea id="rno" placeholder="e.g. pain has improved, new area of concern…"></textarea></div>
+            <div class="fn2">We already have your details on file. ✓</div>
+          </div>
+        </div>
+        <div class="btn-row2">
+          <button class="btn-back2" onclick="goS(1)">← Back</button>
+          <button class="btn-full" onclick="goS(3)">Review & pay →</button>
+        </div>
+      </div>
+
+      <!-- S3: Pay & Confirm -->
+      <div id="s3" style="display:none">
+        <div class="msteps">
+          <div class="ms dn"><div class="md2">✓</div>Appointment</div>
+          <div class="mdiv"></div>
+          <div class="ms dn"><div class="md2">✓</div>Details</div>
+          <div class="mdiv"></div>
+          <div class="ms on"><div class="md2">3</div>Pay & confirm</div>
+        </div>
+        <div class="summary-bar">
+          <div class="summary-label" id="sumLabel">Initial Assessment · 60 mins</div>
+          <div class="summary-price" id="sumPrice">£100</div>
+        </div>
+        <div class="conf-details" id="confDets"></div>
+        <div class="pay-section">
+          <div class="pay-section-title">Secure payment</div>
+          <div class="card-field">
+            <span style="color:var(--muted);font-size:13px">Card number</span>
+            <span style="font-size:16px">💳</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div class="card-field" style="margin:0">Expiry MM / YY</div>
+            <div class="card-field" style="margin:0">CVC</div>
+          </div>
+          <div class="stripe-note">🔒 Secured by Stripe · PCI compliant · Card details never stored</div>
+        </div>
+        <div class="fn2" style="margin-bottom:10px">By submitting you agree to our 24-hour cancellation policy. A confirmation email will be sent immediately after payment.</div>
+        <button class="btn-full" onclick="submitB()" style="background:#1d4ed8">Pay securely & confirm booking →</button>
+        <div class="btn-row2" style="margin-top:8px">
+          <button class="btn-back2" onclick="goS(2)">← Edit details</button>
+        </div>
+      </div>
+
+      <!-- S4: Success -->
+      <div id="s4" style="display:none;text-align:center;padding:20px 0">
+        <div style="font-size:44px;margin-bottom:14px">🎉</div>
+        <div style="font-family:'Playfair Display',serif;font-size:21px;font-weight:400;color:var(--char);margin-bottom:10px">Booking confirmed!</div>
+        <p style="font-size:13px;color:var(--muted);line-height:1.7;max-width:300px;margin:0 auto 14px">Payment received. A confirmation email has been sent with all your appointment details.</p>
+        <p style="font-size:12px;color:var(--sage);margin-bottom:22px">You'll receive a reminder 24 hours and 2 hours before your appointment.</p>
+        <button class="btn-full" onclick="closeM()" style="max-width:220px;margin:0 auto">Close</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let pT='new',sA='Initial Assessment',sD='60 mins',sP=100,sTime='Wed 9am',sArea='';
+
+// ── CHATBOT ──
+const CR=[
+  {k:['stroke','neuro','neurolog','parkinson','ms ','multiple sclerosis'],r:"We specialise in neurological rehabilitation — stroke, Parkinson's and MS. Treatment focuses on movement, balance and rebuilding function at home. Would you like to book an initial assessment?"},
+  {k:['elderly','older','mum','dad','parent','grandmother','grandfather','nan','grandad'],r:"We regularly support older adults at home — building strength and confidence after a fall, recovering from illness, or maintaining independence. We work at your pace."},
+  {k:['fall','balance','wobbly','unsteady'],r:"Falls prevention is one of our core specialisms. We assess balance, strength and the home environment, then build a structured programme to reduce risk and rebuild confidence."},
+  {k:['shoulder','knee','hip','back','ankle','joint','pain','ache','muscle','msk','sport','sprain'],r:"For MSK and sports injuries — shoulders, knees, hips, back and more — we assess thoroughly and treat using manual therapy, targeted exercise and self-management guidance."},
+  {k:['hospital','discharge','surgery','operation','replacement'],r:"We support patients following hospital discharge and surgery, including hip and knee replacements. Early home physio is one of the most effective ways to support recovery."},
+  {k:['care home','nursing home','residential'],r:"Yes — we visit care homes across SW London. If you're enquiring about a regular arrangement, get in touch and we'll discuss options."},
+  {k:['price','cost','how much','fee','charge','pay'],r:"Initial assessment £100 (60 mins). Standard follow-ups £75 (45 mins), extended sessions £90 (60 mins). Packages: Starter £295 (initial + 3 sessions), Full Programme £435 (initial + 5 sessions). Secure card payment via Stripe."},
+  {k:['area','cover','putney','wimbledon','tooting','southfields','morden','colliers'],r:"We cover Putney, Wimbledon, Tooting, Southfields, Morden and Colliers Wood. What's your postcode? I can confirm we can reach you and find available slots."},
+  {k:['referral','gp','doctor'],r:"No referral needed — you can book directly. We can write to your GP following your assessment if that would be helpful."},
+  {k:['whatsapp','message','text'],r:"WhatsApp us on 07508 401627 — tap the green button on the page. We'll get back to you promptly."},
+  {k:['email'],r:"Email us at infoccphysio@gmail.com and we'll get back to you within a few hours."},
+  {k:['book','appointment','when','available','slot'],r:"We have availability this week — Wednesday 9am, Thursday 9am and Saturday 10am. Would you like to book online, or prefer to WhatsApp us on 07508 401627?"},
+];
+
+function openChat(){document.getElementById('chatWin').classList.toggle('open')}
+
+function sendMsg(){
+  const inp=document.getElementById('chatInp'),msgs=document.getElementById('chatMsgs'),txt=inp.value.trim();
+  if(!txt)return;
+  const u=document.createElement('div');u.className='msg mu';u.textContent=txt;
+  msgs.appendChild(u);inp.value='';msgs.scrollTop=msgs.scrollHeight;
+  setTimeout(()=>{
+    const b=document.createElement('div');b.className='msg mb';
+    const t=txt.toLowerCase();
+    let reply="Thanks for getting in touch. We work with neurological rehab, elderly care, MSK issues, sports injuries, falls prevention and more. We use manual therapy, exercise and education to support recovery. What can I help you with specifically?";
+    for(const r of CR){if(r.k.some(k=>t.includes(k))){reply=r.r;break}}
+    b.textContent=reply;msgs.appendChild(b);msgs.scrollTop=msgs.scrollHeight;
+  },700);
+}
+
+// ── MODAL ──
+function openM(area){
+  sArea=area||'';
+  document.getElementById('bModal').classList.add('open');
+  showS(0);
+}
+function closeM(){document.getElementById('bModal').classList.remove('open')}
+function outsideClose(e){if(e.target===document.getElementById('bModal'))closeM()}
+
+function showS(n){
+  [0,1,2,3,4].forEach(i=>document.getElementById('s'+i).style.display=i===n?'block':'none');
+  document.getElementById('mInner').scrollTop=0;
+}
+
+function setT(type){
+  pT=type;
+  document.getElementById('newO').style.display=type==='new'?'block':'none';
+  document.getElementById('retO').style.display=type==='ret'?'block':'none';
+  document.getElementById('newF').style.display=type==='new'?'block':'none';
+  document.getElementById('retF').style.display=type==='ret'?'block':'none';
+  if(type==='new'){sA='Initial Assessment';sD='60 mins';sP=100;}
+  else{sA='Standard Session';sD='45 mins';sP=75;}
+  showS(1);
+}
+
+// Single-select within the active group
+function selA(el,name,dur,price){
+  el.closest('.ag').querySelectorAll('.ao').forEach(o=>o.classList.remove('sel'));
+  el.classList.add('sel');
+  sA=name;sD=dur;sP=typeof price==='number'?price:parseInt(price);
+}
+
+function selT2(el){
+  document.querySelectorAll('.tc').forEach(t=>t.classList.remove('sel'));
+  el.classList.add('sel');sTime=el.textContent;
+}
+
+function goS(n){
+  if(n===3&&!valS2())return;
+  showS(n);
+  if(n===3)buildConf();
+}
+
+function valS2(){
+  let ok=true;
+  const fields=pT==='new'
+    ?[['fn','efn'],['ln','eln'],['ph','eph'],['em','eem'],['pc','epc'],['re','ere']]
+    :[['rfn','erfn'],['rln','erln'],['rph','erph'],['rpc','erpc']];
+  fields.forEach(([f,e])=>{
+    const empty=!document.getElementById(f).value.trim();
+    document.getElementById(e).classList.toggle('show',empty);
+    if(empty)ok=false;
+  });
+  return ok;
+}
+
+function buildConf(){
+  let name,phone,postcode,extra='';
+  if(pT==='new'){
+    name=document.getElementById('fn').value+' '+document.getElementById('ln').value;
+    phone=document.getElementById('ph').value;
+    postcode=document.getElementById('pc').value;
+    const re=document.getElementById('re').value;
+    extra=`
+      <div class="conf-row"><span class="crl">Email</span><span class="crv">${document.getElementById('em').value}</span></div>
+      <div class="conf-row"><span class="crl">Booking for</span><span class="crv">${document.getElementById('bf').value}</span></div>
+      <div class="conf-row"><span class="crl">Reason</span><span class="crv">${re.substring(0,55)}${re.length>55?'…':''}</span></div>`;
+  } else {
+    name=document.getElementById('rfn').value+' '+document.getElementById('rln').value;
+    phone=document.getElementById('rph').value;
+    postcode=document.getElementById('rpc').value;
+  }
+  document.getElementById('sumLabel').textContent=sA+' · '+sD;
+  document.getElementById('sumPrice').textContent='£'+sP;
+  document.getElementById('confDets').innerHTML=`
+    <div class="conf-row"><span class="crl">Name</span><span class="crv">${name}</span></div>
+    <div class="conf-row"><span class="crl">Phone</span><span class="crv">${phone}</span></div>
+    <div class="conf-row"><span class="crl">Postcode</span><span class="crv">${postcode}</span></div>
+    ${extra}
+    <div class="conf-row"><span class="crl">Appointment</span><span class="crv">${sA}</span></div>
+    <div class="conf-row"><span class="crl">Preferred time</span><span class="crv">${sTime}</span></div>
+    ${sArea?`<div class="conf-row"><span class="crl">Area</span><span class="crv">${sArea}</span></div>`:''}
+  `;
+}
+
+function submitB(){showS(4)}
+</script>
+</body>
+</html>
