@@ -31,13 +31,13 @@ function getDurationMins(appt) {
 }
 
 const PRICES = {
-  'Initial Assessment':   100,   // £1 TEST — change back to 10000 after testing
+  'Initial Assessment':   10000,
   'Standard Session':     7500,
   'Extended Session':     9000,
   'Starter Programme':    29500,
   'Full Programme':       43500,
   'Block of 4 Sessions':  28000,
-  'Block of 6 Sessions':  40000,
+  'Block of 6 Sessions':  42000,
 };
 
 export default async function handler(req, res) {
