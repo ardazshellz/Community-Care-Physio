@@ -40,6 +40,11 @@ const PRICES = {
   'Block of 6 Sessions':  42000,
 };
 
+// Complexity surcharge only applies to Initial Assessment for now (3+ areas of concern ticked).
+// Server never trusts the client's price blindly — it only accepts one of these two known values.
+const COMPLEXITY_SURCHARGE = 3000; // £30 in pence
+const ALLOWED_INITIAL_PRICES = [PRICES['Initial Assessment'], PRICES['Initial Assessment'] + COMPLEXITY_SURCHARGE];
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -123,7 +128,18 @@ export default async function handler(req, res) {
     }
 
     // 4. Create Stripe Checkout Session with booking ID in metadata
-    const priceInPence = PRICES[bd.appointment] || (bd.price * 100);
+    // Initial Assessment: allow the £30 complexity surcharge, but validate against
+    // known allowed values rather than trusting whatever price the client sends.
+    // Every other appointment type: always the fixed price, exactly as before.
+    let priceInPence;
+    if (bd.appointment === 'Initial Assessment') {
+      const clientPricePence = Math.round((bd.price || 0) * 100);
+      priceInPence = ALLOWED_INITIAL_PRICES.includes(clientPricePence)
+        ? clientPricePence
+        : PRICES['Initial Assessment']; // fall back to base price if anything looks off
+    } else {
+      priceInPence = PRICES[bd.appointment] || (bd.price * 100);
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
