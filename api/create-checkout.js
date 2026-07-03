@@ -36,8 +36,8 @@ const PRICES = {
   'Extended Session':     9000,
   'Starter Programme':    29500,
   'Full Programme':       43500,
-  'Block of 4 Sessions':  28000,
-  'Block of 6 Sessions':  42000,
+  'Block of 4 Sessions':  29500,
+  'Block of 6 Sessions':  43500,
 };
 
 // Complexity surcharge only applies to Initial Assessment for now (3+ areas of concern ticked).
@@ -132,7 +132,7 @@ export default async function handler(req, res) {
     // 4. Create Stripe Checkout Session with booking ID in metadata
     // Initial Assessment: allow the £30 complexity surcharge, but validate against
     // known allowed values rather than trusting whatever price the client sends.
-    // Every other appointment type: always the fixed price, exactly as before.
+    // Every other appointment type: always the fixed price from PRICES.
     let priceInPence;
     if (bd.appointment === 'Initial Assessment') {
       const clientPricePence = Math.round((bd.price || 0) * 100);
