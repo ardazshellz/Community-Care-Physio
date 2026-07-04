@@ -164,7 +164,7 @@ export default async function handler(req, res) {
                   Please wear comfortable clothing. If you have any relevant medical letters, X-rays or scan results, these can be really helpful for your assessment — though not essential, so no need to worry if you don't have them to hand.
                 </p>
                 <p style="font-size:13px;color:#586860;line-height:1.6">
-                  Cancellations within 24 hours incur a £50 fee. To cancel or reschedule, contact us as soon as possible — reply to this email or WhatsApp us on <a href="https://wa.me/447508401627?text=Hi%2C%20I%20need%20to%20cancel%20or%20reschedule%20my%20appointment%20on%20${encodeURIComponent(formattedDate)}" style="color:#1e4d3b;font-weight:600">07508 401627</a>.
+                  A £50 fee applies for cancellations within 24 hours. To cancel or rearrange, please message us on WhatsApp as early as you can on <a href="https://wa.me/447508401627?text=Hi%2C%20I%20need%20to%20cancel%20or%20reschedule%20my%20appointment%20on%20${encodeURIComponent(formattedDate)}" style="color:#1e4d3b;font-weight:600">07508 401627</a> — if something urgent has come up we'll always do our best to help.
                   If a refund is applicable, please allow 5–10 working days for it to appear back on your card via Stripe.
                 </p>
                 <div style="margin-top:24px;padding-top:20px;border-top:1px solid #e8f2ee;font-size:12px;color:#586860">
