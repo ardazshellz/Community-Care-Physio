@@ -40,10 +40,25 @@ const PRICES = {
   'Block of 6 Sessions':  43500,
 };
 
-// Complexity surcharge only applies to Initial Assessment for now (3+ areas of concern ticked).
-// Server never trusts the client's price blindly — it only accepts one of these two known values.
-const COMPLEXITY_SURCHARGE = 3000; // £30 in pence
-const ALLOWED_INITIAL_PRICES = [PRICES['Initial Assessment'], PRICES['Initial Assessment'] + COMPLEXITY_SURCHARGE];
+// Complex pricing (in pence). A booking is "complex" when the client selected one
+// or more clinically complex areas of concern. The server recomputes complexity
+// from the concern categories itself — it never trusts the client's price directly.
+const COMPLEX_PRICES = {
+  'Initial Assessment':   13000,
+  'Standard Session':     9000,
+  'Extended Session':     10500,
+  'Starter Programme':    35500,
+  'Full Programme':       52500,
+  'Block of 4 Sessions':  35500,
+  'Block of 6 Sessions':  52500,
+};
+
+const COMPLEX_CATS = ['Neurological / Stroke','Respiratory Issue','Post-Surgical / Post-Op Recovery','Falls Prevention & Management'];
+
+function isComplexBooking(concernAreas) {
+  if (!concernAreas) return false;
+  return COMPLEX_CATS.some(cat => concernAreas.includes(cat));
+}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -130,17 +145,16 @@ export default async function handler(req, res) {
     }
 
     // 4. Create Stripe Checkout Session with booking ID in metadata
-    // Initial Assessment: allow the £30 complexity surcharge, but validate against
-    // known allowed values rather than trusting whatever price the client sends.
-    // Every other appointment type: always the fixed price from PRICES.
+    // The server recomputes complexity from the concern categories itself and
+    // charges the matching price — it never trusts the client's price value.
+    const complex = isComplexBooking(bd.concernAreas);
     let priceInPence;
-    if (bd.appointment === 'Initial Assessment') {
-      const clientPricePence = Math.round((bd.price || 0) * 100);
-      priceInPence = ALLOWED_INITIAL_PRICES.includes(clientPricePence)
-        ? clientPricePence
-        : PRICES['Initial Assessment']; // fall back to base price if anything looks off
+    if (complex && COMPLEX_PRICES[bd.appointment]) {
+      priceInPence = COMPLEX_PRICES[bd.appointment];
+    } else if (PRICES[bd.appointment]) {
+      priceInPence = PRICES[bd.appointment];
     } else {
-      priceInPence = PRICES[bd.appointment] || (bd.price * 100);
+      priceInPence = Math.round((bd.price || 0) * 100);
     }
 
     const session = await stripe.checkout.sessions.create({
