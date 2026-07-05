@@ -83,7 +83,25 @@ export default async function handler(req, res) {
 
       await supabase.from('bookings').update({ paid: true, confirmed: true }).eq('id', bookingId);
 
-      if (existing.booked_date && existing.booked_time) {
+      // Custom bookings carry a list of sessions — block every one of their slots.
+      let customSessions = null;
+      if (existing.custom_sessions) {
+        try { customSessions = JSON.parse(existing.custom_sessions); } catch(e) { customSessions = null; }
+      }
+
+      if (Array.isArray(customSessions) && customSessions.length) {
+        const rows = [];
+        customSessions.forEach(s => {
+          if (!s.date || !s.time) return;
+          const durationMins = s.length === '60' ? 60 : 45;
+          getBlockedSlots(s.time, durationMins).forEach(slot => {
+            rows.push({ booking_date: s.date, slot_time: slot, booking_id: existing.id });
+          });
+        });
+        if (rows.length) {
+          await supabase.from('blocked_slots').upsert(rows, { onConflict: 'booking_date,slot_time', ignoreDuplicates: true });
+        }
+      } else if (existing.booked_date && existing.booked_time) {
         const durationMins = getDurationMins(existing.appointment);
         const slotsToBlock = getBlockedSlots(existing.booked_time, durationMins);
         await supabase.from('blocked_slots').upsert(
