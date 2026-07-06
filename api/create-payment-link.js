@@ -70,6 +70,33 @@ export default async function handler(req, res) {
 
     if (bookingErr) throw bookingErr;
 
+    // ── 48-HOUR SLOT HOLD ──
+    // Hold every session's slot immediately so no one else can book it while the
+    // patient pays. get-slots already blocks pending_bookings whose expires_at is
+    // still in the future, so this makes the hold appear on everyone's homepage.
+    // Best-effort: wrapped so that if the insert fails (e.g. a column name differs
+    // in your pending_bookings table) the payment link STILL generates — it can
+    // never break booking creation. If holds don't appear, check the column names
+    // below against your Supabase `pending_bookings` table.
+    try {
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      const holds = sess
+        .filter(s => s && s.date && s.time)
+        .map(s => ({
+          booked_date: s.date,
+          booked_time: s.time,
+          expires_at: expiresAt,
+          booking_id: booking.id,
+          name: patient?.name || 'Custom booking'
+        }));
+      if (holds.length) {
+        const { error: holdErr } = await supabase.from('pending_bookings').insert(holds);
+        if (holdErr) console.warn('pending hold insert failed (non-fatal):', holdErr.message);
+      }
+    } catch (holdErr) {
+      console.warn('pending hold insert threw (non-fatal):', holdErr?.message);
+    }
+
     const price = await stripe.prices.create({
       currency: 'gbp',
       unit_amount: pence,
