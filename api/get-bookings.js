@@ -64,7 +64,13 @@ export default async function handler(req, res) {
         complexityFee: b.complexity_fee,
         paid: b.paid,
         confirmed: b.confirmed,
-        timestamp: b.timestamp || new Date(b.created_at).toLocaleString('en-GB')
+        timestamp: b.timestamp || new Date(b.created_at).toLocaleString('en-GB'),
+        // Package support: expose the sessions list + created time + status so the
+        // admin can render an Episode-of-Care card (one card per package).
+        customSessions: (() => { try { return b.custom_sessions ? (typeof b.custom_sessions === 'string' ? JSON.parse(b.custom_sessions) : b.custom_sessions) : null; } catch (e) { return null; } })(),
+        createdAt: b.created_at,
+        bookingFor: b.booking_for,
+        status: b.status || null
       })),
       bookedSlots: bookedSlotsMap
     });
