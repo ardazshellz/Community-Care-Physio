@@ -54,12 +54,14 @@ export default async function handler(req, res) {
 
       (Array.isArray(sessions) ? sessions : []).forEach((s, idx) => {
         const status = (s && s.status) ? String(s.status).toLowerCase() : 'scheduled';
-        if (s && s.date === tomorrowStr && s.time && !['cancelled', 'dna', 'expired'].includes(status)) {
-          // Avoid duplicating the main booked_date if a session mirrors it
-          if (!(b.booked_date === tomorrowStr && s.time === (b.booked_time || ''))) {
-            due.push({ b, time: s.time, label: s.label || `Follow-up ${idx + 1}` });
-          }
-        }
+        if (!s || s.date !== tomorrowStr || !s.time) return;
+        if (['cancelled', 'dna', 'expired'].includes(status)) return;
+        // Respect the admin's per-appointment reminder switch, and never send twice.
+        if (s.reminderOff === true) return;
+        if (s.reminderSent === true) return;
+        // Avoid duplicating the main booked_date if a session mirrors it
+        if (b.booked_date === tomorrowStr && s.time === (b.booked_time || '')) return;
+        due.push({ b, time: s.time, label: s.label || `Follow-up ${idx + 1}`, sessionIndex: idx, sessions });
       });
     }
 
@@ -72,7 +74,7 @@ export default async function handler(req, res) {
 
     let sent = 0;
 
-    for (const { b, time, label } of due) {
+    for (const { b, time, label, sessionIndex, sessions } of due) {
       const first = b.name ? b.name.split(' ')[0] : 'there';
 
       // Patient reminder — formal tone
@@ -145,6 +147,17 @@ export default async function handler(req, res) {
           `
         })
       });
+
+      // Tick the reminder as sent so the admin card shows "✓ Reminder sent"
+      // and it can never be emailed twice.
+      if (typeof sessionIndex === 'number' && Array.isArray(sessions)) {
+        try {
+          const updated = sessions.map((s, i) => (i === sessionIndex ? { ...s, reminderSent: true } : s));
+          await supabase.from('bookings').update({ custom_sessions: updated }).eq('id', b.id);
+        } catch (e) {
+          console.warn('could not mark reminderSent:', e?.message);
+        }
+      }
 
       sent++;
     }
