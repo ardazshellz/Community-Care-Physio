@@ -13,7 +13,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { token, action, bookingId } = req.body;
+  const { token, action, bookingId, sessions } = req.body;
   if (!verifyAdminToken(token)) {
     return res.status(401).json({ error: 'Unauthorised' });
   }
@@ -32,6 +32,25 @@ export default async function handler(req, res) {
       const { error } = await supabase
         .from('bookings')
         .update({ paid: !booking.paid })
+        .eq('id', bookingId);
+      if (error) throw error;
+    } else if (action === 'saveSessions') {
+      // Persist a package's follow-up appointments (dates, times, statuses) onto the
+      // booking itself. This makes them REAL server records, so they survive across
+      // devices and are picked up by the 24-hour reminder cron (send-reminders.js).
+      if (!Array.isArray(sessions)) {
+        return res.status(400).json({ error: 'sessions must be an array' });
+      }
+      const clean = sessions.map((s, i) => ({
+        label: (s && s.label) ? String(s.label) : `Follow-up ${i + 1}`,
+        date: (s && s.date) ? String(s.date) : null,
+        time: (s && s.time) ? String(s.time) : null,
+        length: (s && s.length) ? Number(s.length) : 45,
+        status: (s && s.status) ? String(s.status) : 'scheduled'
+      }));
+      const { error } = await supabase
+        .from('bookings')
+        .update({ custom_sessions: clean })
         .eq('id', bookingId);
       if (error) throw error;
     } else if (action === 'delete') {
