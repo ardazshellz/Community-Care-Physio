@@ -46,7 +46,10 @@ export default async function handler(req, res) {
         date: (s && s.date) ? String(s.date) : null,
         time: (s && s.time) ? String(s.time) : null,
         length: (s && s.length) ? Number(s.length) : 45,
-        status: (s && s.status) ? String(s.status) : 'scheduled'
+        status: (s && s.status) ? String(s.status) : 'scheduled',
+        // Reminder tracking: reminderOff = admin cancelled it; reminderSent = cron has emailed it.
+        reminderOff: !!(s && s.reminderOff),
+        reminderSent: !!(s && s.reminderSent)
       }));
       const { error } = await supabase
         .from('bookings')
