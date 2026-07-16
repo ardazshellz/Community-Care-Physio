@@ -9,6 +9,7 @@ export const config = {
 };
 
 import { supabase } from '../lib/supabase.js';
+import * as nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
   const authHeader = req.headers['authorization'];
@@ -17,8 +18,16 @@ export default async function handler(req, res) {
   }
 
   try {
-    const resendKey = process.env.RESEND_API_KEY;
-    if (!resendKey) return res.status(200).json({ message: 'No Resend key configured' });
+    // Send via Gmail SMTP — the SAME method stripe-webhook.js already uses successfully
+    // for booking confirmations. Emails come from the real practice address, so patients
+    // reliably receive them (Resend's onboarding@resend.dev only delivers to yourself).
+    if (!process.env.GMAIL_APP_PASSWORD) {
+      return res.status(200).json({ message: 'No GMAIL_APP_PASSWORD configured' });
+    }
+    const transporter = nodemailer.default.createTransport({
+      service: 'gmail',
+      auth: { user: 'infoccphysio@gmail.com', pass: process.env.GMAIL_APP_PASSWORD }
+    });
 
     // Tomorrow's date in London time (YYYY-MM-DD)
     const tomorrow = new Date();
@@ -78,11 +87,9 @@ export default async function handler(req, res) {
       const first = b.name ? b.name.split(' ')[0] : 'there';
 
       // Patient reminder — formal tone
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'Community Care Physio <onboarding@resend.dev>',
+      await transporter.sendMail({
+          from: '"Community Care Physio" <infoccphysio@gmail.com>',
+          replyTo: 'infoccphysio@gmail.com',
           to: b.email,
           subject: `Appointment reminder — ${formattedDate} at ${time}`,
           html: `
@@ -117,15 +124,11 @@ export default async function handler(req, res) {
               </div>
             </div>
           `
-        })
-      });
+        });
 
       // Clinician copy
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'CCP Reminders <onboarding@resend.dev>',
+      await transporter.sendMail({
+          from: '"CCP Reminders" <infoccphysio@gmail.com>',
           to: 'infoccphysio@gmail.com',
           subject: `Tomorrow: ${label} · ${b.name} · ${time}`,
           html: `
@@ -145,8 +148,7 @@ export default async function handler(req, res) {
               </div>
             </div>
           `
-        })
-      });
+        });
 
       // Tick the reminder as sent so the admin card shows "✓ Reminder sent"
       // and it can never be emailed twice.
