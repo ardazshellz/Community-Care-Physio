@@ -99,15 +99,17 @@ export default async function handler(req, res) {
                 <p style="color:rgba(255,255,255,.6);font-size:11px;margin:4px 0 0">Appointment reminder</p>
               </div>
               <div style="background:#fff;padding:24px;border:1px solid #e8f2ee;border-top:none">
+                <h3 style="color:#1e4d3b;font-size:17px;margin:0 0 16px">Your appointment is tomorrow</h3>
                 <p style="font-size:14px;color:#1a1f1d;margin:0 0 12px">Dear ${first},</p>
-                <p style="font-size:13px;color:#586860;line-height:1.6;margin:0 0 12px">
-                  This is a reminder of your upcoming physiotherapy appointment with Community Care Physio:
+                <p style="font-size:13px;color:#586860;line-height:1.6;margin:0 0 16px">
+                  This is a reminder of your upcoming physiotherapy appointment. We look forward to seeing you.
                 </p>
-                <div style="background:#e8f2ee;border-radius:10px;padding:16px;margin:16px 0">
-                  <p style="margin:0;font-size:14px;color:#1a1f1d"><strong>${label}</strong></p>
-                  <p style="margin:6px 0 0;font-size:13px;color:#1e4d3b"><strong>${formattedDate} · ${time}</strong></p>
-                  <p style="margin:6px 0 0;font-size:12px;color:#586860">${b.address || ''}${b.postcode ? ', ' + b.postcode : ''}</p>
-                </div>
+                <table style="margin:0 0 18px;font-size:13px;color:#586860;line-height:1.9">
+                  <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Appointment:</strong></td><td>${label}</td></tr>
+                  <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Date:</strong></td><td>${formattedDate}</td></tr>
+                  <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Time:</strong></td><td><strong style="color:#1e4d3b">${time}</strong></td></tr>
+                  ${b.address ? `<tr><td style="padding-right:10px;vertical-align:top"><strong style="color:#1a1f1d">Your address:</strong></td><td>${b.address}${b.postcode ? ', ' + b.postcode : ''}</td></tr>` : ''}
+                </table>
                 <p style="font-size:13px;color:#586860;line-height:1.6">
                   Please wear comfortable clothing, and have any relevant letters, scan results or x-rays to hand.
                 </p>
@@ -116,7 +118,6 @@ export default async function handler(req, res) {
                   <strong>07508 401627</strong> at your earliest convenience. Please note that cancellations
                   within 24 hours may be subject to a £50 fee.
                 </p>
-                <p style="font-size:13px;color:#586860;line-height:1.6">We look forward to seeing you.</p>
                 <p style="font-size:13px;color:#1a1f1d;line-height:1.6;margin-top:18px">
                   Kind regards,<br>Zakery Shelley<br>Community Care Physio<br>
                   🌐 https://www.communitycarephysio.co.uk/<br>📧 infoccphysio@gmail.com<br>📞 07508 401627
