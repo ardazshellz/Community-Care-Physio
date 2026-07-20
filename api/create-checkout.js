@@ -36,8 +36,8 @@ const PRICES = {
   'Extended Session':     9000,
   'Starter Programme':    29500,
   'Full Programme':       43500,
-  'Block of 4 Sessions':  29500,
-  'Block of 6 Sessions':  43500,
+  'Block of 4 Sessions':  28000,
+  'Block of 6 Sessions':  42000,
 };
 
 // Complex pricing (in pence). A booking is "complex" when the client selected one
@@ -49,8 +49,8 @@ const COMPLEX_PRICES = {
   'Extended Session':     10500,
   'Starter Programme':    35500,
   'Full Programme':       52500,
-  'Block of 4 Sessions':  35500,
-  'Block of 6 Sessions':  52500,
+  'Block of 4 Sessions':  34000,
+  'Block of 6 Sessions':  51000,
 };
 
 const COMPLEX_CATS = ['Neurological / Stroke','Respiratory Issue','Post-Surgical / Post-Op Recovery','Falls Prevention & Management'];
@@ -69,6 +69,23 @@ export default async function handler(req, res) {
 
   try {
     const bd = req.body;
+
+    // Work out the price the SERVER will actually charge (never trust the client's
+    // number). We compute it up-front so the booking record and the confirmation
+    // email always match exactly what Stripe takes — important for HMRC records.
+    const complex = isComplexBooking(bd.concernAreas);
+    let priceInPence;
+    if (complex && COMPLEX_PRICES[bd.appointment]) {
+      priceInPence = COMPLEX_PRICES[bd.appointment];
+    } else if (PRICES[bd.appointment]) {
+      priceInPence = PRICES[bd.appointment];
+    } else {
+      priceInPence = Math.round((bd.price || 0) * 100);
+    }
+    const chargedPrice = priceInPence / 100;
+    const serverComplexityFee = (complex && COMPLEX_PRICES[bd.appointment] && PRICES[bd.appointment])
+      ? (COMPLEX_PRICES[bd.appointment] - PRICES[bd.appointment]) / 100
+      : 0;
 
     // 1. Check slot isn't already taken
     if (bd.bookedDate && bd.bookedTime) {
@@ -95,7 +112,7 @@ export default async function handler(req, res) {
         postcode: bd.postcode,
         appointment: bd.appointment,
         duration: bd.duration,
-        price: bd.price,
+        price: chargedPrice,
         booked_date: bd.bookedDate || null,
         booked_time: bd.bookedTime || null,
         preferred_time: bd.preferredTime,
@@ -105,7 +122,7 @@ export default async function handler(req, res) {
         reason: bd.reason,
         preferred_days: bd.preferredDays,
         concern_areas: bd.concernAreas || null,
-        complexity_fee: bd.complexityFee || 0,
+        complexity_fee: serverComplexityFee,
         paid: false,
         confirmed: false,
         timestamp: new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
@@ -144,19 +161,8 @@ export default async function handler(req, res) {
         }, { onConflict: 'stripe_session_id' });
     }
 
-    // 4. Create Stripe Checkout Session with booking ID in metadata
-    // The server recomputes complexity from the concern categories itself and
-    // charges the matching price — it never trusts the client's price value.
-    const complex = isComplexBooking(bd.concernAreas);
-    let priceInPence;
-    if (complex && COMPLEX_PRICES[bd.appointment]) {
-      priceInPence = COMPLEX_PRICES[bd.appointment];
-    } else if (PRICES[bd.appointment]) {
-      priceInPence = PRICES[bd.appointment];
-    } else {
-      priceInPence = Math.round((bd.price || 0) * 100);
-    }
-
+    // 4. Create Stripe Checkout Session with booking ID in metadata.
+    // priceInPence was computed up-front (server-authoritative) and stored on the record.
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
