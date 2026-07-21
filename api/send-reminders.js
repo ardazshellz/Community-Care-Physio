@@ -1,174 +1,134 @@
-// api/send-reminders.js
-// Called automatically by Vercel Cron every morning at 8am London time.
-// Sends a reminder 24hrs before each appointment — for BOTH standalone bookings
-// AND every follow-up session inside a custom/package booking (custom_sessions).
-
-export const config = {
-  schedule: '0 8 * * *',
-  timezone: 'Europe/London'
-};
+// api/send-reminder-now.js
+// Admin-triggered "Send reminder now" for a single appointment.
+// Sends the SAME patient + clinician reminder emails as the automatic cron
+// (send-reminders.js), immediately — useful when an appointment is added/edited
+// after the 8am reminder run, so the automatic reminder can no longer fire.
+// Protected by the signed admin session token.
 
 import { supabase } from '../lib/supabase.js';
+import { verifyAdminToken } from '../lib/adminAuth.js';
 import * as nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
-  const authHeader = req.headers['authorization'];
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorised' });
+  res.setHeader('Access-Control-Allow-Origin', 'https://communitycarephysio.co.uk');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const {
+    token, bookingId, sessionIndex,
+    to, name, label, date, time, address, postcode, phone, reason
+  } = req.body || {};
+
+  if (!verifyAdminToken(token)) return res.status(401).json({ error: 'Unauthorised' });
+  if (!to)   return res.status(400).json({ error: 'Missing patient email' });
+  if (!date || !time) return res.status(400).json({ error: 'Missing appointment date/time' });
+
+  if (!process.env.GMAIL_APP_PASSWORD) {
+    return res.status(500).json({ error: 'Email not configured (GMAIL_APP_PASSWORD missing)' });
   }
 
   try {
-    // Send via Gmail SMTP — the SAME method stripe-webhook.js already uses successfully
-    // for booking confirmations. Emails come from the real practice address, so patients
-    // reliably receive them (Resend's onboarding@resend.dev only delivers to yourself).
-    if (!process.env.GMAIL_APP_PASSWORD) {
-      return res.status(200).json({ message: 'No GMAIL_APP_PASSWORD configured' });
-    }
     const transporter = nodemailer.default.createTransport({
       service: 'gmail',
       auth: { user: 'infoccphysio@gmail.com', pass: process.env.GMAIL_APP_PASSWORD }
     });
 
-    // Tomorrow's date in London time (YYYY-MM-DD)
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
-
-    // Pull all confirmed + paid bookings, then work out which appointments (standalone
-    // date OR any package follow-up session) actually fall tomorrow.
-    const { data: bookings, error } = await supabase
-      .from('bookings')
-      .select('*')
-      .eq('confirmed', true)
-      .eq('paid', true);
-    if (error) throw error;
-
-    // Build the list of appointments happening tomorrow.
-    const due = [];
-    for (const b of bookings || []) {
-      if (!b.email) continue;
-
-      // 1) The main booked date
-      if (b.booked_date === tomorrowStr) {
-        due.push({ b, time: b.booked_time || b.preferred_time || 'your confirmed time', label: b.appointment });
-      }
-
-      // 2) Any follow-up sessions inside a custom/package booking
-      let sessions = [];
-      try {
-        sessions = b.custom_sessions
-          ? (typeof b.custom_sessions === 'string' ? JSON.parse(b.custom_sessions) : b.custom_sessions)
-          : [];
-      } catch (e) { sessions = []; }
-
-      (Array.isArray(sessions) ? sessions : []).forEach((s, idx) => {
-        const status = (s && s.status) ? String(s.status).toLowerCase() : 'scheduled';
-        if (!s || s.date !== tomorrowStr || !s.time) return;
-        if (['cancelled', 'dna', 'expired'].includes(status)) return;
-        // Respect the admin's per-appointment reminder switch, and never send twice.
-        if (s.reminderOff === true) return;
-        if (s.reminderSent === true) return;
-        // Avoid duplicating the main booked_date if a session mirrors it
-        if (b.booked_date === tomorrowStr && s.time === (b.booked_time || '')) return;
-        due.push({ b, time: s.time, label: s.label || `Follow-up ${idx + 1}`, sessionIndex: idx, sessions });
-      });
-    }
-
-    if (!due.length) {
-      return res.status(200).json({ message: 'No appointments tomorrow', sent: 0 });
-    }
-
-    const formattedDate = new Date(tomorrowStr + 'T12:00:00')
+    const first = name ? String(name).split(' ')[0] : 'there';
+    const apptLabel = label || 'Physiotherapy appointment';
+    const formattedDate = new Date(date + 'T12:00:00')
       .toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
-    let sent = 0;
+    // Patient reminder — identical template to the automatic cron.
+    await transporter.sendMail({
+      from: '"Community Care Physio" <infoccphysio@gmail.com>',
+      replyTo: 'infoccphysio@gmail.com',
+      to,
+      subject: `Appointment reminder — ${formattedDate} at ${time}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1f1d">
+          <div style="background:#1e4d3b;padding:20px;border-radius:10px 10px 0 0">
+            <h2 style="color:#fff;margin:0;font-size:18px">Community Care Physio</h2>
+            <p style="color:rgba(255,255,255,.6);font-size:11px;margin:4px 0 0">Appointment reminder</p>
+          </div>
+          <div style="background:#fff;padding:24px;border:1px solid #e8f2ee;border-top:none">
+            <h3 style="color:#1e4d3b;font-size:17px;margin:0 0 16px">Your upcoming appointment</h3>
+            <p style="font-size:14px;color:#1a1f1d;margin:0 0 12px">Dear ${first},</p>
+            <p style="font-size:13px;color:#586860;line-height:1.6;margin:0 0 16px">
+              This is a reminder of your upcoming physiotherapy appointment. We look forward to seeing you.
+            </p>
+            <table style="margin:0 0 18px;font-size:13px;color:#586860;line-height:1.9">
+              <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Appointment:</strong></td><td>${apptLabel}</td></tr>
+              <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Date:</strong></td><td>${formattedDate}</td></tr>
+              <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Time:</strong></td><td><strong style="color:#1e4d3b">${time}</strong></td></tr>
+              ${address ? `<tr><td style="padding-right:10px;vertical-align:top"><strong style="color:#1a1f1d">Your address:</strong></td><td>${address}${postcode ? ', ' + postcode : ''}</td></tr>` : ''}
+            </table>
+            <p style="font-size:13px;color:#586860;line-height:1.6">
+              Please wear comfortable clothing, and have any relevant letters, scan results or x-rays to hand.
+            </p>
+            <p style="font-size:13px;color:#586860;line-height:1.6">
+              Should you need to rearrange, please reply to this email or contact us on WhatsApp on
+              <strong>07508 401627</strong> at your earliest convenience. Please note that cancellations
+              within 24 hours may be subject to a £50 fee.
+            </p>
+            <p style="font-size:13px;color:#1a1f1d;line-height:1.6;margin-top:18px">
+              Kind regards,<br>Zakery Shelley<br>Community Care Physio<br>
+              🌐 https://www.communitycarephysio.co.uk/<br>📧 infoccphysio@gmail.com<br>📞 07508 401627
+            </p>
+          </div>
+        </div>
+      `
+    });
 
-    for (const { b, time, label, sessionIndex, sessions } of due) {
-      const first = b.name ? b.name.split(' ')[0] : 'there';
+    // Clinician copy — same as the cron.
+    await transporter.sendMail({
+      from: '"CCP Reminders" <infoccphysio@gmail.com>',
+      to: 'infoccphysio@gmail.com',
+      subject: `Reminder sent: ${apptLabel} · ${name || ''} · ${formattedDate} ${time}`,
+      html: `
+        <div style="font-family:Arial,sans-serif;max-width:520px;color:#1a1f1d">
+          <div style="background:#1e4d3b;padding:18px;border-radius:10px 10px 0 0">
+            <h3 style="color:#fff;margin:0">Manual reminder sent</h3>
+          </div>
+          <div style="background:#fff;padding:20px;border:1px solid #e8f2ee;border-top:none">
+            <table style="font-size:13px;width:100%">
+              <tr><td style="padding:5px 0;color:#586860;width:35%">Patient</td><td style="font-weight:600">${name || '—'}</td></tr>
+              <tr><td style="padding:5px 0;color:#586860">Phone</td><td>${phone ? `<a href="tel:${phone}">${phone}</a>` : '—'}</td></tr>
+              <tr><td style="padding:5px 0;color:#586860">Address</td><td>${address || '—'}${postcode ? ', ' + postcode : ''}</td></tr>
+              <tr><td style="padding:5px 0;color:#586860">Appointment</td><td>${apptLabel}</td></tr>
+              <tr><td style="padding:5px 0;color:#586860">Date</td><td>${formattedDate}</td></tr>
+              <tr><td style="padding:5px 0;color:#586860">Time</td><td><strong style="color:#1e4d3b">${time}</strong></td></tr>
+              <tr><td style="padding:5px 0;color:#586860">Reason</td><td>${reason || '—'}</td></tr>
+            </table>
+          </div>
+        </div>
+      `
+    });
 
-      // Patient reminder — formal tone
-      await transporter.sendMail({
-          from: '"Community Care Physio" <infoccphysio@gmail.com>',
-          replyTo: 'infoccphysio@gmail.com',
-          to: b.email,
-          subject: `Appointment reminder — ${formattedDate} at ${time}`,
-          html: `
-            <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1f1d">
-              <div style="background:#1e4d3b;padding:20px;border-radius:10px 10px 0 0">
-                <h2 style="color:#fff;margin:0;font-size:18px">Community Care Physio</h2>
-                <p style="color:rgba(255,255,255,.6);font-size:11px;margin:4px 0 0">Appointment reminder</p>
-              </div>
-              <div style="background:#fff;padding:24px;border:1px solid #e8f2ee;border-top:none">
-                <h3 style="color:#1e4d3b;font-size:17px;margin:0 0 16px">Your appointment is tomorrow</h3>
-                <p style="font-size:14px;color:#1a1f1d;margin:0 0 12px">Dear ${first},</p>
-                <p style="font-size:13px;color:#586860;line-height:1.6;margin:0 0 16px">
-                  This is a reminder of your upcoming physiotherapy appointment. We look forward to seeing you.
-                </p>
-                <table style="margin:0 0 18px;font-size:13px;color:#586860;line-height:1.9">
-                  <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Appointment:</strong></td><td>${label}</td></tr>
-                  <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Date:</strong></td><td>${formattedDate}</td></tr>
-                  <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Time:</strong></td><td><strong style="color:#1e4d3b">${time}</strong></td></tr>
-                  ${b.address ? `<tr><td style="padding-right:10px;vertical-align:top"><strong style="color:#1a1f1d">Your address:</strong></td><td>${b.address}${b.postcode ? ', ' + b.postcode : ''}</td></tr>` : ''}
-                </table>
-                <p style="font-size:13px;color:#586860;line-height:1.6">
-                  Please wear comfortable clothing, and have any relevant letters, scan results or x-rays to hand.
-                </p>
-                <p style="font-size:13px;color:#586860;line-height:1.6">
-                  Should you need to rearrange, please reply to this email or contact us on WhatsApp on
-                  <strong>07508 401627</strong> at your earliest convenience. Please note that cancellations
-                  within 24 hours may be subject to a £50 fee.
-                </p>
-                <p style="font-size:13px;color:#1a1f1d;line-height:1.6;margin-top:18px">
-                  Kind regards,<br>Zakery Shelley<br>Community Care Physio<br>
-                  🌐 https://www.communitycarephysio.co.uk/<br>📧 infoccphysio@gmail.com<br>📞 07508 401627
-                </p>
-              </div>
-            </div>
-          `
-        });
-
-      // Clinician copy
-      await transporter.sendMail({
-          from: '"CCP Reminders" <infoccphysio@gmail.com>',
-          to: 'infoccphysio@gmail.com',
-          subject: `Tomorrow: ${label} · ${b.name} · ${time}`,
-          html: `
-            <div style="font-family:Arial,sans-serif;max-width:520px;color:#1a1f1d">
-              <div style="background:#1e4d3b;padding:18px;border-radius:10px 10px 0 0">
-                <h3 style="color:#fff;margin:0">Appointment tomorrow</h3>
-              </div>
-              <div style="background:#fff;padding:20px;border:1px solid #e8f2ee;border-top:none">
-                <table style="font-size:13px;width:100%">
-                  <tr><td style="padding:5px 0;color:#586860;width:35%">Patient</td><td style="font-weight:600">${b.name}</td></tr>
-                  <tr><td style="padding:5px 0;color:#586860">Phone</td><td><a href="tel:${b.phone}">${b.phone}</a></td></tr>
-                  <tr><td style="padding:5px 0;color:#586860">Address</td><td>${b.address || '—'}${b.postcode ? ', ' + b.postcode : ''}</td></tr>
-                  <tr><td style="padding:5px 0;color:#586860">Appointment</td><td>${label}</td></tr>
-                  <tr><td style="padding:5px 0;color:#586860">Time</td><td><strong style="color:#1e4d3b">${time}</strong></td></tr>
-                  <tr><td style="padding:5px 0;color:#586860">Reason</td><td>${b.reason || '—'}</td></tr>
-                </table>
-              </div>
-            </div>
-          `
-        });
-
-      // Tick the reminder as sent so the admin card shows "✓ Reminder sent"
-      // and it can never be emailed twice.
-      if (typeof sessionIndex === 'number' && Array.isArray(sessions)) {
-        try {
-          const updated = sessions.map((s, i) => (i === sessionIndex ? { ...s, reminderSent: true } : s));
-          await supabase.from('bookings').update({ custom_sessions: updated }).eq('id', b.id);
-        } catch (e) {
-          console.warn('could not mark reminderSent:', e?.message);
+    // Mark this session's reminder as sent in Supabase so it shows "✓ Reminder sent"
+    // and the cron never double-sends it. Best-effort — email already went out.
+    if (bookingId && typeof sessionIndex === 'number') {
+      try {
+        const { data: booking } = await supabase
+          .from('bookings').select('custom_sessions').eq('id', bookingId).single();
+        let sessions = [];
+        if (booking && booking.custom_sessions) {
+          sessions = typeof booking.custom_sessions === 'string'
+            ? JSON.parse(booking.custom_sessions) : booking.custom_sessions;
         }
+        if (Array.isArray(sessions) && sessions[sessionIndex]) {
+          sessions = sessions.map((s, i) => (i === sessionIndex ? { ...s, reminderSent: true } : s));
+          await supabase.from('bookings').update({ custom_sessions: sessions }).eq('id', bookingId);
+        }
+      } catch (e) {
+        console.warn('send-reminder-now: could not mark reminderSent:', e?.message);
       }
-
-      sent++;
     }
 
-    return res.status(200).json({ message: `Sent ${sent} reminder(s)`, sent });
-
+    return res.status(200).json({ success: true, sent: 1 });
   } catch (err) {
-    console.error('send-reminders error:', err);
+    console.error('send-reminder-now error:', err);
     return res.status(500).json({ error: err.message });
   }
 }
