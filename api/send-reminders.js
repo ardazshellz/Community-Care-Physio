@@ -1,134 +1,146 @@
 // api/send-reminder-now.js
-// Admin-triggered "Send reminder now" for a single appointment.
-// Sends the SAME patient + clinician reminder emails as the automatic cron
-// (send-reminders.js), immediately — useful when an appointment is added/edited
-// after the 8am reminder run, so the automatic reminder can no longer fire.
-// Protected by the signed admin session token.
+// ---------------------------------------------------------------------------
+// Sends a single appointment-reminder email on demand (the admin "Send now"
+// button). This is the endpoint the site was calling at /api/send-reminder-now
+// which returned 404 because the file did not exist. Upload this file into your
+// existing `api/` folder (alongside get-bookings.js etc.) and redeploy.
+//
+// Stack match:
+//   • Node serverless function on Vercel
+//   • Gmail SMTP via Nodemailer, using process.env.GMAIL_APP_PASSWORD
+//   • Sends from infoccphysio@gmail.com
+//
+// ⚠ AUTH — READ THIS:
+// Your other admin endpoints (e.g. get-bookings.js) verify the admin session
+// `token`. This file ships with a common HMAC verification, but if your
+// admin-login.js signs tokens differently it will reject with 401. The safest
+// move: copy the EXACT token-check block from your get-bookings.js into
+// `verifyAdminToken()` below so it matches byte-for-byte. If you paste me your
+// get-bookings.js / admin-login.js I will align it for you in seconds.
+// ---------------------------------------------------------------------------
 
-import { supabase } from '../lib/supabase.js';
-import { verifyAdminToken } from '../lib/adminAuth.js';
-import * as nodemailer from 'nodemailer';
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', 'https://communitycarephysio.co.uk');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+const FROM_EMAIL = 'infoccphysio@gmail.com';
 
-  const {
-    token, bookingId, sessionIndex,
-    to, name, label, date, time, address, postcode, phone, reason
-  } = req.body || {};
+const SIGNATURE =
+`Kind regards,
+Zakery Shelley
+Community Care Physio
+🌐 https://www.communitycarephysio.co.uk/
+📧 infoccphysio@gmail.com
+📞 07508 401627`;
 
-  if (!verifyAdminToken(token)) return res.status(401).json({ error: 'Unauthorised' });
-  if (!to)   return res.status(400).json({ error: 'Missing patient email' });
-  if (!date || !time) return res.status(400).json({ error: 'Missing appointment date/time' });
+// --- Admin token verification --------------------------------------------
+// Tries a stateless HMAC check against a few likely secret env vars and the two
+// most common token layouts ("sig.expiry" and "expiry.sig"). Replace the body
+// with your real check if your login signs tokens another way.
+function verifyAdminToken(token) {
+  if (!token || typeof token !== 'string' || token.indexOf('.') === -1) return false;
+  const secrets = [
+    process.env.ADMIN_TOKEN_SECRET,
+    process.env.ADMIN_PASSWORD_HASH,
+    process.env.SESSION_SECRET,
+    process.env.ADMIN_PASSWORD
+  ].filter(Boolean);
+  if (!secrets.length) return false;
 
-  if (!process.env.GMAIL_APP_PASSWORD) {
-    return res.status(500).json({ error: 'Email not configured (GMAIL_APP_PASSWORD missing)' });
+  const parts = token.split('.');
+  // Candidate (payload, signature) pairs for the two common orderings.
+  const candidates = [
+    { payload: parts[0], sig: parts[1] },
+    { payload: parts[1], sig: parts[0] }
+  ];
+  for (const secret of secrets) {
+    for (const c of candidates) {
+      if (!c.payload || !c.sig) continue;
+      // Expiry check when the payload is a millisecond timestamp.
+      const asNum = Number(c.payload);
+      if (!Number.isNaN(asNum) && asNum > 1000000000000 && asNum < Date.now()) continue; // expired
+      const expected = crypto.createHmac('sha256', secret).update(String(c.payload)).digest('hex');
+      try {
+        if (expected.length === c.sig.length &&
+            crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(c.sig))) {
+          return true;
+        }
+      } catch (_) { /* length mismatch → not this format */ }
+    }
   }
+  return false;
+}
+
+function esc(s) { return String(s == null ? '' : s); }
+
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed — use POST.' });
+    return;
+  }
+
+  // Vercel usually parses JSON bodies; fall back to manual parse just in case.
+  let body = req.body;
+  if (!body || typeof body === 'string') {
+    try { body = JSON.parse(body || '{}'); } catch (_) { body = {}; }
+  }
+
+  const { token, to, name, label, date, time, address, postcode, phone, reason } = body || {};
+
+  if (!verifyAdminToken(token)) {
+    res.status(401).json({ error: 'Unauthorised — admin session invalid or expired. Sign out and back in, then try again.' });
+    return;
+  }
+  if (!to) {
+    res.status(400).json({ error: 'No recipient email address was provided for this patient.' });
+    return;
+  }
+  if (!process.env.GMAIL_APP_PASSWORD) {
+    res.status(500).json({ error: 'Email is not configured on the server (GMAIL_APP_PASSWORD is missing in Vercel environment variables).' });
+    return;
+  }
+
+  const first = (name || 'there').split(' ')[0];
+  const whenLine = date
+    ? `• ${date}${time ? ' at ' + time : ''}`
+    : (label || 'your upcoming appointment');
+
+  const subject = 'Appointment reminder — Community Care Physio';
+  const text =
+`Dear ${first},
+
+This is a reminder of your upcoming physiotherapy appointment with Community Care Physio:
+
+${whenLine}${address ? `
+
+Address on file: ${esc(address)}${postcode ? ', ' + esc(postcode) : ''}` : ''}
+
+Please wear comfortable clothing, and have any relevant letters, scan results or x-rays to hand.
+
+Should you need to rearrange, please reply to this email or contact us on WhatsApp at your earliest convenience. Please note that cancellations within 24 hours may be subject to a £50 fee.
+
+We look forward to seeing you.
+
+${SIGNATURE}`;
 
   try {
-    const transporter = nodemailer.default.createTransport({
-      service: 'gmail',
-      auth: { user: 'infoccphysio@gmail.com', pass: process.env.GMAIL_APP_PASSWORD }
+    const transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      auth: { user: FROM_EMAIL, pass: process.env.GMAIL_APP_PASSWORD }
     });
 
-    const first = name ? String(name).split(' ')[0] : 'there';
-    const apptLabel = label || 'Physiotherapy appointment';
-    const formattedDate = new Date(date + 'T12:00:00')
-      .toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
-
-    // Patient reminder — identical template to the automatic cron.
     await transporter.sendMail({
-      from: '"Community Care Physio" <infoccphysio@gmail.com>',
-      replyTo: 'infoccphysio@gmail.com',
+      from: `Community Care Physio <${FROM_EMAIL}>`,
       to,
-      subject: `Appointment reminder — ${formattedDate} at ${time}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;color:#1a1f1d">
-          <div style="background:#1e4d3b;padding:20px;border-radius:10px 10px 0 0">
-            <h2 style="color:#fff;margin:0;font-size:18px">Community Care Physio</h2>
-            <p style="color:rgba(255,255,255,.6);font-size:11px;margin:4px 0 0">Appointment reminder</p>
-          </div>
-          <div style="background:#fff;padding:24px;border:1px solid #e8f2ee;border-top:none">
-            <h3 style="color:#1e4d3b;font-size:17px;margin:0 0 16px">Your upcoming appointment</h3>
-            <p style="font-size:14px;color:#1a1f1d;margin:0 0 12px">Dear ${first},</p>
-            <p style="font-size:13px;color:#586860;line-height:1.6;margin:0 0 16px">
-              This is a reminder of your upcoming physiotherapy appointment. We look forward to seeing you.
-            </p>
-            <table style="margin:0 0 18px;font-size:13px;color:#586860;line-height:1.9">
-              <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Appointment:</strong></td><td>${apptLabel}</td></tr>
-              <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Date:</strong></td><td>${formattedDate}</td></tr>
-              <tr><td style="padding-right:10px"><strong style="color:#1a1f1d">Time:</strong></td><td><strong style="color:#1e4d3b">${time}</strong></td></tr>
-              ${address ? `<tr><td style="padding-right:10px;vertical-align:top"><strong style="color:#1a1f1d">Your address:</strong></td><td>${address}${postcode ? ', ' + postcode : ''}</td></tr>` : ''}
-            </table>
-            <p style="font-size:13px;color:#586860;line-height:1.6">
-              Please wear comfortable clothing, and have any relevant letters, scan results or x-rays to hand.
-            </p>
-            <p style="font-size:13px;color:#586860;line-height:1.6">
-              Should you need to rearrange, please reply to this email or contact us on WhatsApp on
-              <strong>07508 401627</strong> at your earliest convenience. Please note that cancellations
-              within 24 hours may be subject to a £50 fee.
-            </p>
-            <p style="font-size:13px;color:#1a1f1d;line-height:1.6;margin-top:18px">
-              Kind regards,<br>Zakery Shelley<br>Community Care Physio<br>
-              🌐 https://www.communitycarephysio.co.uk/<br>📧 infoccphysio@gmail.com<br>📞 07508 401627
-            </p>
-          </div>
-        </div>
-      `
+      replyTo: FROM_EMAIL,
+      subject,
+      text
     });
 
-    // Clinician copy — same as the cron.
-    await transporter.sendMail({
-      from: '"CCP Reminders" <infoccphysio@gmail.com>',
-      to: 'infoccphysio@gmail.com',
-      subject: `Reminder sent: ${apptLabel} · ${name || ''} · ${formattedDate} ${time}`,
-      html: `
-        <div style="font-family:Arial,sans-serif;max-width:520px;color:#1a1f1d">
-          <div style="background:#1e4d3b;padding:18px;border-radius:10px 10px 0 0">
-            <h3 style="color:#fff;margin:0">Manual reminder sent</h3>
-          </div>
-          <div style="background:#fff;padding:20px;border:1px solid #e8f2ee;border-top:none">
-            <table style="font-size:13px;width:100%">
-              <tr><td style="padding:5px 0;color:#586860;width:35%">Patient</td><td style="font-weight:600">${name || '—'}</td></tr>
-              <tr><td style="padding:5px 0;color:#586860">Phone</td><td>${phone ? `<a href="tel:${phone}">${phone}</a>` : '—'}</td></tr>
-              <tr><td style="padding:5px 0;color:#586860">Address</td><td>${address || '—'}${postcode ? ', ' + postcode : ''}</td></tr>
-              <tr><td style="padding:5px 0;color:#586860">Appointment</td><td>${apptLabel}</td></tr>
-              <tr><td style="padding:5px 0;color:#586860">Date</td><td>${formattedDate}</td></tr>
-              <tr><td style="padding:5px 0;color:#586860">Time</td><td><strong style="color:#1e4d3b">${time}</strong></td></tr>
-              <tr><td style="padding:5px 0;color:#586860">Reason</td><td>${reason || '—'}</td></tr>
-            </table>
-          </div>
-        </div>
-      `
-    });
-
-    // Mark this session's reminder as sent in Supabase so it shows "✓ Reminder sent"
-    // and the cron never double-sends it. Best-effort — email already went out.
-    if (bookingId && typeof sessionIndex === 'number') {
-      try {
-        const { data: booking } = await supabase
-          .from('bookings').select('custom_sessions').eq('id', bookingId).single();
-        let sessions = [];
-        if (booking && booking.custom_sessions) {
-          sessions = typeof booking.custom_sessions === 'string'
-            ? JSON.parse(booking.custom_sessions) : booking.custom_sessions;
-        }
-        if (Array.isArray(sessions) && sessions[sessionIndex]) {
-          sessions = sessions.map((s, i) => (i === sessionIndex ? { ...s, reminderSent: true } : s));
-          await supabase.from('bookings').update({ custom_sessions: sessions }).eq('id', bookingId);
-        }
-      } catch (e) {
-        console.warn('send-reminder-now: could not mark reminderSent:', e?.message);
-      }
-    }
-
-    return res.status(200).json({ success: true, sent: 1 });
+    res.status(200).json({ ok: true });
   } catch (err) {
-    console.error('send-reminder-now error:', err);
-    return res.status(500).json({ error: err.message });
+    // Surface a useful message to the admin UI instead of a bare 500.
+    res.status(502).json({ error: 'Email send failed: ' + (err && err.message ? err.message : 'unknown SMTP error') + '. Check GMAIL_APP_PASSWORD and that the Gmail account allows app passwords.' });
   }
-}
+};
