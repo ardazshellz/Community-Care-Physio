@@ -46,7 +46,7 @@ const PRICES = {
 const COMPLEX_PRICES = {
   'Initial Assessment':   13000,
   'Standard Session':     9000,
-  'Extended Session':     10500,
+  'Extended Session':     9000,   // 60-min extended already includes the extra time — no complex surcharge
   'Starter Programme':    35500,
   'Full Programme':       52500,
   'Block of 4 Sessions':  34000,
