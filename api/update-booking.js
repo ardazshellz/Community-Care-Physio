@@ -1,6 +1,7 @@
 // api/update-booking.js
-// Admin panel calls this to confirm, mark paid, save sessions, or permanently delete bookings.
-// Protected by a signed admin session token issued by /api/admin-login.js.
+// Admin panel calls this to confirm, mark paid, or delete bookings.
+// Protected by a signed admin session token (issued by /api/admin-login.js),
+// instead of re-sending the raw password on every call.
 
 import { supabase } from '../lib/supabase.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
@@ -18,17 +19,28 @@ export default async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).end();
   }
 
-  const { token, action, bookingId, sessions } = req.body || {};
+  const {
+    token,
+    action,
+    bookingId,
+    sessions,
+    packageStatus,
+    packageCompletedAt
+  } = req.body || {};
 
   if (!verifyAdminToken(token)) {
-    return res.status(401).json({ error: 'Unauthorised' });
+    return res.status(401).json({
+      error: 'Unauthorised'
+    });
   }
 
   if (!bookingId) {
-    return res.status(400).json({ error: 'Missing bookingId' });
+    return res.status(400).json({
+      error: 'Missing bookingId'
+    });
   }
 
   try {
@@ -59,69 +71,110 @@ export default async function handler(req, res) {
     }
 
     else if (action === 'saveSessions') {
+      // Save the package appointments onto the booking so the same
+      // information appears on desktop and mobile.
+
       if (!Array.isArray(sessions)) {
         return res.status(400).json({
           error: 'sessions must be an array'
         });
       }
 
-      const cleanSessions = sessions.map((session, index) => ({
-        label:
-          session && session.label
-            ? String(session.label)
-            : `Follow-up ${index + 1}`,
+      const completedAt =
+        packageCompletedAt &&
+        !Number.isNaN(Date.parse(packageCompletedAt))
+          ? new Date(packageCompletedAt).toISOString()
+          : null;
 
-        date:
-          session && session.date
-            ? String(session.date)
-            : null,
+      const clean = sessions.map((session, index) => {
+        const row = {
+          label:
+            session && session.label
+              ? String(session.label)
+              : `Follow-up ${index + 1}`,
 
-        time:
-          session && session.time
-            ? String(session.time)
-            : null,
+          date:
+            session && session.date
+              ? String(session.date)
+              : null,
 
-        length:
-          session && session.length
-            ? Number(session.length)
-            : 45,
+          time:
+            session && session.time
+              ? String(session.time)
+              : null,
 
-        status:
-          session && session.status
-            ? String(session.status)
-            : 'scheduled',
+          length:
+            session && session.length
+              ? Number(session.length)
+              : 45,
 
-        reminderOff: Boolean(session && session.reminderOff),
-        reminderSent: Boolean(session && session.reminderSent)
-      }));
+          status:
+            session && session.status
+              ? String(session.status)
+              : 'scheduled',
+
+          reminderOff: Boolean(
+            session && session.reminderOff
+          ),
+
+          reminderSent: Boolean(
+            session && session.reminderSent
+          )
+        };
+
+        // Store the completion timestamp in the first session.
+        // This avoids needing a new Supabase database column.
+        if (index === 0 && completedAt) {
+          row.packageCompletedAt = completedAt;
+        }
+
+        return row;
+      });
+
+      const update = {
+        custom_sessions: clean
+      };
+
+      if (
+        typeof packageStatus === 'string' &&
+        packageStatus.trim()
+      ) {
+        update.status = packageStatus
+          .trim()
+          .slice(0, 40);
+      }
 
       const { error } = await supabase
         .from('bookings')
-        .update({ custom_sessions: cleanSessions })
+        .update(update)
         .eq('id', bookingId);
 
       if (error) throw error;
     }
 
-    else if (action === 'delete' || action === 'purge') {
-      // This permanently removes genuine test or refunded records
-      // from Patients, Bookings, Finance and future Excel exports.
+    else if (
+      action === 'delete' ||
+      action === 'purge'
+    ) {
+      // Permanently remove genuine test or refunded records
+      // from the admin area, finance view and future HMRC exports.
 
-      const { data: existingBooking, error: readError } = await supabase
-        .from('bookings')
-        .select('id')
-        .eq('id', bookingId)
-        .maybeSingle();
+      const { data: existing, error: readError } =
+        await supabase
+          .from('bookings')
+          .select('id')
+          .eq('id', bookingId)
+          .maybeSingle();
 
       if (readError) throw readError;
 
-      if (!existingBooking) {
+      if (!existing) {
         return res.status(404).json({
           error: 'Booking not found'
         });
       }
 
-      // Remove appointment slots connected to this booking.
+      // Remove any blocked appointment slots linked to this booking.
       const { error: slotError } = await supabase
         .from('blocked_slots')
         .delete()
@@ -129,24 +182,28 @@ export default async function handler(req, res) {
 
       if (slotError) throw slotError;
 
-      // Remove any temporary pending record associated with this booking.
+      // Remove an older temporary pending-booking record where present.
       const { error: pendingError } = await supabase
         .from('pending_bookings')
         .delete()
-        .eq('stripe_session_id', `pending_${bookingId}`);
+        .eq(
+          'stripe_session_id',
+          `pending_${bookingId}`
+        );
 
       if (pendingError) throw pendingError;
 
-      // Permanently remove the main booking record.
-      const { data: deletedBookings, error: deleteError } = await supabase
-        .from('bookings')
-        .delete()
-        .eq('id', bookingId)
-        .select('id');
+      // Permanently remove the booking record.
+      const { data: deleted, error: deleteError } =
+        await supabase
+          .from('bookings')
+          .delete()
+          .eq('id', bookingId)
+          .select('id');
 
       if (deleteError) throw deleteError;
 
-      if (!deletedBookings || deletedBookings.length !== 1) {
+      if (!deleted || deleted.length !== 1) {
         return res.status(500).json({
           error: 'Booking could not be deleted'
         });
@@ -165,7 +222,10 @@ export default async function handler(req, res) {
   }
 
   catch (error) {
-    console.error('update-booking error:', error);
+    console.error(
+      'update-booking error:',
+      error
+    );
 
     return res.status(500).json({
       error: 'Internal server error'
