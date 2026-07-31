@@ -1,0 +1,40 @@
+{
+  "version": 2,
+  "crons": [
+    {
+      "path": "/api/send-reminders",
+      "schedule": "0 8 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "https://communitycarephysio.co.uk"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET,POST,OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type,Authorization"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/review",
+      "destination": "https://www.google.com/search?sca_esv=75d6586d45596069&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_zN_DHWoovYLDYry_mYV27_vnjHWUylheG7ZDRb2oPwGzX4bwY5cJRIXnZgBpkvDvmReLT_xL7WNKt5-YFDVYZGC-wJilnaHft8Msz7YfVVYCVCxcw%3D%3D&q=Community+Care+Physio+Reviews&sa=X&ved=2ahUKEwiVi7D0g_2VAxUfVUEAHddwBlcQ0bkNegQINBAF&biw=1437&bih=690&dpr=2",
+      "permanent": false
+    },
+    {
+      "source": "/review/",
+      "destination": "https://www.google.com/search?sca_esv=75d6586d45596069&si=APenkKm7iecQ4G6P-TsbSMFKIQtv3EFIqRAFw-i8uEbk55Z-_zN_DHWoovYLDYry_mYV27_vnjHWUylheG7ZDRb2oPwGzX4bwY5cJRIXnZgBpkvDvmReLT_xL7WNKt5-YFDVYZGC-wJilnaHft8Msz7YfVVYCVCxcw%3D%3D&q=Community+Care+Physio+Reviews&sa=X&ved=2ahUKEwiVi7D0g_2VAxUfVUEAHddwBlcQ0bkNegQINBAF&biw=1437&bih=690&dpr=2",
+      "permanent": false
+    }
+  ]
+}
