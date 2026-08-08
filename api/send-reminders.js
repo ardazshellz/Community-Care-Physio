@@ -120,7 +120,8 @@ async function handleCron(req, res) {
   if (!process.env.GMAIL_APP_PASSWORD) {
     return res.status(500).json({ error: 'GMAIL_APP_PASSWORD is missing in Vercel environment variables.' });
   }
-  const target = ukDate(1); // tomorrow, UK time
+  const today = ukDate(0);
+  const tomorrow = ukDate(1);
 
   let bookings;
   try {
@@ -132,10 +133,13 @@ async function handleCron(req, res) {
     return res.status(500).json({ error: 'Database read failed' });
   }
 
-  const sent = [];
-  const noEmail = [];
+  const tomorrowDigest = []; // for Zakery: name / time / type
+  const noEmail = [];        // patients we could not email
   const errors = [];
+  let patientsSent = 0;
 
+  // ---- TOMORROW: send the patient their reminder (day before, outside the
+  //      24-hour window), mark it sent, and collect a line for Zakery. ----
   for (const b of bookings) {
     try {
       const name = b.name || 'there';
@@ -145,35 +149,33 @@ async function handleCron(req, res) {
       const status = String(b.status || '').toLowerCase();
 
       const hits = [];
-
-      if (b.booked_date === target && !DEAD.includes(status)) {
+      if (b.booked_date === tomorrow && !DEAD.includes(status)) {
         hits.push({ label: b.appointment || 'Appointment', time: b.booked_time || b.preferred_time || '', sessionIndex: null });
       }
-
       const sessions = parseSessions(b.custom_sessions);
       if (Array.isArray(sessions)) {
         sessions.forEach((s, idx) => {
           if (!s) return;
           const st = String(s.status || '').toLowerCase();
-          if (s.date === target && ACTIVE.includes(st) && !s.reminderOff && !s.reminderSent) {
+          if (s.date === tomorrow && ACTIVE.includes(st) && !s.reminderOff && !s.reminderSent) {
             hits.push({ label: s.label || 'Follow-up appointment', time: s.time || '', sessionIndex: idx });
           }
         });
       }
-
       if (!hits.length) continue;
 
       const marked = [];
       for (const h of hits) {
-        const whenLine = `• ${fmtDate(target)}${h.time ? ' at ' + fmtTime(h.time) : ''} — ${h.label}`;
         if (email) {
+          const whenLine = `• ${fmtDate(tomorrow)}${h.time ? ' at ' + fmtTime(h.time) : ''} — ${h.label}`;
           await sendMail(email, 'Appointment reminder — Community Care Physio',
             patientText(firstName(name), whenLine, address, postcode));
-          sent.push(`${name} — ${fmtTime(h.time) || 'time TBC'} (${h.label})`);
+          patientsSent++;
           if (h.sessionIndex != null) marked.push(h.sessionIndex);
         } else {
           noEmail.push(`${name} — ${fmtTime(h.time) || 'time TBC'} (${h.label})`);
         }
+        tomorrowDigest.push(`${name} · ${fmtTime(h.time) || 'time TBC'} · ${h.label}`);
       }
 
       if (Array.isArray(sessions) && marked.length) {
@@ -190,24 +192,51 @@ async function handleCron(req, res) {
     }
   }
 
-  try {
-    const lines = [`Reminders for ${fmtDate(target)}:`, ''];
-    if (sent.length) { lines.push('Reminded:'); sent.forEach(x => lines.push('  • ' + x)); }
-    else lines.push('No patient reminders were due for tomorrow.');
-    if (noEmail.length) {
-      lines.push('', 'Could NOT remind — no email on file, please contact manually:');
-      noEmail.forEach(x => lines.push('  • ' + x));
+  // ---- TODAY: heads-up for Zakery only (patients were reminded yesterday). ----
+  const todayDigest = [];
+  for (const b of bookings) {
+    const name = b.name || 'there';
+    const status = String(b.status || '').toLowerCase();
+    if (b.booked_date === today && !DEAD.includes(status)) {
+      todayDigest.push(`${name} · ${fmtTime(b.booked_time || b.preferred_time || '') || 'time TBC'} · ${b.appointment || 'Appointment'}`);
     }
-    if (errors.length) { lines.push('', 'Errors during the run:'); errors.forEach(x => lines.push('  • ' + x)); }
-    lines.push('', '— Community Care Physio reminder system');
-    await sendMail(ADMIN_EMAIL, `Appointment reminders — ${fmtDate(target)}`, lines.join('\n'));
-  } catch (e) {
-    console.error('send-reminders cron: admin digest failed', e && e.message);
+    const sessions = parseSessions(b.custom_sessions);
+    if (Array.isArray(sessions)) {
+      sessions.forEach(s => {
+        if (!s) return;
+        const st = String(s.status || '').toLowerCase();
+        if (s.date === today && ACTIVE.includes(st)) {
+          todayDigest.push(`${name} · ${fmtTime(s.time) || 'time TBC'} · ${s.label || 'Follow-up appointment'}`);
+        }
+      });
+    }
   }
 
+  // ---- Email Zakery ONLY when there is actually something on (no empty spam). ----
+  try {
+    if (tomorrowDigest.length) {
+      const lines = [`You have ${tomorrowDigest.length} appointment${tomorrowDigest.length > 1 ? 's' : ''} tomorrow (${fmtDate(tomorrow)}):`, ''];
+      tomorrowDigest.forEach(x => lines.push('  • ' + x));
+      if (noEmail.length) { lines.push('', 'No email on file — please remind these patients manually:'); noEmail.forEach(x => lines.push('  • ' + x)); }
+      if (errors.length) { lines.push('', 'Errors during the run:'); errors.forEach(x => lines.push('  • ' + x)); }
+      lines.push('', '— Community Care Physio reminder system');
+      await sendMail(ADMIN_EMAIL, `Tomorrow's appointments — ${fmtDate(tomorrow)}`, lines.join('\n'));
+    }
+  } catch (e) { console.error('send-reminders: tomorrow digest failed', e && e.message); }
+
+  try {
+    if (todayDigest.length) {
+      const lines = [`You have ${todayDigest.length} appointment${todayDigest.length > 1 ? 's' : ''} today (${fmtDate(today)}):`, ''];
+      todayDigest.forEach(x => lines.push('  • ' + x));
+      lines.push('', '— Community Care Physio reminder system');
+      await sendMail(ADMIN_EMAIL, `Today's appointments — ${fmtDate(today)}`, lines.join('\n'));
+    }
+  } catch (e) { console.error('send-reminders: today digest failed', e && e.message); }
+
   return res.status(200).json({
-    ok: true, date: target,
-    remindersSent: sent.length, missingEmail: noEmail.length, errors: errors.length
+    ok: true, today, tomorrow,
+    patientsSent, tomorrowCount: tomorrowDigest.length, todayCount: todayDigest.length,
+    missingEmail: noEmail.length, errors: errors.length
   });
 }
 
