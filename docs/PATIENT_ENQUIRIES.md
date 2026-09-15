@@ -1,6 +1,12 @@
 # Patient enquiries — implementation and release notes
 
-15 September 2026. Local branch: `feature/patient-enquiries`, based on main `e9defdf7a25594ad22b436d4a01af9a1a9805a97`. Changes are local and uncommitted. No production migration, deployment, payment or message has been performed.
+15 September 2026. Branch: `feature/patient-enquiries`, based on main `e9defdf7a25594ad22b436d4a01af9a1a9805a97`. Feature commit `daf34bf` built successfully on Vercel Preview. Following explicit user consent, the production Supabase migration was applied and its table/function verified. No real payment or message has been sent. Stripe event configuration and production website publication are being completed.
+
+## Incomplete package archive correction
+
+Outstanding sessions now override stale package completion flags and timestamps. Unbooked/cancelled visits are no longer omitted from the completion test, missing purchased sessions receive unscheduled placeholders, and the dashboard, patient list and review selection use session-based completion. Completed visits remain completed. An old browser submitting stale completion metadata is also corrected by the save-sessions API. The affected existing record was checked using only its package/session states; its stale timestamp is to be cleared after the fixed server is published. No patient identity or contact details are included in this handover or tests.
+
+25 automated tests pass, including seven archive regressions with synthetic data in addition to the enquiry tests below. Vercel browser login works for project `prj_8vBZj1Ble9dG8FL1HUn0Fsmmh1UZ` in team `team_1r0GROqXrDhI8sh3XxNr6jRp`; connector access still fails. Required environment names are present in Production and Preview. The applied enquiry table intentionally has no anon/authenticated RLS policies or grants; only the service role can use it.
 
 ## What the administrator can do
 

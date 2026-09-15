@@ -3602,6 +3602,8 @@ function aPkgBaseSessions(b){
 }
 function aPkgSessions(b){
   const base=aPkgBaseSessions(b);
+  // A partly populated session list must not silently shrink the purchased package.
+  while(base.length<aPkgSize(b))base.push({label:'Follow-up '+(base.length+1),date:null,time:null,length:45,status:'unscheduled'});
   // Supabase is the source of truth for real bookings. Older versions stored
   // session edits only in localStorage, which caused phones and desktops to show
   // different patients/statuses.
@@ -3658,10 +3660,10 @@ function aPkgSaveOverrides(id, arr, meta={}){
   try{
     const b=adminBookings.find(x=>x.id===id);
     if(!b || !aIsServerBooking(id)) return Promise.resolve();
-    const base=aPkgBaseSessions(b);
+    const base=aPkgSessions(b);
     const hasCompletedMeta=Object.prototype.hasOwnProperty.call(meta,'packageCompletedAt');
-    const completedAt=hasCompletedMeta ? meta.packageCompletedAt : (aPkgServerCompletedAt(b)||aPkgLocalCompletedAt(b));
-    const packageStatus=Object.prototype.hasOwnProperty.call(meta,'packageStatus') ? meta.packageStatus : (b.status||null);
+    let completedAt=hasCompletedMeta ? meta.packageCompletedAt : (aPkgServerCompletedAt(b)||aPkgLocalCompletedAt(b));
+    let packageStatus=Object.prototype.hasOwnProperty.call(meta,'packageStatus') ? meta.packageStatus : (b.status||null);
     const merged=base.map((s,i)=>{
       const o=(Array.isArray(arr)&&arr[i]&&typeof arr[i]==='object')?arr[i]:{};
       const row={
@@ -3683,10 +3685,17 @@ function aPkgSaveOverrides(id, arr, meta={}){
       if(i===0 && completedAt) row.packageCompletedAt=completedAt;
       return row;
     });
+    const allDone=merged.length>0 && merged.length>=aPkgSize(b) && merged.every(s=>['completed','dna'].includes(s.status));
+    if(!allDone){
+      completedAt=null;
+      merged.forEach(s=>{delete s.packageCompletedAt;});
+      if(packageStatus==='completed')packageStatus=b.paid!==false?'prepaid':'pending';
+      try{localStorage.removeItem(aPkgArchiveKey(id));}catch(e){}
+    }
     b.customSessions=merged;
     if(packageStatus) b.status=packageStatus;
     if(completedAt) b.packageCompletedAt=completedAt;
-    else if(hasCompletedMeta) delete b.packageCompletedAt;
+    else if(hasCompletedMeta || !allDone) delete b.packageCompletedAt;
     return fetch('/api/update-booking',{
       method:'POST',
       cache:'no-store',
@@ -4122,17 +4131,17 @@ function aPkgExercise(i){
 const ARCHIVE_MS = 24*60*60*1000;
 function aPkgArchiveKey(id){ return 'ccp_archived_'+id; }
 function aPkgAllDone(b){
-  const s=aPkgSessions(b).filter(x=>x.date && x.status!=='cancelled' && x.status!=='unscheduled');
-  return s.length>0 && s.every(x=>x.status==='completed');
+  const sessions=aPkgSessions(b);
+  return sessions.length>0 && sessions.length>=aPkgSize(b) &&
+    sessions.every(s=>s && ['completed','dna'].includes(s.status));
 }
 function aPkgIsComplete(b){
-  if(!b || b.status==='cancelled') return false;
-  if(aPkgServerCompletedAt(b)) return true;
-  try{ if(localStorage.getItem(aPkgArchiveKey(b.id))!=null) return true; }catch(e){}
-  return b.status==='completed' || aPkgAllDone(b);
+  if(!b || ['cancelled','expired'].includes(b.status)) return false;
+  // Session records outrank stale package flags and old browser archive timers.
+  return aPkgAllDone(b);
 }
 function aPkgDerivedCompletionTime(b){
-  const completed=aPkgSessions(b).filter(s=>s&&s.status==='completed'&&s.date);
+  const completed=aPkgSessions(b).filter(s=>s&&['completed','dna'].includes(s.status)&&s.date);
   if(!completed.length) return null;
   const times=completed.map(s=>{
     const tm=(s.time&&/^\d{2}:\d{2}/.test(s.time))?s.time.slice(0,5):'23:59';
@@ -4141,6 +4150,7 @@ function aPkgDerivedCompletionTime(b){
   return times.length?Math.max(...times):null;
 }
 function aPkgArchivedAt(b){
+  if(!aPkgIsComplete(b)) return null;
   const serverIso=aPkgServerCompletedAt(b);
   const serverMs=serverIso?Date.parse(serverIso):NaN;
   if(Number.isFinite(serverMs)) return serverMs;
@@ -4174,6 +4184,10 @@ const aArchiveMigrationInFlight=new Set();
 function migratePackageArchiveState(){
   adminBookings.forEach(b=>{
     if(!b || !aIsPackage(b) || !aIsServerBooking(b.id)) return;
+    if(!aPkgIsComplete(b)){
+      try{localStorage.removeItem(aPkgArchiveKey(b.id));}catch(e){}
+      return;
+    }
     const localIso=aPkgLocalCompletedAt(b);
     const serverIso=aPkgServerCompletedAt(b);
     if(!localIso || serverIso || aArchiveMigrationInFlight.has(b.id)) return;
@@ -4189,9 +4203,13 @@ function migratePackageArchiveState(){
 
 async function aPkgComplete(i){
   const b=adminBookings[i]; if(!b) return;
-  if(!confirm('Mark this whole package as completed? It stays visible for 24 hours (with an Uncomplete button), then moves to Completed / archived patients. Nothing is deleted.')) return;
   const sessions=aPkgSessions(b);
-  const arr=sessions.map(s=>({ status: s.status==='unscheduled'?'unscheduled':'completed', date:s.date, time:s.time }));
+  if(sessions.length<aPkgSize(b) || sessions.some(s=>!['completed','dna'].includes(s.status) && (!s.date || ['unscheduled','cancelled'].includes(s.status)))){
+    alert('This package still has sessions to arrange. Complete or resolve those sessions before marking the whole package complete.');
+    return;
+  }
+  if(!confirm('Mark this whole package as completed? It stays visible for 24 hours (with an Uncomplete button), then moves to Completed / archived patients. Nothing is deleted.')) return;
+  const arr=sessions.map(s=>({ status:s.status==='dna'?'dna':'completed', date:s.date, time:s.time }));
   b.status='completed';
   try{ localStorage.setItem(aPkgArchiveKey(b.id), String(Date.now())); }catch(e){}
   renderAdminBookings();
@@ -5827,7 +5845,7 @@ function reviewDateIsTodayOrFuture(date,time){
 function reviewRecordIsCurrentlyActive(b){
   if(!b) return false;
   const status=String(b.status||'').trim().toLowerCase();
-  if(['cancelled','expired','completed','dna'].includes(status)) return false;
+  if(['cancelled','expired'].includes(status)) return false;
 
   if(typeof aIsPackage==='function' && aIsPackage(b)){
     if((typeof aPkgIsComplete==='function'&&aPkgIsComplete(b)) ||
@@ -5835,8 +5853,10 @@ function reviewRecordIsCurrentlyActive(b){
     const sessions=typeof aPkgSessions==='function' ? aPkgSessions(b) : [];
     // A package is active only when this named patient still has a scheduled,
     // rescheduled or unbooked session remaining. Completed and DNA sessions are used.
-    return sessions.some(s=>['scheduled','rescheduled','unscheduled'].includes(String(s&&s.status||'').toLowerCase()));
+    return sessions.some(s=>s&&!['completed','dna'].includes(String(s.status||'').toLowerCase()));
   }
+
+  if(['completed','dna'].includes(status)) return false;
 
   const date=b.bookedDate||b.appointmentDate||b.date||'';
   const time=b.bookedTime||b.appointmentTime||b.time||'';

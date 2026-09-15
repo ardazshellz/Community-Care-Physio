@@ -5,6 +5,7 @@
 
 import { supabase } from '../lib/supabase.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
+import { reconcilePackageCompletion } from '../lib/package-completion.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://communitycarephysio.co.uk');
@@ -77,6 +78,11 @@ export default async function handler(req, res) {
       if (typeof packageStatus === 'string' && packageStatus.trim()) {
         update.status = packageStatus.trim().slice(0, 40);
       }
+
+      const {data: current, error: readError}=await supabase.from('bookings')
+        .select('appointment,paid,status').eq('id',bookingId).single();
+      if(readError)throw readError;
+      reconcilePackageCompletion(update,current);
 
       const { error } = await supabase
         .from('bookings')
