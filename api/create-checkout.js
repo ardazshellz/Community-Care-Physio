@@ -132,7 +132,9 @@ export default async function handler(req, res) {
 
     if (bookingErr) throw bookingErr;
 
-    // 3. Hold the slot for 5 minutes while payment is in progress
+    // Keep the hold until Checkout expires, with a small settlement buffer.
+    const checkoutExpiresAt = Math.floor(Date.now() / 1000) + 31 * 60;
+    // 3. Reserve the slot before creating a payable Checkout session.
     // NOTE: slot only gets BLOCKED in blocked_slots after payment confirmed via webhook
     if (bd.bookedDate && bd.bookedTime) {
       // Check if slot is currently held by another pending booking
@@ -150,15 +152,19 @@ export default async function handler(req, res) {
         return res.status(409).json({ error: 'Slot temporarily held', code: 'SLOT_HELD' });
       }
 
-      await supabase
+      const { error: holdErr } = await supabase
         .from('pending_bookings')
         .upsert({
           stripe_session_id: `pending_${booking.id}`,
           booking_data: bd,
           booked_date: bd.bookedDate,
           booked_time: bd.bookedTime,
-          expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 minutes only
+          expires_at: new Date((checkoutExpiresAt + 60) * 1000).toISOString()
         }, { onConflict: 'stripe_session_id' });
+      if (holdErr) {
+        await supabase.from('bookings').delete().eq('id', booking.id);
+        return res.status(409).json({ error: 'This appointment could not be reserved. Please choose another time.', code: 'SLOT_HELD' });
+      }
     }
 
     // 4. Create Stripe Checkout Session with booking ID in metadata.
@@ -179,6 +185,7 @@ export default async function handler(req, res) {
         quantity: 1,
       }],
       mode: 'payment',
+      expires_at: checkoutExpiresAt,
       customer_email: bd.email || undefined,
       // 5. Return URLs - back to your site
       success_url: `https://communitycarephysio.co.uk/?booking=success&id=${booking.id}`,

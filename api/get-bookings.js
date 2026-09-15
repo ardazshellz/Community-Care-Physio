@@ -14,9 +14,29 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
   // Verify admin session token
-  const { token } = req.body;
+  const { token } = req.body || {};
+  res.setHeader('Cache-Control', 'no-store');
   if (!verifyAdminToken(token)) {
     return res.status(401).json({ error: 'Unauthorised' });
+  }
+
+  if (req.body?.action === 'enquiries') {
+    try {
+      const [{ createEnquiryService }, { default: Stripe }] = await Promise.all([
+        import('../lib/enquiries.js'), import('stripe')
+      ]);
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'unconfigured');
+      const service = createEnquiryService({ db: supabase, stripe });
+      return res.status(200).json(await service.handle(req.body));
+    } catch (err) {
+      const setup = ['42P01','PGRST202','PGRST205'].includes(err.code);
+      // Do not expose database internals, Stripe objects or patient data in errors.
+      const safe = err.code === 'P0001' || (!err.code && !err.type);
+      return res.status(setup ? 503 : safe ? 400 : 502).json({
+        error: setup ? 'Patient enquiries are not enabled yet. Ask your administrator to complete setup.'
+          : safe ? err.message : 'Could not complete the request. Reload to check its status before retrying.'
+      });
+    }
   }
 
   try {
@@ -42,7 +62,7 @@ export default async function handler(req, res) {
     });
 
     return res.status(200).json({
-      bookings: bookings.map(b => ({
+      bookings: bookings.filter(b => b.booking_for !== 'enquiry' || (b.paid && b.confirmed)).map(b => ({
         id: b.id,
         name: b.name,
         phone: b.phone,

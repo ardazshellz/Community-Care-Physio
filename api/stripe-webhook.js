@@ -55,6 +55,22 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Webhook Error: ${err.message}` });
   }
 
+  // The enquiry branch has transactional, retry-safe promotion and no draft sends.
+  if (event.data.object.metadata?.enquiry_id && [
+    'checkout.session.completed', 'checkout.session.async_payment_succeeded',
+    'checkout.session.async_payment_failed', 'checkout.session.expired'
+  ].includes(event.type)) {
+    try {
+      const { createEnquiryService } = await import('../lib/enquiries.js');
+      const session = await stripe.checkout.sessions.retrieve(event.data.object.id);
+      await createEnquiryService({db:supabase,stripe}).settleSession(
+        session, event.type === 'checkout.session.async_payment_failed');
+      return res.status(200).json({received:true});
+    } catch {
+      return res.status(500).json({error:'Enquiry confirmation failed; retry required'});
+    }
+  }
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const bookingId = session.metadata?.booking_id;

@@ -840,6 +840,7 @@ body.admin-active .chat-win{display:none!important}
 @media(max-width:860px){ .contact-grid{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:480px){ .contact-card{padding:16px 13px} .contact-v{font-size:13px} .contact-actions .contact-btn,.contact-actions .contact-btn-alt{flex:1 1 100%;justify-content:center} }
 </style>
+<link rel="stylesheet" href="/assets/enquiries.css">
 </head>
 <body>
 
@@ -2574,6 +2575,7 @@ document.getElementById('legalModal').addEventListener('click',function(e){
           <button class="admin-nav-item active" data-nav="dashboard" data-label="📊 Dashboard" onclick="adminNav('dashboard')"><span class="ani-ic">📊</span> Dashboard</button>
           <button class="admin-nav-item" data-nav="patients" data-label="👥 Patients" onclick="adminNav('patients')"><span class="ani-ic">👥</span> Patients</button>
           <button class="admin-nav-item" data-nav="bookings" data-label="🧾 Bookings" onclick="adminNav('bookings')"><span class="ani-ic">🧾</span> Bookings</button>
+          <button class="admin-nav-item" data-nav="enquiries" data-label="🌱 Patient enquiries" onclick="adminNav('enquiries')"><span class="ani-ic">🌱</span> Patient enquiries</button>
           <button class="admin-nav-item" data-nav="programmes" data-label="✉️ Generate Emails" onclick="adminNav('programmes')"><span class="ani-ic">✉️</span> Generate Emails</button>
           <button class="admin-nav-item" data-nav="availability" data-label="📅 Availability" onclick="adminNav('availability')"><span class="ani-ic">📅</span> Availability</button>
           <button class="admin-nav-item" data-nav="finance" data-label="💷 Finance" onclick="adminNav('finance')"><span class="ani-ic">💷</span> Finance</button>
@@ -2714,6 +2716,22 @@ document.getElementById('legalModal').addEventListener('click',function(e){
               <div id="cbOutput" style="margin-top:16px"></div>
             </div>
           </div>
+        </div>
+
+        <div class="acard" style="grid-column:1/-1" data-asec="programmes">
+          <div class="acard-title">🌱 New patient enquiry</div>
+          <p class="eq-muted">Save a query patient, prepare an introduction by email or WhatsApp, and follow through to a paid appointment.</p>
+          <button class="eq-btn primary" onclick="adminNav('enquiries')">Open patient enquiry workflow →</button>
+        </div>
+        <div class="acard" style="grid-column:1/-1" data-asec="dashboard">
+          <div class="acard-title">🌱 Patient enquiries</div>
+          <p id="eqSummary" class="eq-muted">Manage people enquiring about their first home visit.</p>
+          <button class="eq-btn" onclick="adminNav('enquiries')">View enquiries →</button>
+        </div>
+        <div class="acard" style="grid-column:1/-1" data-asec="enquiries" id="eqPanel">
+          <div class="eq-top"><div><h2>From first conversation to first visit</h2><p class="eq-muted">Patient enquiries · email and WhatsApp</p></div><div class="eq-actions"><button class="eq-btn" data-action="reload">Reload enquiries</button><button class="eq-btn primary" data-action="new">+ New query patient</button></div></div>
+          <div id="eqStatus" class="eq-status" role="status" aria-live="polite">Save details, prepare your messages, then confirm an appointment.</div>
+          <div class="eq-layout"><aside><label class="eq-field" for="eqSearch">Find an enquiry</label><input class="eq-search" id="eqSearch" type="search" placeholder="Name, email or mobile"><div class="eq-list" id="eqList"></div></aside><div id="eqEditor"></div></div>
         </div>
 
         <!-- HOME EXERCISE PROGRAMME EMAIL -->
@@ -2945,6 +2963,7 @@ async function doAdminLogin(){
 }
 
 function doAdminLogout(){
+  window.CCPEnquiries?.clear();
   sessionStorage.removeItem('ccp_admin_token');
   sessionStorage.removeItem('ccp_admin_expiry');
   adminSessionToken=null;
@@ -2973,12 +2992,12 @@ function openAdmin(){
   }
 }
 
-// Check URL on load
-(function(){
+// Restore an admin session only after all booking state and modules initialise.
+window.addEventListener('DOMContentLoaded',()=>{
   if(window.location.hash==='#admin'||window.location.search.includes('admin')){
     openAdmin();
   }
-})();
+},{once:true});
 
 // ── ADMIN BOOKINGS ──
 let adminBookings=[];
@@ -3234,7 +3253,11 @@ function aPkgSize(b){
   return 0;
 }
 
+let adminSyncInFlight=false;
 async function syncFromSupabase(){
+  if(adminSyncInFlight || !adminSessionToken)return;
+  adminSyncInFlight=true;
+  const requestToken=adminSessionToken;
   const dbg=document.getElementById('aDebug');
   aSetSyncButtons('↻ Syncing…',true);
   try{
@@ -3244,6 +3267,7 @@ async function syncFromSupabase(){
       headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},
       body:JSON.stringify({token:adminSessionToken})
     });
+    if(requestToken!==adminSessionToken)return;
     if(!res.ok){
       let err={}; try{err=await res.json();}catch(_){}
       window.CCP_ADMIN_STATE.services.supabase='error';
@@ -3252,6 +3276,7 @@ async function syncFromSupabase(){
         sessionStorage.removeItem('ccp_admin_token');
         sessionStorage.removeItem('ccp_admin_expiry');
         adminSessionToken=null;
+        window.CCPEnquiries?.clear();
         const lw=document.getElementById('adminLoginWrap'),ac=document.getElementById('adminContent');
         if(lw) lw.style.display='flex';
         if(ac) ac.style.display='none';
@@ -3264,6 +3289,8 @@ async function syncFromSupabase(){
     }
 
     const data=await res.json();
+    if(requestToken!==adminSessionToken)return;
+    window.CCPEnquiries?.refreshSummary();
     const serverBookings=Array.isArray(data.bookings)?data.bookings:[];
     adminBookings=[...serverBookings,...MANUAL_BOOKINGS];
     serverBookings.forEach(b=>{
@@ -3299,6 +3326,7 @@ async function syncFromSupabase(){
     if(dbg) dbg.innerHTML='<span style="color:#dc2626">Could not reach the server ('+aEsc(e.message||'network')+'). Your existing data is not deleted.</span>';
     renderSettings();
   }finally{
+    adminSyncInFlight=false;
     aSetSyncButtons('↻ Sync bookings',false);
   }
 }
@@ -3333,6 +3361,13 @@ window.addEventListener('pageshow',e=>{
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='visible') refreshAdminFromServerIfVisible(false);
 });
+// A payment webhook can confirm any enquiry while the clinician stays on the
+// homepage. Refresh the dashboard even when no individual enquiry is selected.
+setInterval(()=>{
+  if(document.visibilityState==='visible' && ['dashboard','patients'].includes(ADMIN_SEC)){
+    refreshAdminFromServerIfVisible(false);
+  }
+},30000);
 
 function initAdmin(){
   adminBookings=[...MANUAL_BOOKINGS];
@@ -3362,7 +3397,9 @@ function toggleAdminMobileNav(){
   btn.setAttribute('aria-expanded',open?'true':'false');
 }
 function adminNav(sec){
+  if(ADMIN_SEC==='enquiries' && sec!=='enquiries' && window.CCPEnquiries?.hasUnsaved?.() && !confirm('Leave the enquiry with unsaved changes? Your draft will remain here.')) return;
   ADMIN_SEC=sec;
+  if(sec==='enquiries')window.CCPEnquiries?.show();
   document.querySelectorAll('#adminContent [data-asec]').forEach(el=>{
     el.style.display=(el.getAttribute('data-asec')===sec)?'':'none';
   });
@@ -6008,5 +6045,6 @@ async function reviewSendBoth(){
 }
 </script>
 
+<script type="module" src="/assets/enquiries.js"></script>
 </body>
 </html>
