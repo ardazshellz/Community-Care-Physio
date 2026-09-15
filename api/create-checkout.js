@@ -3,6 +3,7 @@
 // This is the proper way to integrate Stripe with a booking system
 
 import Stripe from 'stripe';
+import {checkoutQuote} from '../lib/checkout-pricing.js';
 import { supabase } from '../lib/supabase.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -30,36 +31,6 @@ function getDurationMins(appt) {
   return map[appt] || 60;
 }
 
-const PRICES = {
-  'Initial Assessment':   10000,
-  'Standard Session':     7500,
-  'Extended Session':     9000,
-  'Starter Programme':    29500,
-  'Full Programme':       43500,
-  'Block of 4 Sessions':  28000,
-  'Block of 6 Sessions':  42000,
-};
-
-// Complex pricing (in pence). A booking is "complex" when the client selected one
-// or more clinically complex areas of concern. The server recomputes complexity
-// from the concern categories itself — it never trusts the client's price directly.
-const COMPLEX_PRICES = {
-  'Initial Assessment':   13000,
-  'Standard Session':     9000,
-  'Extended Session':     9000,   // 60-min extended already includes the extra time — no complex surcharge
-  'Starter Programme':    35500,
-  'Full Programme':       52500,
-  'Block of 4 Sessions':  34000,
-  'Block of 6 Sessions':  51000,
-};
-
-const COMPLEX_CATS = ['Neurological / Stroke','Respiratory Issue','Post-Surgical / Post-Op Recovery','Falls Prevention & Management'];
-
-function isComplexBooking(concernAreas) {
-  if (!concernAreas) return false;
-  return COMPLEX_CATS.some(cat => concernAreas.includes(cat));
-}
-
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -73,19 +44,12 @@ export default async function handler(req, res) {
     // Work out the price the SERVER will actually charge (never trust the client's
     // number). We compute it up-front so the booking record and the confirmation
     // email always match exactly what Stripe takes — important for HMRC records.
-    const complex = isComplexBooking(bd.concernAreas);
-    let priceInPence;
-    if (complex && COMPLEX_PRICES[bd.appointment]) {
-      priceInPence = COMPLEX_PRICES[bd.appointment];
-    } else if (PRICES[bd.appointment]) {
-      priceInPence = PRICES[bd.appointment];
-    } else {
-      priceInPence = Math.round((bd.price || 0) * 100);
-    }
-    const chargedPrice = priceInPence / 100;
-    const serverComplexityFee = (complex && COMPLEX_PRICES[bd.appointment] && PRICES[bd.appointment])
-      ? (COMPLEX_PRICES[bd.appointment] - PRICES[bd.appointment]) / 100
-      : 0;
+    let quote;
+    try { quote=checkoutQuote(bd); }
+    catch(error){return res.status(400).json({error:error.message});}
+    const {priceInPence,travel}=quote;
+    const chargedPrice=priceInPence/100;
+    const serverComplexityFee=quote.complexityFee;
 
     // 1. Check slot isn't already taken
     if (bd.bookedDate && bd.bookedTime) {
@@ -170,7 +134,6 @@ export default async function handler(req, res) {
     // 4. Create Stripe Checkout Session with booking ID in metadata.
     // priceInPence was computed up-front (server-authoritative) and stored on the record.
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
       line_items: [{
         price_data: {
           currency: 'gbp',
@@ -180,10 +143,10 @@ export default async function handler(req, res) {
               ? `${new Date(bd.bookedDate + 'T12:00:00').toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })} at ${bd.bookedTime || bd.preferredTime}`
               : bd.preferredTime || 'Home visit appointment',
           },
-          unit_amount: priceInPence,
+          unit_amount: quote.treatment,
         },
         quantity: 1,
-      }],
+      }, ...(travel.total ? [{price_data:{currency:'gbp',product_data:{name:'Travel fee',description:'Travel per home visit · '+bd.postcode.toUpperCase()},unit_amount:travel.fee*100},quantity:travel.visits}] : [])],
       mode: 'payment',
       expires_at: checkoutExpiresAt,
       customer_email: bd.email || undefined,
@@ -193,6 +156,9 @@ export default async function handler(req, res) {
       // 6. Booking data in metadata - this is what the webhook reads
       metadata: {
         booking_id: booking.id,
+        travel_fee_per_visit: String(travel.fee),
+        travel_visits: String(travel.visits),
+        travel_total: String(travel.total),
         patient_name: bd.name,
         appointment: bd.appointment,
         booked_date: bd.bookedDate || '',
