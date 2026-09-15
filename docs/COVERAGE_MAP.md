@@ -51,3 +51,6 @@ Added a local postcode/district checker and an SVG pin at the district label poi
 Shared coverage policy now limits checkout to the 81 displayed districts. Outside-map entries require contact. Checkout validates a full postcode and known appointment type, ignores submitted prices/fees, and computes travel server-side. Package travel is charged for all four or six visits and appears as a separate Stripe line item; the total is saved in booking price and the travel breakdown in Stripe metadata. These changes are implemented locally, not deployed. Enquiry-generated payment links are a separate flow and are unchanged.
 
 Validation: 29 automated tests pass, including four coverage/pricing tests. Browser preview checked new and returning patient routes, W4 £75+£15=£90 through simulated checkout, CR0 six-visit programme £435+£210=£645, switching to SW15 removes the fee, and outside-map entry disables the map booking action. No live payment was made.
+
+## 16 September 2026 — simplified map controls
+Removed the postcode-district dropdown and its JavaScript/CSS dependencies. Visitors use the postcode checker or clickable map. Updated instructions and map-loading fallback. Verified JavaScript syntax, no dropdown after browser refresh, and KT1 lookup returning £15 with a map pin.

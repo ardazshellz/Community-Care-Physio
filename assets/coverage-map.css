@@ -19,12 +19,11 @@
 .coverage-legend span{display:flex;align-items:center;gap:11px}
 .coverage-swatch{width:18px;height:18px;border-radius:5px;display:inline-block;flex-shrink:0;background:#c0d9b8}
 .coverage-swatch.nearby{background:#d9dfd6}.coverage-swatch.extended{background:#c4ccc7}
-.coverage-select-label{display:block;font-size:13px;margin:24px 0 8px;color:#e3ebe6}
-#coverage-select{width:100%;padding:13px;border-radius:10px;background:#f4f6ef;color:#1e4d3b;border:1px solid #bfd2c2;font:inherit}
+.coverage-input-label{display:block;font-size:13px;margin:24px 0 8px;color:#e3ebe6}
 .coverage-readout{padding:18px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.2);border-radius:12px;margin-top:16px;height:150px;box-sizing:border-box}
 .coverage-readout strong{display:block;font-size:18px;color:#d1e6c9;margin-bottom:6px}.coverage-readout p{font-size:14px;margin:0;line-height:1.55}
 .coverage-book{background:#c4dfb9;color:#183d2e;border:0;border-radius:10px;padding:14px 18px;width:100%;margin-top:14px;font:500 15px 'Outfit',sans-serif;cursor:pointer}
-.coverage-book:hover{background:#d9eccf}.coverage-book:focus-visible,#coverage-select:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.coverage-book:hover{background:#d9eccf}.coverage-book:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .coverage-other{display:block;text-align:center;font-size:13px;color:#d8e4dc;margin-top:18px;text-decoration:underline}
 .coverage-booking-note{padding:12px 15px;margin:12px 0;background:#edf4e9;color:#284c37;border-radius:10px;font-size:13px;line-height:1.5}
 @media(max-width:750px){.coverage-layout{grid-template-columns:1fr;gap:24px}.coverage-copy h3{font-size:26px}.coverage-map-wrap svg{max-height:none}.coverage-district text{font-size:21px}.coverage-district.small text{display:none}.coverage-district text.coverage-place{font-size:15px}}
