@@ -100,7 +100,7 @@ h1 em{color:var(--forest);font-style:italic}
 .hero-email summary svg{width:15px;height:15px;flex-shrink:0}
 .hero-email summary::after{content:'▾';color:var(--forest);font-size:10px;transition:transform .2s}
 .hero-email[open] summary::after{transform:rotate(180deg)}
-.hero-email-menu{position:absolute;top:calc(100% + 8px);left:0;z-index:20;display:flex;gap:6px;padding:7px;background:#fff;border:1px solid rgba(30,77,59,.14);border-radius:12px;box-shadow:0 12px 30px rgba(30,77,59,.15);white-space:nowrap;isolation:isolate}
+.hero-email-menu{position:absolute;top:calc(100% + 8px);left:50%;z-index:20;display:flex;gap:6px;padding:7px;background:#fff;border:1px solid rgba(30,77,59,.14);border-radius:12px;box-shadow:0 12px 30px rgba(30,77,59,.15);white-space:nowrap;transform:translateX(-50%);isolation:isolate}
 .hero-email-menu a{display:inline-flex;align-items:center;color:var(--forest);background:var(--fp);padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;transition:background .2s,color .2s}
 .hero-email-menu a:hover,.hero-email-menu a:focus-visible{background:var(--forest);color:#fff;outline:none}
 .trust-row{position:relative;z-index:1;margin-top:36px;padding-top:24px;border-top:1px solid rgba(30,77,59,.1);display:flex;gap:20px;flex-wrap:wrap;animation:fadeUp .7s .4s ease both}
@@ -785,7 +785,7 @@ body.admin-active .chat-win{display:none!important}
   .hero-email{width:100%}
   .hero-email summary{width:100%;min-height:39px;padding:10px 7px;font-size:12px}
   .hero-email summary svg{width:13px;height:13px}
-  .hero-email-menu{left:auto;right:0;margin-top:0;padding:7px;gap:5px}
+  .hero-email-menu{left:50%;right:auto;margin-top:0;padding:7px;gap:5px;transform:translateX(-50%)}
   .hero-email-menu a{padding:9px 10px;font-size:12px}
   .trust-row{margin-top:24px;padding-top:18px;gap:12px}
   .tp{font-size:11px}
