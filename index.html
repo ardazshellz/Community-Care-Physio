@@ -297,6 +297,21 @@ select.mini:focus{border-color:var(--forest)}
 .pc.feat .pbtn:hover{background:rgba(255,255,255,.25)}
 .pc.pkg .pbtn{background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.2)}
 .pc.pkg .pbtn:hover{background:rgba(255,255,255,.2)}
+/* Desktop pricing emphasis; preserve mobile typography and compact card layout. */
+@media(min-width:951px){
+  #pricing .pc{padding:16px 22px}
+  #pricing .pc.pkg{padding:12px 20px}
+  #pricing .ptag{font-size:11px;line-height:1.3;font-weight:600;letter-spacing:.06em}
+  #pricing .pname{font-size:21px}
+  #pricing .pdur{font-size:12px;line-height:1.4;margin-bottom:7px}
+  #pricing .pamt{font-size:36px}
+  #pricing .pc.pkg .pamt{font-size:32px}
+  #pricing .pcomplex{font-size:12px}
+  #pricing .psave{font-size:11px}
+  #pricing .pc.feat .ptag,#pricing .pc.pkg .ptag,
+  #pricing .pc.feat .pdur,#pricing .pc.pkg .pdur{color:rgba(255,255,255,.8)}
+  #pricing .pc.feat .pcomplex,#pricing .pc.pkg .pcomplex{color:rgba(255,255,255,.8)!important}
+}
 .pay-note{display:flex;align-items:center;gap:10px;margin-top:20px;padding:14px 18px;background:var(--fp);border-radius:12px;border:1px solid rgba(30,77,59,.12)}
 .pay-note-icon{font-size:18px;flex-shrink:0}
 .pay-note-text{font-size:12px;color:var(--forest);line-height:1.5}
