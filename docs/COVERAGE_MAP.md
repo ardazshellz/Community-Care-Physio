@@ -58,3 +58,5 @@ Removed the postcode-district dropdown and its JavaScript/CSS dependencies. Visi
 Postcode checker moved directly below the section introduction, before the map; colour legend moved to the bottom of the side panel. Yellow and grey labels explicitly say Extra £15/£35 per visit. Local browser verified layout and KT1 £15 result with map pin.
 
 Responsive refinement: search is a grid item beside the map above the detail panel on desktop (>950px); on narrower screens DOM order places search above map, then details/fee legend. Fee wording retained. Diff checks passed; browser verification was blocked by automatic approval review model capacity.
+
+Final desktop arrangement: right-hand heading aligns with map top, then compact search, selected-area box/booking and fee legend. Mobile: heading/search above map. Browser geometry verified at 1440px and 390px; viewport restored.

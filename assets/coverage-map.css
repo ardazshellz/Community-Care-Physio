@@ -55,11 +55,15 @@
 
 .coverage-check-intro{max-width:640px;margin:0 0 32px}.coverage-check-intro .coverage-input-label{margin-top:0}.coverage-check-intro #coverage-check-status{color:#d3e0d8;font-size:14px;line-height:1.6;margin:10px 0 0}
 
-/* Search beside the map on desktop; first in the flow on smaller screens. */
+/* Heading and search beside the map on desktop, above it on mobile. */
 @media(min-width:951px){
-  .coverage-layout{grid-template-areas:"map search" "map details";grid-template-rows:auto 1fr;row-gap:20px}
+  .coverage-layout{grid-template-areas:"map intro" "map search" "map details";grid-template-rows:auto auto 1fr;row-gap:16px}
   .coverage-map-wrap{grid-area:map}
   .coverage-check-intro{grid-area:search;margin:0;max-width:none}
   .coverage-copy{grid-area:details}
+  .coverage-intro{grid-area:intro}
+  .coverage-intro h3{margin-bottom:0}
 }
 @media(max-width:950px){.coverage-check-intro{max-width:720px;margin:0}}
+
+.coverage-check-row button{white-space:nowrap}.coverage-check-intro #coverage-check-status{min-height:44px}
