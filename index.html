@@ -93,6 +93,15 @@ h1 em{color:var(--forest);font-style:italic}
 .btn-wah{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#e7f9ef;color:var(--wad);padding:12px 18px;border-radius:40px;font-size:13px;font-weight:500;text-decoration:none;border:1px solid rgba(37,211,102,.25);transition:all .2s;white-space:nowrap}
 .btn-wah:hover{background:var(--wa);color:#fff}
 .btn-wah svg{width:15px;height:15px;flex-shrink:0}
+.hero-email{position:relative;width:max-content;margin-top:14px;animation:fadeUp .7s .35s ease both}
+.hero-email summary{list-style:none;display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:12px;cursor:pointer;user-select:none}
+.hero-email summary::-webkit-details-marker{display:none}
+.hero-email summary span{color:var(--forest);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.hero-email summary::after{content:'▾';color:var(--forest);font-size:10px;transition:transform .2s}
+.hero-email[open] summary::after{transform:rotate(180deg)}
+.hero-email-menu{position:absolute;top:calc(100% + 8px);left:0;z-index:20;display:flex;gap:6px;padding:7px;background:#fff;border:1px solid rgba(30,77,59,.14);border-radius:12px;box-shadow:0 12px 30px rgba(30,77,59,.15);white-space:nowrap}
+.hero-email-menu a{display:inline-flex;align-items:center;color:var(--forest);background:var(--fp);padding:7px 10px;border-radius:8px;font-size:11px;font-weight:500;text-decoration:none;transition:background .2s,color .2s}
+.hero-email-menu a:hover,.hero-email-menu a:focus-visible{background:var(--forest);color:#fff;outline:none}
 .trust-row{margin-top:36px;padding-top:24px;border-top:1px solid rgba(30,77,59,.1);display:flex;gap:20px;flex-wrap:wrap;animation:fadeUp .7s .4s ease both}
 .tp{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
 .tp::before{content:'✓';color:var(--forest);font-weight:600;font-size:11px}
@@ -774,6 +783,10 @@ body.admin-active .chat-win{display:none!important}
   .hero-acts .btn-wah{flex:1.05 1 0;min-width:0;padding:10px 7px;font-size:11px;gap:5px}
   .hero-acts .btn-p svg,.hero-acts .btn-call-hero svg,.hero-acts .btn-wah svg{width:13px;height:13px}
   .hero-book-long,.hero-wa-long{display:none}
+  .hero-email{margin-top:10px}
+  .hero-email summary{font-size:11px}
+  .hero-email-menu{position:static;margin-top:7px;padding:6px;gap:5px}
+  .hero-email-menu a{padding:6px 8px;font-size:10px}
   .trust-row{margin-top:24px;padding-top:18px;gap:12px}
   .tp{font-size:11px}
 
@@ -915,6 +928,14 @@ body.admin-active .chat-win{display:none!important}
         <span>WhatsApp us</span>
       </a>
     </div>
+    <details class="hero-email">
+      <summary>Prefer email? <span>Email us</span></summary>
+      <div class="hero-email-menu" role="group" aria-label="Choose an email service">
+        <a href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20enquiry">Email app</a>
+        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=infoccphysio%40gmail.com&amp;su=Physiotherapy%20enquiry" target="_blank" rel="noopener">Gmail</a>
+        <a href="https://outlook.office.com/mail/deeplink/compose?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20enquiry" target="_blank" rel="noopener">Outlook</a>
+      </div>
+    </details>
     <div class="trust-row">
       <span class="tp">NHS-trained clinicians</span>
       <span class="tp">HCPC registered</span>
