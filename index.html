@@ -855,6 +855,14 @@ body.admin-active .chat-win{display:none!important}
 .contact-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;max-width:1000px;margin:0 auto 34px}
 .contact-card{display:flex;flex-direction:column;gap:3px;background:#fff;border:1px solid rgba(30,77,59,.1);border-radius:14px;padding:20px 18px;text-decoration:none;cursor:pointer;transition:transform .2s,box-shadow .2s;text-align:left}
 .contact-card:hover{transform:translateY(-3px);box-shadow:0 10px 26px -8px rgba(30,77,59,.18)}
+.contact-email{position:relative;min-width:0}
+.contact-email summary{list-style:none;height:100%}
+.contact-email summary::-webkit-details-marker{display:none}
+.contact-email summary::after{content:'▾';position:absolute;right:16px;top:20px;color:var(--forest);font-size:11px;transition:transform .2s}
+.contact-email[open] summary::after{transform:rotate(180deg)}
+.contact-email-menu{position:absolute;top:calc(100% + 8px);left:50%;z-index:30;display:flex;gap:6px;max-width:calc(100vw - 32px);padding:7px;background:#fff;border:1px solid rgba(30,77,59,.14);border-radius:12px;box-shadow:0 12px 30px rgba(30,77,59,.15);white-space:nowrap;transform:translateX(-50%);isolation:isolate}
+.contact-email-menu a{display:inline-flex;align-items:center;justify-content:center;color:var(--forest);background:var(--fp);padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;transition:background .2s,color .2s}
+.contact-email-menu a:hover,.contact-email-menu a:focus-visible{background:var(--forest);color:#fff;outline:none}
 .contact-ico{font-size:22px;margin-bottom:6px}
 .contact-h{font-size:14px;font-weight:600;color:var(--forest)}
 .contact-v{font-size:14px;color:var(--char);font-weight:500;word-break:break-word}
@@ -866,7 +874,7 @@ body.admin-active .chat-win{display:none!important}
 .contact-btn{background:var(--forest);color:#fff;padding:12px 22px;border-radius:40px;font-size:13.5px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-family:'Outfit',sans-serif;text-decoration:none}
 .contact-btn-alt{background:#fff;color:var(--forest);border:1px solid rgba(30,77,59,.3);padding:12px 22px;border-radius:40px;font-size:13.5px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-family:'Outfit',sans-serif;text-decoration:none}
 @media(max-width:860px){ .contact-grid{grid-template-columns:repeat(2,1fr)} }
-@media(max-width:480px){ .contact-card{padding:16px 13px} .contact-v{font-size:13px} .contact-actions .contact-btn,.contact-actions .contact-btn-alt{flex:1 1 100%;justify-content:center} }
+@media(max-width:480px){ .contact-card{padding:16px 13px} .contact-v{font-size:13px} .contact-email-menu{display:grid;grid-template-columns:repeat(2,1fr);width:max-content;white-space:normal} .contact-actions .contact-btn,.contact-actions .contact-btn-alt{flex:1 1 100%;justify-content:center} }
 </style>
 <link rel="stylesheet" href="/assets/enquiries.css">
 <link rel="stylesheet" href="/assets/coverage-map.css">
@@ -936,6 +944,7 @@ body.admin-active .chat-win{display:none!important}
           <a href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20enquiry">Email app</a>
           <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=infoccphysio%40gmail.com&amp;su=Physiotherapy%20enquiry" target="_blank" rel="noopener">Gmail</a>
           <a href="https://outlook.office.com/mail/deeplink/compose?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20enquiry" target="_blank" rel="noopener">Outlook</a>
+          <a href="https://compose.mail.yahoo.com/?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20enquiry" target="_blank" rel="noopener">Yahoo</a>
         </div>
       </details>
     </div>
@@ -1277,12 +1286,20 @@ body.admin-active .chat-win{display:none!important}
       <div class="contact-v">07508 401627</div>
       <div class="contact-s">Message us any time</div>
     </a>
-    <a href="mailto:infoccphysio@gmail.com" class="contact-card">
-      <div class="contact-ico">✉️</div>
-      <div class="contact-h">Email us</div>
-      <div class="contact-v">infoccphysio@gmail.com</div>
-      <div class="contact-s">We reply promptly</div>
-    </a>
+    <details class="contact-email">
+      <summary class="contact-card">
+        <div class="contact-ico">✉️</div>
+        <div class="contact-h">Email us</div>
+        <div class="contact-v">infoccphysio@gmail.com</div>
+        <div class="contact-s">Choose your email app</div>
+      </summary>
+      <div class="contact-email-menu" role="group" aria-label="Choose an email service">
+        <a href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20enquiry">Email app</a>
+        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=infoccphysio%40gmail.com&amp;su=Physiotherapy%20enquiry" target="_blank" rel="noopener">Gmail</a>
+        <a href="https://outlook.office.com/mail/deeplink/compose?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20enquiry" target="_blank" rel="noopener">Outlook</a>
+        <a href="https://compose.mail.yahoo.com/?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20enquiry" target="_blank" rel="noopener">Yahoo</a>
+      </div>
+    </details>
     <div class="contact-card" onclick="openM()">
       <div class="contact-ico">📅</div>
       <div class="contact-h">Book online</div>
