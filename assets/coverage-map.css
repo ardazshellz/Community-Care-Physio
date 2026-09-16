@@ -52,3 +52,5 @@
 
 #heroTravelContact[hidden],#coverage-travel-contact[hidden]{display:none}
 #heroTravelContact:not([hidden]),#coverage-travel-contact:not([hidden]){display:block;padding:12px;border-radius:9px;background:#d5ebce;color:#183d2e;text-align:center;margin:8px 0 12px}
+
+.coverage-check-intro{max-width:640px;margin:0 0 32px}.coverage-check-intro .coverage-input-label{margin-top:0}.coverage-check-intro #coverage-check-status{color:#d3e0d8;font-size:14px;line-height:1.6;margin:10px 0 0}
