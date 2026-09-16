@@ -93,16 +93,18 @@ h1 em{color:var(--forest);font-style:italic}
 .btn-wah{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#e7f9ef;color:var(--wad);padding:12px 18px;border-radius:40px;font-size:13px;font-weight:500;text-decoration:none;border:1px solid rgba(37,211,102,.25);transition:all .2s;white-space:nowrap}
 .btn-wah:hover{background:var(--wa);color:#fff}
 .btn-wah svg{width:15px;height:15px;flex-shrink:0}
-.hero-email{position:relative;width:max-content;margin-top:14px;animation:fadeUp .7s .35s ease both}
-.hero-email summary{list-style:none;display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:12px;cursor:pointer;user-select:none}
+.hero-email{position:relative;width:max-content;animation:fadeUp .7s .35s ease both}
+.hero-email summary{list-style:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#fff;color:var(--forest);padding:12px 16px;border:1px solid rgba(30,77,59,.24);border-radius:40px;font-size:13px;font-weight:500;cursor:pointer;user-select:none;white-space:nowrap;transition:all .2s}
 .hero-email summary::-webkit-details-marker{display:none}
-.hero-email summary span{color:var(--forest);font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.hero-email summary:hover{background:var(--fp);border-color:var(--forest);transform:translateY(-2px)}
+.hero-email summary svg{width:15px;height:15px;flex-shrink:0}
 .hero-email summary::after{content:'▾';color:var(--forest);font-size:10px;transition:transform .2s}
 .hero-email[open] summary::after{transform:rotate(180deg)}
 .hero-email-menu{position:absolute;top:calc(100% + 8px);left:0;z-index:20;display:flex;gap:6px;padding:7px;background:#fff;border:1px solid rgba(30,77,59,.14);border-radius:12px;box-shadow:0 12px 30px rgba(30,77,59,.15);white-space:nowrap}
-.hero-email-menu a{display:inline-flex;align-items:center;color:var(--forest);background:var(--fp);padding:7px 10px;border-radius:8px;font-size:11px;font-weight:500;text-decoration:none;transition:background .2s,color .2s}
+.hero-email-menu a{display:inline-flex;align-items:center;color:var(--forest);background:var(--fp);padding:9px 12px;border-radius:8px;font-size:13px;font-weight:500;text-decoration:none;transition:background .2s,color .2s}
 .hero-email-menu a:hover,.hero-email-menu a:focus-visible{background:var(--forest);color:#fff;outline:none}
 .trust-row{margin-top:36px;padding-top:24px;border-top:1px solid rgba(30,77,59,.1);display:flex;gap:20px;flex-wrap:wrap;animation:fadeUp .7s .4s ease both}
+.hero-l:has(.hero-email[open]) .trust-row{margin-top:78px}
 .tp{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
 .tp::before{content:'✓';color:var(--forest);font-weight:600;font-size:11px}
 
@@ -777,17 +779,17 @@ body.admin-active .chat-win{display:none!important}
   .eyebrow{font-size:10px;padding:6px 12px;margin-bottom:18px}
   /* Keep all three hero actions on one balanced row while leaving the
      right side of the photograph visible. */
-  .hero-acts{width:calc(100% - 34px);max-width:325px;gap:7px;flex-wrap:nowrap;align-items:stretch}
-  .hero-acts .btn-p{flex:1.08 1 0;min-width:0;padding:11px 8px;font-size:11px;justify-content:center;white-space:nowrap}
-  .hero-acts .btn-call-hero{flex:.82 1 0;min-width:0;padding:10px 7px;font-size:11px;gap:5px}
-  .hero-acts .btn-wah{flex:1.05 1 0;min-width:0;padding:10px 7px;font-size:11px;gap:5px}
+  .hero-acts{width:calc(100% - 34px);max-width:325px;display:grid;grid-template-columns:1fr 1fr;gap:7px;align-items:stretch}
+  .hero-acts .btn-p,.hero-acts .btn-call-hero,.hero-acts .btn-wah{min-width:0;padding:11px 8px;font-size:12px;justify-content:center;white-space:nowrap}
   .hero-acts .btn-p svg,.hero-acts .btn-call-hero svg,.hero-acts .btn-wah svg{width:13px;height:13px}
   .hero-book-long,.hero-wa-long{display:none}
-  .hero-email{margin-top:10px}
-  .hero-email summary{font-size:11px}
-  .hero-email-menu{position:static;margin-top:7px;padding:6px;gap:5px}
-  .hero-email-menu a{padding:6px 8px;font-size:10px}
+  .hero-email{width:100%}
+  .hero-email summary{width:100%;min-height:39px;padding:10px 7px;font-size:12px}
+  .hero-email summary svg{width:13px;height:13px}
+  .hero-email-menu{left:auto;right:0;margin-top:0;padding:7px;gap:5px}
+  .hero-email-menu a{padding:9px 10px;font-size:12px}
   .trust-row{margin-top:24px;padding-top:18px;gap:12px}
+  .hero-l:has(.hero-email[open]) .trust-row{margin-top:72px}
   .tp{font-size:11px}
 
   .strip{padding:11px 0;overflow:hidden}
@@ -927,15 +929,18 @@ body.admin-active .chat-win{display:none!important}
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
         <span>WhatsApp us</span>
       </a>
+      <details class="hero-email">
+        <summary>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+          <span>Email us</span>
+        </summary>
+        <div class="hero-email-menu" role="group" aria-label="Choose an email service">
+          <a href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20enquiry">Email app</a>
+          <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=infoccphysio%40gmail.com&amp;su=Physiotherapy%20enquiry" target="_blank" rel="noopener">Gmail</a>
+          <a href="https://outlook.office.com/mail/deeplink/compose?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20enquiry" target="_blank" rel="noopener">Outlook</a>
+        </div>
+      </details>
     </div>
-    <details class="hero-email">
-      <summary>Prefer email? <span>Email us</span></summary>
-      <div class="hero-email-menu" role="group" aria-label="Choose an email service">
-        <a href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20enquiry">Email app</a>
-        <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=infoccphysio%40gmail.com&amp;su=Physiotherapy%20enquiry" target="_blank" rel="noopener">Gmail</a>
-        <a href="https://outlook.office.com/mail/deeplink/compose?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20enquiry" target="_blank" rel="noopener">Outlook</a>
-      </div>
-    </details>
     <div class="trust-row">
       <span class="tp">NHS-trained clinicians</span>
       <span class="tp">HCPC registered</span>
