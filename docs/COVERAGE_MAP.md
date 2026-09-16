@@ -56,3 +56,5 @@ Validation: 29 automated tests pass, including four coverage/pricing tests. Brow
 Removed the postcode-district dropdown and its JavaScript/CSS dependencies. Visitors use the postcode checker or clickable map. Updated instructions and map-loading fallback. Verified JavaScript syntax, no dropdown after browser refresh, and KT1 lookup returning £15 with a map pin.
 
 Postcode checker moved directly below the section introduction, before the map; colour legend moved to the bottom of the side panel. Yellow and grey labels explicitly say Extra £15/£35 per visit. Local browser verified layout and KT1 £15 result with map pin.
+
+Responsive refinement: search is a grid item beside the map above the detail panel on desktop (>950px); on narrower screens DOM order places search above map, then details/fee legend. Fee wording retained. Diff checks passed; browser verification was blocked by automatic approval review model capacity.
