@@ -20,6 +20,10 @@ test('package travel charges apply to every visit alongside complexity',()=>{
  assert.equal(q.priceInPence,73500);assert.equal(q.complexityFee,90);
  assert.equal(travelQuote('SW15 1AA','Starter Programme').total,0);
 });
+test('complex extended sessions add the £15 surcharge',()=>{
+ const q=checkoutQuote({appointment:'Extended Session',postcode:'SW15 1AA',concernAreas:'Neurological / Stroke'});
+ assert.equal(q.treatment,10500);assert.equal(q.priceInPence,10500);assert.equal(q.complexityFee,15);
+});
 test('unknown services, incomplete postcodes and outside-map locations cannot create checkout',()=>{
  for(const bd of [{appointment:'fake',postcode:'W4 1AA'},{appointment:'Initial Assessment',postcode:'W4'},{appointment:'Initial Assessment',postcode:'M1 1AA'}])assert.throws(()=>checkoutQuote(bd));
 });

@@ -1213,7 +1213,7 @@ body.admin-active .chat-win{display:none!important}
       <div class="pname">Extended Session</div>
       <div class="pdur">60 mins · at your home</div>
       <div class="pamt">£90</div>
-      <div class="pcomplex">Additional time already included</div>
+      <div class="pcomplex">+£15 for complex needs</div>
       <ul class="pfl"><li>Longer 60-minute appointment</li><li>Suited to complex clinical, mobility or rehab needs</li><li>More time for hands-on treatment</li><li>Comprehensive progress reassessment</li></ul>
       <button class="pbtn" onclick="openM()">Book session</button>
     </div>
@@ -1843,7 +1843,7 @@ const COMPLEX_CATS=['Neurological / Stroke','Respiratory Issue','Post-Surgical /
 const COMPLEX_PRICES={
   'Initial Assessment':130,
   'Standard Session':90,
-  'Extended Session':90,
+  'Extended Session':105,
   'Starter Programme':355,
   'Full Programme':525,
   'Block of 4 Sessions':340,
@@ -2789,7 +2789,7 @@ document.getElementById('legalModal').addEventListener('click',function(e){
                   <input type="checkbox" id="cbOutOfArea" onchange="cbRecalc()" style="width:16px;height:16px;cursor:pointer"> Out of area (+£15/session)
                 </label>
               </div>
-              <div id="cbExtNote" style="display:none;background:var(--fp);border-left:3px solid var(--forest);border-radius:8px;padding:9px 12px;margin:-6px 0 16px;font-size:11.5px;color:var(--muted);line-height:1.6">Additional time is already included in the extended-session price, so the complex-patient surcharge is not applied to 60-minute sessions.</div>
+              <div id="cbExtNote" style="display:none;background:var(--fp);border-left:3px solid var(--forest);border-radius:8px;padding:9px 12px;margin:-6px 0 16px;font-size:11.5px;color:var(--muted);line-height:1.6">Complex needs add £15 to each 60-minute extended session.</div>
 
               <div style="background:var(--fp);border-radius:10px;padding:14px;margin-bottom:16px">
                 <div id="cbSubtotalRow" style="display:none;justify-content:space-between;align-items:center;margin-bottom:5px">
@@ -3002,7 +3002,7 @@ document.getElementById('legalModal').addEventListener('click',function(e){
               <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
                 <div class="settings-row"><span class="settings-key">Initial Assessment</span><span class="settings-value">£100 · +£30 complex needs</span></div>
                 <div class="settings-row"><span class="settings-key">Standard Session</span><span class="settings-value">£75 · +£15 complex needs</span></div>
-                <div class="settings-row"><span class="settings-key">Extended Session</span><span class="settings-value">£90 · additional time included</span></div>
+                <div class="settings-row"><span class="settings-key">Extended Session</span><span class="settings-value">£90 · +£15 complex needs</span></div>
                 <div class="settings-row"><span class="settings-key">Starter Programme</span><span class="settings-value">£295 · +£60 complex needs</span></div>
                 <div class="settings-row"><span class="settings-key">Full Programme</span><span class="settings-value">£435 · +£90 complex needs</span></div>
               </div>
@@ -5486,7 +5486,7 @@ function bmShow(key){
 // Per-session base prices (pounds). Standard = 45 min, Extended = 60 min.
 const CB_PRICES = {
   standard: { normal: 75,  complex: 90  },   // 45 min — complex adds £15
-  extended: { normal: 90,  complex: 90  }    // 60 min — extra time already included, no complex surcharge
+  extended: { normal: 90,  complex: 105 }    // 60 min — complex adds £15
 };
 const CB_OUT_OF_AREA = 15; // per session
 let cbSessions = [];       // {date, time, length}
@@ -5681,7 +5681,7 @@ function cbRecalc(){
   const discount = cbBlockDiscount();
   const suggested = cbCalcSuggested();
   document.getElementById('cbSuggested').textContent = '£'+suggested;
-  // Show the extended-session note when complex is on and a 60-min session exists.
+  // Show the extended-session surcharge note when complex is on and a 60-min session exists.
   const extNote=document.getElementById('cbExtNote');
   if(extNote){
     const hasExt=cbSessions.some(s=>s.length==='60');
