@@ -56,6 +56,15 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nav-call svg,.nav-wa svg{width:14px;height:14px;flex-shrink:0}
 .nav-cta{background:var(--forest);color:#fff;padding:10px 20px;border-radius:40px;font-size:13px;font-weight:500;border:none;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s}
 .nav-cta:hover{background:var(--fl);transform:translateY(-1px)}
+/* When the header runs out of room, links move to their own scrollable row instead of clipping the Book button */
+@media(min-width:661px){.logo-text{white-space:nowrap}}
+@media(min-width:661px) and (max-width:1320px){
+  nav{flex-wrap:wrap;row-gap:2px;padding:10px 24px}
+  .nav-r{margin-left:auto}
+  .nav-links{order:3;width:100%;overflow-x:auto;gap:22px;padding:2px 0 4px;scrollbar-width:none}
+  .nav-links::-webkit-scrollbar{display:none}
+  .nav-links a{display:block;white-space:nowrap;padding:8px 0}
+}
 
 /* ── HERO ── */
 .hero{min-height:92vh;display:grid;grid-template-columns:1.1fr 0.9fr;align-items:center;padding:60px 40px;gap:60px;position:relative;overflow:hidden;background:var(--warm)}
@@ -283,11 +292,11 @@ select.mini:focus{border-color:var(--forest)}
 .pp.gold{background:var(--gold);color:var(--char)}
 .pp.sage{background:var(--sage);color:#fff}
 .ptag{font-size:9px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--sage);margin-bottom:5px}
-.pc.feat .ptag,.pc.pkg .ptag{color:rgba(255,255,255,.45)}
+.pc.feat .ptag,.pc.pkg .ptag{color:rgba(255,255,255,.75)}
 .pname{font-family:'Playfair Display',serif;font-size:17px;font-weight:400;color:var(--char);margin-bottom:2px;line-height:1.2}
 .pc.feat .pname,.pc.pkg .pname{color:#fff}
 .pdur{font-size:10px;color:var(--muted);margin-bottom:9px}
-.pc.feat .pdur,.pc.pkg .pdur{color:rgba(255,255,255,.45)}
+.pc.feat .pdur,.pc.pkg .pdur{color:rgba(255,255,255,.75)}
 .pamt{font-size:32px;font-weight:300;color:var(--forest);line-height:1;margin-bottom:4px;display:inline-block;vertical-align:baseline}
 .pc.pkg .pamt{font-size:26px}
 .pc.pkg .pfl{margin-bottom:12px}
@@ -295,10 +304,11 @@ select.mini:focus{border-color:var(--forest)}
 .pc.feat .pamt,.pc.pkg .pamt{color:#fff}
 .psave{font-size:10px;color:var(--gold);font-weight:500;margin-bottom:10px}
 .pcomplex{font-size:11px;color:var(--muted);font-weight:400;display:inline-block;margin-left:8px}
-.pc.feat .psave{color:rgba(255,255,255,.6)}
+.pc.feat .pcomplex,.pc.pkg .pcomplex{color:rgba(255,255,255,.85)!important}
+.pc.feat .psave{color:rgba(255,255,255,.82)}
 .pfl{list-style:none;display:flex;flex-direction:column;gap:6px;margin-bottom:16px}
 .pfl li{font-size:11px;color:var(--muted);display:flex;gap:6px;align-items:flex-start;line-height:1.4}
-.pc.feat .pfl li,.pc.pkg .pfl li{color:rgba(255,255,255,.75)}
+.pc.feat .pfl li,.pc.pkg .pfl li{color:rgba(255,255,255,.88)}
 .pfl li::before{content:'✓';color:var(--sage);font-size:10px;flex-shrink:0;margin-top:1px}
 .pc.feat .pfl li::before,.pc.pkg .pfl li::before{color:var(--gold)}
 .pbtn{width:100%;padding:10px;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;transition:all .2s;border:1px solid rgba(30,77,59,.2);background:transparent;color:var(--forest)}
@@ -384,6 +394,11 @@ footer{padding:40px;background:var(--char);border-top:1px solid rgba(255,255,255
 .chat-bub{position:fixed;bottom:24px;right:24px;z-index:999;width:52px;height:52px;border-radius:50%;background:var(--forest);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(30,77,59,.4);transition:transform .2s}
 .chat-bub:hover{transform:scale(1.08)}
 .chat-bub svg{width:21px;height:21px;color:#fff}
+@media(max-width:660px){
+  .float-wa{display:none}
+  .chat-bub{width:46px;height:46px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+  .chat-win{right:12px;bottom:calc(70px + env(safe-area-inset-bottom,0px));width:min(316px,calc(100vw - 24px))}
+}
 
 /* ── CHATBOT ── */
 .chat-win{position:fixed;bottom:88px;right:24px;z-index:997;width:316px;background:#fff;border-radius:18px;border:1px solid rgba(30,77,59,.1);box-shadow:0 20px 60px rgba(0,0,0,.1);overflow:hidden;display:none;animation:slideUp .22s ease}
@@ -1230,7 +1245,7 @@ body.admin-active .chat-win{display:none!important}
       <div class="pname">Starter Programme</div>
       <div class="pdur">Initial + 3 follow-ups · 4 sessions</div>
       <div class="pamt">£295</div>
-      <div class="pcomplex" style="color:rgba(255,255,255,.6)">+£60 for complex needs</div>
+      <div class="pcomplex">+£60 for complex needs</div>
       <div class="psave">Save £30 vs individually</div>
       <ul class="pfl"><li>Initial assessment included</li><li>3 × 45 min follow-up sessions</li><li>Structured rehab programme</li><li>Priority scheduling</li></ul>
       <button class="pbtn" onclick="openM()">Book programme</button>
@@ -1241,7 +1256,7 @@ body.admin-active .chat-win{display:none!important}
       <div class="pname">Full Programme</div>
       <div class="pdur">Initial + 5 follow-ups · 6 sessions</div>
       <div class="pamt">£435</div>
-      <div class="pcomplex" style="color:rgba(255,255,255,.6)">+£90 for complex needs</div>
+      <div class="pcomplex">+£90 for complex needs</div>
       <div class="psave">Save £40 vs individually</div>
       <ul class="pfl"><li>Initial assessment included</li><li>5 × 45 min follow-up sessions</li><li>Full structured rehab programme</li><li>Regular progress reviews</li><li>Priority scheduling throughout</li></ul>
       <button class="pbtn" onclick="openM()">Book programme</button>
