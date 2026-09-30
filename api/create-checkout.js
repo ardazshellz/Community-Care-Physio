@@ -40,13 +40,25 @@ export default async function handler(req, res) {
 
   try {
     const bd = req.body;
+    if (!bd || typeof bd !== 'object' || Array.isArray(bd) ||
+      typeof bd.appointment !== 'string' || typeof bd.postcode !== 'string' ||
+      (bd.concernAreas != null && typeof bd.concernAreas !== 'string' &&
+        !(Array.isArray(bd.concernAreas) && bd.concernAreas.every(item => typeof item === 'string')))) {
+      return res.status(400).json({ error: 'Please provide valid booking details.' });
+    }
 
     // Work out the price the SERVER will actually charge (never trust the client's
     // number). We compute it up-front so the booking record and the confirmation
     // email always match exactly what Stripe takes — important for HMRC records.
     let quote;
     try { quote=checkoutQuote(bd); }
-    catch(error){return res.status(400).json({error:error.message});}
+    catch (error) {
+      const safeMessages = [
+        'Please select a valid appointment.', 'Please enter a full UK postcode.',
+        'Please contact us to arrange a visit outside our coverage map.'
+      ];
+      return res.status(400).json({ error: safeMessages.includes(error.message) ? error.message : 'Please provide valid booking details.' });
+    }
     const {priceInPence,travel}=quote;
     const chargedPrice=priceInPence/100;
     const serverComplexityFee=quote.complexityFee;
@@ -150,6 +162,13 @@ export default async function handler(req, res) {
       mode: 'payment',
       expires_at: checkoutExpiresAt,
       customer_email: bd.email || undefined,
+      customer_creation: 'always',
+      payment_intent_data: { setup_future_usage: 'off_session' },
+      custom_text: {
+        submit: {
+          message: 'Your card is saved securely by Stripe. Under our cancellation policy a £50 fee may be charged for cancellations within 24 hours of the appointment or missed appointments.'
+        }
+      },
       // 5. Return URLs - back to your site
       success_url: `https://communitycarephysio.co.uk/?booking=success&id=${booking.id}`,
       cancel_url: `https://communitycarephysio.co.uk/?booking=cancelled`,
@@ -176,7 +195,8 @@ export default async function handler(req, res) {
     });
 
   } catch (err) {
-    console.error('create-checkout error:', err);
-    return res.status(500).json({ error: err.message });
+    const code = typeof err?.code === 'string' && /^[a-z0-9_]{1,40}$/i.test(err.code) ? err.code : 'unknown';
+    console.error('create-checkout', { action: 'create-session', code });
+    return res.status(500).json({ error: 'Unable to create checkout. Please try again.' });
   }
 }

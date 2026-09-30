@@ -1,19 +1,6 @@
-import nodemailer from 'nodemailer';
+import { FROM_EMAIL, SIGNATURE_TEXT, SIGNATURE_HTML, sendMail, wrapHtml, textToHtml } from '../lib/mailer.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
 
-const FROM_EMAIL = 'infoccphysio@gmail.com';
-
-// Formal Community Care Physio sign-off, shared by every email this endpoint sends.
-const SIGNATURE_TEXT = `Kind regards,
-
-Zakery Shelley
-Physiotherapist
-Community Care Physio
-Home Visit Physiotherapy · South West London
-T: 07508 401627
-E: infoccphysio@gmail.com
-W: www.communitycarephysio.co.uk`;
-const SIGNATURE_HTML = 'Kind regards,<br><br><strong style="color:#1e4d3b;font-size:15px">Zakery Shelley</strong><br><strong>Physiotherapist</strong><br>Community Care Physio<br><span style="color:#8aab97">Home Visit Physiotherapy · South West London</span><br><br><strong>T:</strong> 07508 401627<br><strong>E:</strong> <a href="mailto:infoccphysio@gmail.com" style="color:#1e4d3b">infoccphysio@gmail.com</a><br><strong>W:</strong> <a href="https://www.communitycarephysio.co.uk/" style="color:#1e4d3b">www.communitycarephysio.co.uk</a><br><br><img src="https://www.communitycarephysio.co.uk/assets/email-signature.png" width="300" height="100" alt="Community Care Physio" style="display:block;border:0;border-radius:6px">';
 const REVIEW_LINK = 'https://www.communitycarephysio.co.uk/review';
 
 function esc(value) {
@@ -175,16 +162,13 @@ export function customEmail(body) {
   const cut = text.lastIndexOf('Kind regards,');
   if (cut !== -1 && /Zakery/.test(text.slice(cut))) text = text.slice(0, cut).trim();
 
-  const linkify = (html) => html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#1e4d3b">$1</a>');
-  const paragraphs = text.split(/\n{2,}/)
-    .map(p => `<p style="margin:0 0 16px;line-height:1.65">${linkify(esc(p)).replace(/\n/g, '<br>')}</p>`)
-    .join('');
+  const paragraphs = textToHtml(text);
 
   return {
     subject,
     attachments,
     text: `${text}\n\n${SIGNATURE_TEXT}`,
-    html: `<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#ffffff;font-family:Arial,sans-serif;font-size:14px;color:#1a1f1d"><div style="max-width:600px">${paragraphs}<div style="margin-top:24px;color:#586860;font-size:13px;line-height:1.6">${SIGNATURE_HTML}</div></div></body></html>`
+    html: wrapHtml(paragraphs)
   };
 }
 
@@ -205,7 +189,7 @@ export default async function handler(req, res) {
   }
 
   if (!process.env.GMAIL_APP_PASSWORD) {
-    return res.status(500).json({ error: 'Email is not configured on the server. GMAIL_APP_PASSWORD is missing.' });
+    return res.status(500).json({ error: 'Email is not configured on the server.' });
   }
 
   const emailType = ['dna', 'review', 'custom'].includes(body.emailType) ? body.emailType : '';
@@ -217,15 +201,7 @@ export default async function handler(req, res) {
   if (message.error) return res.status(400).json({ error: message.error });
 
   try {
-    const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      auth: { user: FROM_EMAIL, pass: process.env.GMAIL_APP_PASSWORD }
-    });
-
-    await transporter.sendMail({
-      from: `Community Care Physio <${FROM_EMAIL}>`,
+    await sendMail({
       to: recipient,
       replyTo: FROM_EMAIL,
       subject: message.subject,
@@ -236,12 +212,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true });
   } catch (error) {
-    console.error('send-patient-email error:', {
-      emailType,
-      message: error?.message || String(error)
-    });
+    const code = typeof error?.code === 'string' && /^[a-z0-9_]{1,40}$/i.test(error.code) ? error.code : 'unknown';
+    console.error('send-patient-email', { action: emailType, code });
     return res.status(502).json({
-      error: `The ${emailType === 'dna' ? 'DNA notice' : emailType === 'review' ? 'review email' : 'email'} could not be sent: ${error?.message || 'email service error'}`
+      error: `The ${emailType === 'dna' ? 'DNA notice' : emailType === 'review' ? 'review email' : 'email'} could not be sent. Please try again.`
     });
   }
 }

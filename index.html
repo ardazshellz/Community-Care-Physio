@@ -877,6 +877,7 @@ body.admin-active .chat-win{display:none!important}
 @media(max-width:480px){ .contact-card{padding:16px 13px} .contact-v{font-size:13px} .contact-email-menu{display:grid;grid-template-columns:repeat(2,1fr);width:max-content;white-space:normal} .contact-actions .contact-btn,.contact-actions .contact-btn-alt{flex:1 1 100%;justify-content:center} }
 </style>
 <link rel="stylesheet" href="/assets/enquiries.css">
+<link rel="stylesheet" href="/assets/practice.css">
 <link rel="stylesheet" href="/assets/coverage-map.css">
 <script type="module" src="/assets/coverage-map.js"></script>
 </head>
@@ -898,6 +899,7 @@ body.admin-active .chat-win{display:none!important}
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#areas">Areas</a></li>
     <li><a href="#contact">Contact</a></li>
+    <li><a href="#referrals">Referrers</a></li>
     <li><a href="#faq">FAQs</a></li>
     <li><a href="#" onclick="openLegal('privacy');return false">Legal</a></li>
     <li><a href="#" onclick="openAffiliations();return false">Affiliations</a></li>
@@ -1308,6 +1310,8 @@ body.admin-active .chat-win{display:none!important}
     </div>
   </div>
 
+  <p class="rv-link"><a href="https://g.page/r/CTNprE1O874TEBl" target="_blank" rel="noopener">★ Read our reviews on Google</a> · <a href="/review">Leave a review</a></p>
+
   <div class="contact-prebook">
     <div class="contact-prebook-h">Not sure which appointment to book?</div>
     <p>Arrange a <strong>complimentary 10-minute pre-booking telephone call</strong>. This gives you an opportunity to briefly discuss your requirements and helps us identify the most appropriate appointment type before you book. It isn't a physiotherapy consultation or clinical assessment — just a short, friendly chat to point you in the right direction.</p>
@@ -1316,6 +1320,96 @@ body.admin-active .chat-win{display:none!important}
       <a href="https://wa.me/447508401627?text=Hi, I'd like to arrange a quick pre-booking call" target="_blank" class="contact-btn-alt">💬 WhatsApp us</a>
       <button class="contact-btn-alt" onclick="openM()">📅 Book online</button>
     </div>
+  </div>
+</section>
+
+<!-- CASE MANAGERS & REFERRERS -->
+<section class="sec" id="referrals" style="background:var(--W)">
+  <div class="sl">Case managers &amp; referrers</div>
+  <h2 class="st">Refer a client for home physiotherapy</h2>
+  <span class="ss">For rehabilitation case managers, solicitors, insurers, GPs and care teams. Chartered, HCPC-registered physiotherapy in the client's own home, with clear reporting and invoicing to your organisation.</span>
+
+  <div class="rf-wrap">
+    <aside class="rf-side">
+      <h3>What you can expect</h3>
+      <ul class="rf-points">
+        <li><strong>Reply within one working day</strong> to confirm we can accept the referral.</li>
+        <li><strong>Initial assessment and written report</strong> with objective outcome measures, goals and a costed treatment plan for your approval.</li>
+        <li><strong>Treatment only once funding is approved</strong>, tracked against your authorised sessions.</li>
+        <li><strong>Progress and discharge reports</strong> at agreed points, and invoices quoting your claim reference.</li>
+        <li>Experience with <strong>complex trauma, neurological, falls and older-adult rehabilitation</strong>.</li>
+      </ul>
+      <p class="rf-reg">HCPC registered PH132358 · CSP member · Fully insured. <a href="#" onclick="openLegal('registration');return false">Registration &amp; insurance details</a></p>
+      <p class="rf-note">Please don't attach medical records here. Once we accept the referral, we'll arrange a secure way to receive discharge summaries and consent forms.</p>
+    </aside>
+
+    <form class="rf-form" id="referralForm" novalidate>
+      <fieldset>
+        <legend>Your details</legend>
+        <div class="rf-grid">
+          <label>Full name *<input name="referrer.name" required autocomplete="name"></label>
+          <label>Organisation<input name="referrer.organisation" autocomplete="organization"></label>
+          <label>Role<input name="referrer.role" placeholder="e.g. Rehabilitation Case Manager"></label>
+          <label>Email *<input name="referrer.email" type="email" required autocomplete="email"></label>
+          <label>Phone<input name="referrer.phone" type="tel" autocomplete="tel"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Client</legend>
+        <div class="rf-grid">
+          <label>Client name *<input name="client.name" required></label>
+          <label>Date of birth<input name="client.dob" type="date"></label>
+          <label>Client phone<input name="client.phone" type="tel"></label>
+          <label>Postcode<input name="client.postcode" autocapitalize="characters"></label>
+          <label class="rf-wide">Address<input name="client.address"></label>
+          <label>Contact for appointments<input name="client.contactName" placeholder="If not the client"></label>
+          <label>Contact's phone<input name="client.contactPhone" type="tel"></label>
+          <label>Relationship to client<input name="client.contactRelation" placeholder="e.g. sister"></label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Clinical summary</legend>
+        <label class="rf-wide">Injuries / condition and relevant history *<textarea name="clinical.condition" required rows="4" placeholder="Brief summary — no attachments needed at this stage"></textarea></label>
+        <label class="rf-wide">Precautions or risks<textarea name="clinical.precautions" rows="2" placeholder="e.g. weight-bearing status, lone-working risks, cognitive difficulties"></textarea></label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Service and funding</legend>
+        <div class="rf-grid">
+          <label>Service requested
+            <select name="service.type">
+              <option value="assessment-report">Initial assessment and report</option>
+              <option value="assessment-treatment">Assessment and treatment</option>
+              <option value="treatment-block">Treatment block</option>
+              <option value="report-only">Report only</option>
+              <option value="other">Other</option>
+            </select>
+          </label>
+          <label>Urgency
+            <select name="service.urgency">
+              <option value="routine">Routine</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </label>
+          <label>Case / claim reference<input name="funding.caseRef"></label>
+          <label>Payer (organisation to invoice)<input name="funding.payerName"></label>
+          <label>Invoice email<input name="funding.invoiceEmail" type="email"></label>
+          <label>PO number<input name="funding.poNumber"></label>
+          <label>Sessions authorised<input name="funding.authorisedSessions" type="number" min="0" max="200" inputmode="numeric"></label>
+          <label>Report due by<input name="funding.reportDue" type="date"></label>
+          <label class="rf-wide">Invoice address<input name="funding.invoiceAddress"></label>
+          <label class="rf-wide">Anything else<textarea name="service.notes" rows="2"></textarea></label>
+        </div>
+      </fieldset>
+
+      <label class="rf-check"><input type="checkbox" name="consent" required> I confirm the client (or their legal representative) has consented to this referral and to their information being shared with Community Care Physio. *</label>
+      <input class="rf-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <button type="submit" class="btn-p rf-submit">Send referral</button>
+      <p class="rf-status" id="referralStatus" role="status" aria-live="polite"></p>
+      <p class="rf-small">Your details are used only to process this referral. See our <a href="#" onclick="openLegal('privacy');return false">privacy policy</a>.</p>
+    </form>
   </div>
 </section>
 
@@ -1382,6 +1476,8 @@ body.admin-active .chat-win{display:none!important}
         <a href="#pricing">Pricing</a>
         <a href="#areas">Areas</a>
         <a href="#contact">Contact</a>
+        <a href="#referrals">Case managers &amp; referrers</a>
+        <a href="https://g.page/r/CTNprE1O874TEBl" target="_blank" rel="noopener">Google reviews</a>
         <a href="#faq">FAQs</a>
         <a href="#" onclick="openLegal('privacy');return false">Legal</a>
         <a href="#" onclick="openAffiliations();return false">Trusted Affiliations</a>
@@ -1394,6 +1490,7 @@ body.admin-active .chat-win{display:none!important}
         <a href="#" onclick="openLegal('terms');return false">Terms & Conditions</a>
         <a href="#" onclick="openLegal('gdpr');return false">GDPR</a>
         <a href="#" onclick="openLegal('cookies');return false">Cookie Policy</a>
+        <a href="#" onclick="openLegal('registration');return false">Registration &amp; Insurance</a>
       </div>
     </div>
   </div>
@@ -2516,7 +2613,9 @@ const LEGAL={
 <ul style="padding-left:20px;line-height:2">
 <li>Name, phone number, email address and home address</li>
 <li>Health information relevant to your physiotherapy treatment</li>
-<li>Booking and payment records</li>
+<li>Booking and payment records (card details are held by Stripe, not by us)</li>
+<li>Your answers to our pre-visit intake and consent form</li>
+<li>Referral details sent to us by case managers, insurers or other professionals, with your consent</li>
 <li>Communication history (WhatsApp, email)</li>
 </ul>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">How we use it</h3>
@@ -2548,6 +2647,7 @@ const LEGAL={
 <ul style="padding-left:20px;line-height:2">
 <li>Cancellations with more than 24 hours' notice: full refund</li>
 <li>Cancellations within 24 hours: £50 cancellation fee applies</li>
+<li>When you pay online, your card is saved securely by Stripe (we never see or store your full card details). If a cancellation or missed-appointment fee is due under this policy and has not already been deducted from a refund, we may charge it to the saved card. We will always tell you before doing so.</li>
 <li>A partial refund will be issued minus the £50 fee</li>
 <li>Refunds typically take 5–10 working days to appear on your card via Stripe</li>
 <li>We reserve the right to reschedule appointments where necessary</li>
@@ -2593,7 +2693,9 @@ const LEGAL={
 <h3 style="margin:20px 0 8px;color:#1e4d3b">No tracking or advertising cookies</h3>
 <p>We do not use Google Analytics, Facebook Pixel, or any advertising cookies. Your browsing is not tracked for marketing purposes.</p>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">Managing cookies</h3>
-<p>You can control cookies through your browser settings. Disabling cookies may affect the booking functionality of this site.</p>`,
+<p>You can control cookies through your browser settings. Disabling cookies may affect the booking functionality of this site.</p>
+<h3 style="margin:20px 0 8px;color:#1e4d3b">Website analytics</h3>
+<p>We use Vercel Web Analytics to count page visits. It does not use cookies, does not track you across other websites and does not identify you personally.</p>`,
 
   emergency:`<h2 style="font-family:'Playfair Display',serif;color:#1e4d3b;margin:0 0 20px">Urgent & Emergency Care</h2>
 <p>Community Care Physio provides planned, non-urgent physiotherapy at home. We are not an emergency service.</p>
@@ -2613,7 +2715,16 @@ const LEGAL={
 <p>As our clinicians are HCPC-registered, you may also contact the Health and Care Professions Council (HCPC) at <a href="https://www.hcpc-uk.org" style="color:#1e4d3b" target="_blank">hcpc-uk.org</a>. For concerns about how we handle your personal data, you can contact the Information Commissioner's Office (ICO) at <a href="https://ico.org.uk" style="color:#1e4d3b" target="_blank">ico.org.uk</a>.</p>`
 };
 
-const LEGAL_TABS=[['privacy','Privacy'],['terms','Terms & Cancellation'],['gdpr','Your Data'],['complaints','Complaints'],['cookies','Cookies'],['emergency','Emergency Care']];
+LEGAL.registration=`<h2 style="font-family:'Playfair Display',serif;color:#1e4d3b;margin:0 0 20px">Registration &amp; Insurance</h2>
+<ul style="padding-left:20px;line-height:2">
+<li><strong>HCPC registration:</strong> Zakery Shelley, Physiotherapist, PH132358 — <a href="https://www.hcpc-uk.org/check-the-register/" style="color:#1e4d3b" target="_blank" rel="noopener">check the HCPC register</a></li>
+<li><strong>Chartered Society of Physiotherapy (CSP):</strong> member — membership details available on request</li>
+<li><strong>Professional indemnity and public liability insurance:</strong> in place — certificate available on request</li>
+<li><strong>Information Commissioner's Office (ICO) registration:</strong> details available on request</li>
+<li><strong>Enhanced DBS check:</strong> available on request</li>
+</ul>
+<p>Case managers, solicitors and insurers can request copies of any of these documents at <a href="mailto:infoccphysio@gmail.com" style="color:#1e4d3b">infoccphysio@gmail.com</a>.</p>`;
+const LEGAL_TABS=[['privacy','Privacy'],['terms','Terms & Cancellation'],['gdpr','Your Data'],['registration','Registration & Insurance'],['complaints','Complaints'],['cookies','Cookies'],['emergency','Emergency Care']];
 function openLegal(page){
   if(!LEGAL[page]) page='privacy';
   const tabs=document.getElementById('legalTabs');
@@ -2674,6 +2785,7 @@ document.getElementById('legalModal').addEventListener('click',function(e){
           <button class="admin-nav-item" data-nav="patients" data-label="👥 Patients" onclick="adminNav('patients')"><span class="ani-ic">👥</span> Patients</button>
           <button class="admin-nav-item" data-nav="bookings" data-label="🧾 Bookings" onclick="adminNav('bookings')"><span class="ani-ic">🧾</span> Bookings</button>
           <button class="admin-nav-item" data-nav="enquiries" data-label="🌱 Patient enquiries" onclick="adminNav('enquiries')"><span class="ani-ic">🌱</span> Patient enquiries</button>
+          <button class="admin-nav-item" data-nav="referrals" data-label="📋 Referrals &amp; invoices" onclick="adminNav('referrals')"><span class="ani-ic">📋</span> Referrals &amp; invoices</button>
           <button class="admin-nav-item" data-nav="programmes" data-label="✉️ Generate Emails" onclick="adminNav('programmes')"><span class="ani-ic">✉️</span> Generate Emails</button>
           <button class="admin-nav-item" data-nav="availability" data-label="📅 Availability" onclick="adminNav('availability')"><span class="ani-ic">📅</span> Availability</button>
           <button class="admin-nav-item" data-nav="finance" data-label="💷 Finance" onclick="adminNav('finance')"><span class="ani-ic">💷</span> Finance</button>
@@ -2826,6 +2938,7 @@ document.getElementById('legalModal').addEventListener('click',function(e){
           <p id="eqSummary" class="eq-muted">Manage people enquiring about their first home visit.</p>
           <button class="eq-btn" onclick="adminNav('enquiries')">View enquiries →</button>
         </div>
+        <div class="acard" style="grid-column:1/-1;display:none" data-asec="referrals" id="prPanel"></div>
         <div class="acard" style="grid-column:1/-1" data-asec="enquiries" id="eqPanel">
           <div class="eq-top"><div><h2>From first conversation to first visit</h2><p class="eq-muted">Patient enquiries · email and WhatsApp</p></div><div class="eq-actions"><button class="eq-btn" data-action="reload">Reload enquiries</button><button class="eq-btn primary" data-action="new">+ New query patient</button></div></div>
           <div id="eqStatus" class="eq-status" role="status" aria-live="polite">Save details, prepare your messages, then confirm an appointment.</div>
@@ -3389,6 +3502,7 @@ async function syncFromSupabase(){
     const data=await res.json();
     if(requestToken!==adminSessionToken)return;
     window.CCPEnquiries?.refreshSummary();
+    setTimeout(()=>window.CCPPractice?.load(),0);
     const serverBookings=Array.isArray(data.bookings)?data.bookings:[];
     adminBookings=[...serverBookings,...MANUAL_BOOKINGS];
     serverBookings.forEach(b=>{
@@ -3498,6 +3612,7 @@ function adminNav(sec){
   if(ADMIN_SEC==='enquiries' && sec!=='enquiries' && window.CCPEnquiries?.hasUnsaved?.() && !confirm('Leave the enquiry with unsaved changes? Your draft will remain here.')) return;
   ADMIN_SEC=sec;
   if(sec==='enquiries')window.CCPEnquiries?.show();
+  if(sec==='referrals')window.CCPPractice?.render();
   document.querySelectorAll('#adminContent [data-asec]').forEach(el=>{
     el.style.display=(el.getAttribute('data-asec')===sec)?'':'none';
   });
@@ -3951,6 +4066,7 @@ function aPackageCard(b){
       :`<button class="bi-btn" style="background:${isDone?'#dcfce7':'#f0fdf4'};color:#16a34a;padding:4px 8px;font-size:10.5px;${isDone?'font-weight:600;border:1px solid #86efac':''}" title="${isDone?'Undo — mark as not completed':'Mark this session completed'}" onclick="aSessSet('${b.id}',${i},'${isDone?'scheduled':'completed'}')">${isDone?'↩ Not completed':'✓ Completed'}</button>
          <button class="bi-btn" style="background:${dna?'#fef3c7':'#fffbeb'};color:#b45309;padding:4px 8px;font-size:10.5px;${dna?'font-weight:600;border:1px solid #fcd34d':''}" title="${dna?'Undo — mark as not DNA':'Mark as did not attend'}" onclick="${dna?`aSessSet('${b.id}',${i},'scheduled')`:`aOpenDna('${b.id}',${i})`}">${dna?'↩ Undo DNA':'⚠ DNA'}</button>
          <button class="bi-btn" style="background:#eef2ff;color:#4338ca;padding:4px 8px;font-size:10.5px" onclick="aOpenReschedule('${b.id}',${i})">↻ Reschedule</button>
+         <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b;padding:4px 8px;font-size:10.5px" title="Open or create this session's note in Google Drive" onclick="window.CCPPractice&&CCPPractice.notesFor('${b.id}',${i})">📝 Notes</button>
          <button class="bi-btn" style="background:${canc?'#fee2e2':'#fef2f2'};color:#dc2626;padding:4px 8px;font-size:10.5px;${canc?'font-weight:600;border:1px solid #fca5a5':''}" title="${canc?'Undo — restore this appointment and re-block the slot':'Cancel and free the slot'}" onclick="aSessSet('${b.id}',${i},'${canc?'scheduled':'cancelled'}')">${canc?'↩ Undo cancel':'✕ Cancel'}</button>`;
     return `<div style="padding:8px 9px;border-radius:7px;background:#fff;border:1px solid rgba(30,77,59,.08);margin-bottom:6px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
@@ -3990,6 +4106,9 @@ function aPackageCard(b){
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgReminder(${idx})">✉️ Reminder email</button>
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgExercise(${idx})">🏋️ Exercise email</button>
         <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${b.id}')">⭐ Review email</button>
+        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${b.id}')">📋 Intake form</button>
+        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.notesFor('${b.id}',null)">📝 Notes</button>
+        <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${b.id}',${aEscJs(b.name)})">💳 Charge fee</button>
         ${aPkgIsComplete(b)
           ?`<button class="bi-btn" style="background:#e0f2fe;color:#0369a1" onclick="aPkgUncomplete('${b.id}')">↩ Uncomplete</button>
              <span style="font-size:10.5px;color:#0369a1;align-self:center">Completed · archives in ${aPkgHoursToArchive(b)}h</span>`
@@ -4477,6 +4596,9 @@ function renderAdminBookings(){
             ${overdue?`<button class="bi-btn" style="background:#fef3c7;color:#b45309" onclick="aReleaseBooking(${idx})" title="Mark expired and free the slot">⏱ Release slots</button>`:''}
             <button class="bi-btn" style="background:#fef3c7;color:#b45309" onclick="aCancelBooking(${idx})" title="Cancel — checks the 24h window, drafts the email, frees the slot">⊘ Cancel / release slot</button>
             <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${b.id}')">⭐ Review email</button>
+            <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${b.id}')">📋 Intake form</button>
+        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.notesFor('${b.id}',null)">📝 Notes</button>
+        <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${b.id}',${aEscJs(b.name)})">💳 Charge fee</button>
             <button class="bi-btn del" onclick="aDeleteBooking(${idx})">✕ Remove</button>
           </div>
         </div>
@@ -4490,6 +4612,8 @@ function renderAdminBookings(){
 }
 
 function aEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// A JS string literal that is safe inside a double-quoted HTML attribute (e.g. onclick).
+function aEscJs(s){return aEsc(JSON.stringify(String(s==null?'':s))).replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
 
 // Completed packages that have passed the 24-hour window — shown in their own
 // collapsible section. The record itself is untouched in the database.
@@ -6205,5 +6329,8 @@ async function reviewSendBoth(){
 </script>
 
 <script type="module" src="/assets/enquiries.js"></script>
+<script type="module" src="/assets/practice.js"></script>
+<script defer src="/assets/forms.js"></script>
+<script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>

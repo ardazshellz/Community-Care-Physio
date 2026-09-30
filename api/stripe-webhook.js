@@ -41,6 +41,46 @@ function getDurationMins(appt) {
   return map[appt] || 60;
 }
 
+async function saveCard(session, bookingId) {
+  // Payment-link and enquiry flows keep their existing behaviour.
+  if (session.payment_link || !session.payment_intent) return;
+  try {
+    const intent = await stripe.paymentIntents.retrieve(
+      typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent.id,
+      { expand: ['payment_method'] }
+    );
+    const method = intent.payment_method;
+    const customer = typeof intent.customer === 'string' ? intent.customer : intent.customer?.id;
+    if (!customer || !method?.id || !method.card) return;
+    const key = `card:${bookingId}`;
+    const details = {
+      customer, paymentMethod: method.id, brand: method.card.brand, last4: method.card.last4,
+      expMonth: method.card.exp_month, expYear: method.card.exp_year, savedAt: new Date().toISOString()
+    };
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const { data: existing, error: readError } = await supabase.from('practice_records')
+        .select('value,updated_at').eq('key', key).maybeSingle();
+      if (readError) throw readError;
+      const row = { key, kind: 'card', value: { ...details, charges: existing?.value.charges || [] }, updated_at: new Date().toISOString() };
+      // Preserve charges even if a fee is recorded while this webhook runs.
+      const query = existing
+        ? supabase.from('practice_records').update({ value: row.value, updated_at: row.updated_at })
+          .eq('key', key).eq('updated_at', existing.updated_at)
+        : supabase.from('practice_records').upsert(row, { onConflict: 'key', ignoreDuplicates: true });
+      const { data: saved, error } = await query.select('key').maybeSingle();
+      if (error) throw error;
+      if (saved) return;
+    }
+    throw Object.assign(new Error('Card record changed'), { code: 'record_conflict' });
+  } catch (error) {
+    console.error('stripe-webhook', { action: 'save-card', code: safeCode(error) });
+  }
+}
+
+function safeCode(error) {
+  return typeof error?.code === 'string' && /^[a-z0-9_]{1,40}$/i.test(error.code) ? error.code : 'unknown';
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
@@ -51,8 +91,8 @@ export default async function handler(req, res) {
   try {
     event = stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error('Webhook signature failed:', err.message);
-    return res.status(400).json({ error: `Webhook Error: ${err.message}` });
+    console.error('stripe-webhook', { action: 'verify-signature', code: safeCode(err) });
+    return res.status(400).json({ error: 'Invalid webhook signature.' });
   }
 
   // The enquiry branch has transactional, retry-safe promotion and no draft sends.
@@ -88,16 +128,17 @@ export default async function handler(req, res) {
         .single();
 
       if (!existing) {
-        console.error('Booking not found:', bookingId);
+        console.error('stripe-webhook', { action: 'confirm-booking', code: 'not_found' });
         return res.status(200).json({ received: true });
       }
 
       if (existing.paid) {
-        console.log('Already processed (idempotent):', bookingId);
         return res.status(200).json({ received: true });
       }
 
       await supabase.from('bookings').update({ paid: true, confirmed: true }).eq('id', bookingId);
+
+      await saveCard(session, bookingId);
 
       // Custom bookings carry a list of sessions — block every one of their slots.
       let customSessions = null;
@@ -209,17 +250,15 @@ export default async function handler(req, res) {
               </div>
             </div>`
           });
-          console.log('Patient confirmation email sent to:', existing.email);
         }
 
         console.log('Gmail emails sent successfully');
       } catch(emailErr) {
-        console.error('Gmail email error:', emailErr.message);
+        console.error('stripe-webhook', { action: 'confirmation-email', code: safeCode(emailErr) });
       }
 
-      console.log('Booking confirmed:', bookingId, existing.name);
     } catch (err) {
-      console.error('Webhook processing error:', err);
+      console.error('stripe-webhook', { action: 'confirm-booking', code: safeCode(err) });
     }
   }
 
