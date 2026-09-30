@@ -79,3 +79,4 @@
 .pr-line label,.pr-line input{min-width:0;max-width:100%}
 .if-card .if-chk{font-size:14.5px}.if-card label{font-size:14px}
 .if-card [hidden]{display:none!important}
+html{scroll-padding-top:96px}

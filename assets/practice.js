@@ -294,6 +294,8 @@ async function run(fn) { try { await fn(); } catch (e) { status(e.message, true)
 function upsert(listName, rec) { const l = state[listName]; const i = l.findIndex((x) => x.key === rec.key); if (i < 0) l.unshift(rec); else l[i] = rec; }
 
 document.addEventListener('click', (ev) => {
+  const copy = ev.target.closest('#prPanel [data-copy]');
+  if (copy) { navigator.clipboard.writeText(copy.dataset.copy).then(() => { copy.textContent = '✓ Copied'; }); return; }
   const btn = ev.target.closest('[data-pr]');
   if (!btn || !btn.closest('#prPanel')) return;
   const a = btn.dataset.pr;
@@ -347,9 +349,9 @@ document.addEventListener('click', (ev) => {
     const name = b?.name || $('prIntakeName').value.trim(), email = $('prIntakeEmail').value.trim() || b?.email || '';
     if (!name) throw new Error('Choose a patient or enter a name.');
     const d = await api('intake-create', { bookingId: b?.id || null, name, email });
-    await load(); state.tab = 'intake'; render(); intakeEmail(name, email, d.url);
+    await load(); state.tab = 'intake'; render(); intakeEmail(name, email, d.url, b?.phone);
   });
-  if (a === 'resend-intake') { const r = state.intakes.find((x) => x.key === btn.dataset.key); if (r) intakeEmail(r.value.name, r.value.email, `https://www.communitycarephysio.co.uk/?intake=${r.key.split(':')[1]}`); return; }
+  if (a === 'resend-intake') { const r = state.intakes.find((x) => x.key === btn.dataset.key); if (r) intakeEmail(r.value.name, r.value.email, `https://www.communitycarephysio.co.uk/?intake=${r.key.split(':')[1]}`, bookings().find((b) => String(b.id) === String(r.value.bookingId))?.phone); return; }
   if (a === 'view-intake') { state.open = btn.dataset.key; render(); return; }
   if (a === 'print-intake') { const r = state.intakes.find((x) => x.key === btn.dataset.key); const w = window.open('', '_blank'); if (w && r) { w.document.write(`<!doctype html><title>Intake — ${esc(r.value.name)}</title><body style="font-family:Arial;font-size:13px;max-width:720px;margin:20px auto">${intakeView(r).replace(/<div class="eq-actions">.*?<\/div>/s, '')}<script>onload=()=>print()<\/script></body>`); w.document.close(); } return; }
   if (a === 'save-inv-settings') run(async () => {
@@ -369,16 +371,19 @@ document.addEventListener('change', (ev) => {
 });
 
 function workingDaysFrom(iso, n) { let d = iso; while (n > 0) { d = addDays(d, 1); const day = new Date(d + 'T12:00:00').getDay(); if (day !== 0 && day !== 6) n--; } return d; }
-function emailPanel(to, subject, body, opts, note) {
+function emailPanel(to, subject, body, opts, note, extraHtml = '') {
   const el = $('prEmail'); if (!el) return;
   const url = typeof gmailComposeUrl === 'function' ? gmailComposeUrl(to || '', subject, body) : '#';
-  el.innerHTML = `<section class="eq-section"><h3>Email</h3>${note ? `<p class="eq-muted">${esc(note)}</p>` : ''}<p class="eq-muted">To: ${esc(to || '— no email address —')}<br>Subject: ${esc(subject)}</p><textarea readonly class="eq-search" style="height:180px">${esc(body)}</textarea>${typeof emailActions === 'function' ? emailActions(subject, body, url, to, opts) : ''}</section>`;
+  el.innerHTML = `<section class="eq-section"><h3>Email</h3>${note ? `<p class="eq-muted">${esc(note)}</p>` : ''}<p class="eq-muted">To: ${esc(to || '— no email address —')}<br>Subject: ${esc(subject)}</p>${extraHtml}<textarea readonly class="eq-search" style="height:180px">${esc(body)}</textarea>${typeof emailActions === 'function' ? emailActions(subject, body, url, to, opts) : ''}</section>`;
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-function intakeEmail(name, email, url) {
+function intakeEmail(name, email, url, phone) {
   const first = String(name || '').split(' ')[0] || 'there';
+  const mobile = String(phone || '').replace(/[^\d+]/g, '').replace(/^0/, '44').replace(/^\+/, '');
+  const wa = `Hi ${first}, before your first physiotherapy visit please complete this short health and consent form (about 5 minutes): ${url} — Zakery, Community Care Physio`;
+  const extra = `<div class="eq-actions"><button class="eq-btn" data-copy="${esc(url)}">📋 Copy link</button>${mobile.length >= 11 ? `<a class="eq-btn" href="https://wa.me/${esc(mobile)}?text=${encodeURIComponent(wa)}" target="_blank" rel="noopener">💬 Send by WhatsApp</a>` : ''}</div>`;
   emailPanel(email, 'Before your first visit — Community Care Physio', `Dear ${first},\n\nBefore your first appointment, please complete our short health questionnaire and consent form. It takes about 5 minutes and helps us prepare for your visit safely:\n\n${url}\n\nThe link is personal to you and valid for 30 days. If someone is helping you, they are welcome to complete it on your behalf.\n\n${typeof EMAIL_SIGNATURE !== 'undefined' ? EMAIL_SIGNATURE : ''}`,
-    null, 'Link: ' + url + ' — you can also paste it into WhatsApp.');
+    null, 'Personal link (valid 30 days): ' + url, extra);
 }
 
 // ── Hooks used from patient cards in index.html ──
