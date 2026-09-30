@@ -62,7 +62,7 @@ async function save(){
 function dirty(){state.dirty=true;if($('eqSaveHint'))$('eqSaveHint').textContent='Unsaved changes — save before opening a message.';}
 function template(kind,e){
  const d=e.details,first=d.name.trim().split(/\s+/)[0]||'there';
- const signature='Kind regards,\nZakery\nCommunity Care Physio\nhttps://www.communitycarephysio.co.uk/';
+ const signature='Kind regards,\n\nZakery Shelley\nPhysiotherapist\nCommunity Care Physio\nHome Visit Physiotherapy · South West London\nT: 07508 401627\nE: infoccphysio@gmail.com\nW: www.communitycarephysio.co.uk';
  if(kind==='intro')return 'Hello '+first+',\n\nThank you for getting in touch'+(d.needs?' and letting us know about '+d.needs.replace(/[.\s]+$/,''):'')+'.\n\n'+(d.approach||'We can work with you to develop an individual programme, which may include strength, balance and manual therapy where appropriate, following an initial assessment.')+(d.goals?' Our aim would be to work towards your goals of '+d.goals.replace(/[.\s]+$/,'')+'.':'')+'\n\nPlease let us know a day and time that would work best for a home visit. Once we have agreed an appointment, I can send across a secure payment link to confirm your booking.\n\n'+signature;
  if(kind==='payment')return 'Hello '+first+',\n\nThank you for confirming a suitable time. We have arranged your initial assessment for '+dateLabel(e)+' at '+(d.address||'[visit address]')+(d.postcode?', '+d.postcode:'')+'.\n\nThe appointment is 60 minutes and the agreed fee is '+money(d.amount)+'. Please use the secure link below to pay:\n'+(e.payment_url||'[payment link will appear here]')+'\n\n'+(e.expires_at?'Please pay before '+new Date(e.expires_at).toLocaleString('en-GB',{timeZone:'Europe/London'})+' (UK time). ':'')+'Your appointment will be confirmed once payment has been received. Please get in touch if you need to discuss anything before booking.\n\n'+signature;
  return 'Hello '+first+',\n\nThank you — your payment of '+money(d.amount)+' has been received and your initial assessment is confirmed for '+dateLabel(e)+'.\n\nWe will visit you at '+d.address+', '+d.postcode+'. Please wear comfortable clothing and have any relevant letters or reports to hand.\n\nWe look forward to meeting you.\n\n'+signature;
@@ -136,7 +136,7 @@ function openMessage(k){
   url='https://wa.me/'+phone+'?text='+encodeURIComponent(body);
  }else{
   if(!d.email){status('Enter and save an email address first.',true);return;}
-  url='https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(d.email)+'&su='+encodeURIComponent(e.drafts.subject)+'&body='+encodeURIComponent(body);
+  url='https://mail.google.com/mail/?authuser=infoccphysio%40gmail.com&view=cm&fs=1&to='+encodeURIComponent(d.email)+'&su='+encodeURIComponent(e.drafts.subject)+'&body='+encodeURIComponent(body);
  }
  window.open(url,'_blank','noopener,noreferrer');status('Draft opened. After sending it, choose “I have sent this message”.');
 }

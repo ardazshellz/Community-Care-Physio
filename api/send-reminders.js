@@ -30,10 +30,12 @@ const SIGNATURE =
 `Kind regards,
 
 Zakery Shelley
+Physiotherapist
 Community Care Physio
-🌐 https://www.communitycarephysio.co.uk/
-📧 infoccphysio@gmail.com
-📞 07508 401627`;
+Home Visit Physiotherapy · South West London
+T: 07508 401627
+E: infoccphysio@gmail.com
+W: www.communitycarephysio.co.uk`;
 
 const ACTIVE = ['scheduled', 'confirmed', 'pending', 'paid', 'prepaid'];
 const DEAD = ['cancelled', 'expired', 'completed', 'dna', 'rescheduled', 'refunded'];

@@ -2,6 +2,18 @@ import nodemailer from 'nodemailer';
 import { verifyAdminToken } from '../lib/adminAuth.js';
 
 const FROM_EMAIL = 'infoccphysio@gmail.com';
+
+// Formal Community Care Physio sign-off, shared by every email this endpoint sends.
+const SIGNATURE_TEXT = `Kind regards,
+
+Zakery Shelley
+Physiotherapist
+Community Care Physio
+Home Visit Physiotherapy · South West London
+T: 07508 401627
+E: infoccphysio@gmail.com
+W: www.communitycarephysio.co.uk`;
+const SIGNATURE_HTML = 'Kind regards,<br><br><strong style="color:#1e4d3b;font-size:15px">Zakery Shelley</strong><br><strong>Physiotherapist</strong><br>Community Care Physio<br><span style="color:#8aab97">Home Visit Physiotherapy · South West London</span><br><br><strong>T:</strong> 07508 401627<br><strong>E:</strong> <a href="mailto:infoccphysio@gmail.com" style="color:#1e4d3b">infoccphysio@gmail.com</a><br><strong>W:</strong> <a href="https://www.communitycarephysio.co.uk/" style="color:#1e4d3b">www.communitycarephysio.co.uk</a><br><br><img src="https://www.communitycarephysio.co.uk/assets/email-signature.png" width="300" height="100" alt="Community Care Physio" style="display:block;border:0;border-radius:6px">';
 const REVIEW_LINK = 'https://www.communitycarephysio.co.uk/review';
 
 function esc(value) {
@@ -56,13 +68,7 @@ ${REVIEW_LINK}
 
 There is no obligation, and please only include information you are comfortable making public.
 
-Kind regards,
-
-Zakery Shelley
-Community Care Physio
-https://www.communitycarephysio.co.uk/
-infoccphysio@gmail.com
-07508 401627`;
+${SIGNATURE_TEXT}`;
 
   const personalHtml = optionalMessage
     ? `<p style="margin:0 0 18px;color:#586860;line-height:1.65">${esc(optionalMessage).replace(/\n/g, '<br>')}</p>`
@@ -86,12 +92,7 @@ infoccphysio@gmail.com
         </div>
         <p style="margin:20px 0 0;font-size:12px;color:#8aab97;line-height:1.55">There is no obligation, and please only include information you are comfortable making public.</p>
         <div style="margin-top:24px;padding-top:18px;border-top:1px solid #e8f2ee;color:#586860;font-size:13px;line-height:1.6">
-          Kind regards,<br><br>
-          <strong style="color:#1e4d3b">Zakery Shelley</strong><br>
-          Community Care Physio<br>
-          <a href="https://www.communitycarephysio.co.uk/" style="color:#1e4d3b">communitycarephysio.co.uk</a><br>
-          <a href="mailto:infoccphysio@gmail.com" style="color:#1e4d3b">infoccphysio@gmail.com</a><br>
-          07508 401627
+          ${SIGNATURE_HTML}
         </div>
       </div>
     </div>
@@ -134,15 +135,9 @@ ${detail}
 
 ${consideration}
 
-Kind regards,
+${SIGNATURE_TEXT}`;
 
-Zakery Shelley
-Community Care Physio
-https://www.communitycarephysio.co.uk/
-infoccphysio@gmail.com
-07508 401627`;
-
-  const html = `<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f8f5f0;font-family:Arial,sans-serif;color:#1a1f1d"><div style="max-width:580px;margin:0 auto;background:#fff;border:1px solid #e8f2ee;border-radius:14px;overflow:hidden"><div style="background:#1e4d3b;padding:24px 28px"><h1 style="margin:0;color:#fff;font-size:22px">Community Care Physio</h1><p style="margin:5px 0 0;color:#b9d0c5;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Missed appointment notice</p></div><div style="padding:28px"><p>Dear ${esc(firstName)},</p><p style="color:#586860;line-height:1.65">I’m writing regarding your ${esc(appointment)} scheduled for ${esc(when)}, which was recorded as a missed appointment.</p><div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;color:#92400e;line-height:1.65">${esc(detail)}</div><p style="color:#586860;line-height:1.65">${esc(consideration).replace(/\n/g, '<br>')}</p><div style="margin-top:24px;padding-top:18px;border-top:1px solid #e8f2ee;color:#586860;font-size:13px;line-height:1.6">Kind regards,<br><br><strong style="color:#1e4d3b">Zakery Shelley</strong><br>Community Care Physio<br><a href="https://www.communitycarephysio.co.uk/" style="color:#1e4d3b">communitycarephysio.co.uk</a><br><a href="mailto:infoccphysio@gmail.com" style="color:#1e4d3b">infoccphysio@gmail.com</a><br>07508 401627</div></div></div></body></html>`;
+  const html = `<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#f8f5f0;font-family:Arial,sans-serif;color:#1a1f1d"><div style="max-width:580px;margin:0 auto;background:#fff;border:1px solid #e8f2ee;border-radius:14px;overflow:hidden"><div style="background:#1e4d3b;padding:24px 28px"><h1 style="margin:0;color:#fff;font-size:22px">Community Care Physio</h1><p style="margin:5px 0 0;color:#b9d0c5;font-size:12px;letter-spacing:.08em;text-transform:uppercase">Missed appointment notice</p></div><div style="padding:28px"><p>Dear ${esc(firstName)},</p><p style="color:#586860;line-height:1.65">I’m writing regarding your ${esc(appointment)} scheduled for ${esc(when)}, which was recorded as a missed appointment.</p><div style="margin:20px 0;padding:14px 16px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;color:#92400e;line-height:1.65">${esc(detail)}</div><p style="color:#586860;line-height:1.65">${esc(consideration).replace(/\n/g, '<br>')}</p><div style="margin-top:24px;padding-top:18px;border-top:1px solid #e8f2ee;color:#586860;font-size:13px;line-height:1.6">${SIGNATURE_HTML}</div></div></div></body></html>`;
 
   return { subject, text, html };
 }

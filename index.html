@@ -5030,9 +5030,9 @@ async function dnaSendEmail(){
 // then render with emailActions(subject, body, gmailComposeUrl(to,subject,body)).
 // ══════════════════════════════════════════════════════════════
 
-// Which signed-in Google account Gmail should compose from.
-// 0 = first account, 1 = second, 2 = third… Change this if Gmail opens the wrong one.
-const GMAIL_ACCOUNT_INDEX = 1;
+// Gmail always composes from the business account, whatever order accounts
+// are signed in on this device (authuser matches by address, not position).
+const GMAIL_SENDER = 'infoccphysio@gmail.com';
 
 // Single source of truth for business identity.
 const BUSINESS = {
@@ -5043,19 +5043,23 @@ const BUSINESS = {
   phone: '07508 401627'
 };
 
-// The exact sign-off appended to every generated email.
+// The exact sign-off appended to every generated email. Mirrors the Gmail
+// "Community Care Physio – Formal" signature (Gmail skips its own signature
+// when compose opens with a pre-filled body).
 const EMAIL_SIGNATURE =
 `Kind regards,
 
 ${BUSINESS.clinician}
+Physiotherapist
 ${BUSINESS.name}
-🌐 ${BUSINESS.website}
-📧 ${BUSINESS.email}
-📞 ${BUSINESS.phone}`;
+Home Visit Physiotherapy · South West London
+T: ${BUSINESS.phone}
+E: ${BUSINESS.email}
+W: www.communitycarephysio.co.uk`;
 
 // Build a Gmail compose URL from the configured account index.
 function gmailComposeUrl(to, subject, body){
-  return `https://mail.google.com/mail/u/${GMAIL_ACCOUNT_INDEX}/?view=cm&fs=1`
+  return `https://mail.google.com/mail/?authuser=${encodeURIComponent(GMAIL_SENDER)}&view=cm&fs=1`
     + `&to=${encodeURIComponent(to||'')}`
     + `&su=${encodeURIComponent(subject)}`
     + `&body=${encodeURIComponent(body)}`;
