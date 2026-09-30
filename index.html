@@ -3174,7 +3174,7 @@ async function doAdminLogin(){
 }
 
 function doAdminLogout(){
-  window.CCPEnquiries?.clear();
+  window.CCPEnquiries?.clear();window.CCPPractice?.clear();
   sessionStorage.removeItem('ccp_admin_token');
   sessionStorage.removeItem('ccp_admin_expiry');
   adminSessionToken=null;
@@ -3487,7 +3487,7 @@ async function syncFromSupabase(){
         sessionStorage.removeItem('ccp_admin_token');
         sessionStorage.removeItem('ccp_admin_expiry');
         adminSessionToken=null;
-        window.CCPEnquiries?.clear();
+        window.CCPEnquiries?.clear();window.CCPPractice?.clear();
         const lw=document.getElementById('adminLoginWrap'),ac=document.getElementById('adminContent');
         if(lw) lw.style.display='flex';
         if(ac) ac.style.display='none';
@@ -3502,7 +3502,7 @@ async function syncFromSupabase(){
     const data=await res.json();
     if(requestToken!==adminSessionToken)return;
     window.CCPEnquiries?.refreshSummary();
-    setTimeout(()=>window.CCPPractice?.load(),0);
+    setTimeout(()=>window.CCPPractice?.load(true),0);
     const serverBookings=Array.isArray(data.bookings)?data.bookings:[];
     adminBookings=[...serverBookings,...MANUAL_BOOKINGS];
     serverBookings.forEach(b=>{

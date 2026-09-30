@@ -150,6 +150,16 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
         const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         const ref = `R-${Array.from({ length: 6 }, () => alphabet[randomInt(alphabet.length)]).join('')}`;
         const value = { ...data, status: 'new', submittedAt: new Date().toISOString(), ref };
+        // Abuse limits for this public form: cap volume and never acknowledge the same address twice a day.
+        const since = new Date(Date.now() - 86400000).toISOString();
+        const recent = result(await database.from('practice_records').select('value,created_at').eq('kind', 'referral')
+          .gte('created_at', since).order('created_at', { ascending: false }).range(0, 199));
+        const hourAgo = Date.now() - 3600000;
+        if (recent.filter(r => Date.parse(r.created_at) > hourAgo).length >= 10 || recent.length >= 40) {
+          throw new RequestError(429, 'We are receiving a lot of referrals right now. Please email infoccphysio@gmail.com instead.');
+        }
+        const email = data.referrer.email.toLowerCase();
+        const acknowledged = recent.some(r => String(r.value?.referrer?.email || '').toLowerCase() === email);
         await write(database, `referral:${randomUUID()}`, 'referral', value, 'insert');
         await Promise.all([
           bestEffortMail(mail, action, {
@@ -157,7 +167,7 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
             subject: `New referral ${ref} — ${data.referrer.organisation || data.referrer.name}`.replace(/[\r\n]/g, ' '),
             text: referralSummary(value)
           }),
-          bestEffortMail(mail, action, {
+          !acknowledged && bestEffortMail(mail, action, {
             to: data.referrer.email,
             subject: `Referral received — ${ref} — Community Care Physio`,
             text: `${ackBody(ref)}\n\n${SIGNATURE_TEXT}`,

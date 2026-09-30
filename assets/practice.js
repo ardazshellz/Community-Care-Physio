@@ -35,23 +35,30 @@ async function api(action, extra = {}) {
 }
 function status(msg, bad = false) { const el = $('prStatus'); if (el) { el.textContent = msg; el.className = 'eq-status' + (bad ? ' error' : ''); } }
 
-async function load() {
+// quiet: background refresh after a bookings sync. It never replaces lists or
+// re-renders while a referral or invoice is open, so unsaved edits survive.
+async function load(quiet = false) {
+  const session = token();
   try {
     const [ref, inv, intake, card, settings] = await Promise.all(['referral', 'invoice', 'intake', 'card', 'settings'].map((kind) => api('list', { kind }).then((d) => (Array.isArray(d) ? d : []))));
-    Object.assign(state, { referrals: ref, invoices: inv, intakes: intake, cards: card, loaded: true });
+    if (!session || token() !== session) return; // signed out while loading
+    const editing = quiet && (state.open || state.draft || document.getElementById('prPanel')?.contains(document.activeElement));
+    Object.assign(state, { cards: card, loaded: true });
     state.settings = Object.fromEntries(settings.map((r) => [r.key, r.value]));
-    render(); navBadge();
-  } catch (e) { status(e.message, true); }
+    if (!editing) { Object.assign(state, { referrals: ref, invoices: inv, intakes: intake }); if (!quiet || isVisible()) render(); }
+    navBadge();
+  } catch (e) { if (!quiet) status(e.message, true); }
 }
+function isVisible() { const p = document.getElementById('prPanel'); return !!p && p.style.display !== 'none'; }
 
 // ── Tracking helpers ──
 function linkedBooking(ref) { return bookings().find((b) => String(b.id) === String(ref.value.bookingId)); }
 function sessionsUsed(ref) {
   const b = linkedBooking(ref);
   if (!b || typeof aPkgSessions !== 'function') return Number(ref.value.sessionsUsedManual || 0);
-  const used = aPkgSessions(b).filter((s) => ['completed', 'dna'].includes(s.status)).length;
-  const initialDone = b.bookedDate && b.bookedDate < today() ? 1 : 0;
-  return used + initialDone;
+  // Packages list every visit (the first is the booked date); single bookings count once they are past and paid.
+  if (typeof aIsPackage === 'function' && aIsPackage(b)) return aPkgSessions(b).filter((s) => ['completed', 'dna'].includes(s.status)).length;
+  return b.paid && b.bookedDate && b.bookedDate < today() && !['cancelled', 'expired', 'refunded'].includes(b.status) ? 1 : 0;
 }
 function referralAlerts(ref) {
   const v = ref.value, out = [];
@@ -336,6 +343,7 @@ document.addEventListener('click', (ev) => {
     upsert('invoices', d); state.draft = null; state.open = d.key; render(); navBadge(); status(inv.key ? 'Invoice saved.' : `Invoice ${d.value.number} created.`);
   });
   if (a === 'del-inv' && inv) run(async () => { if (!confirm('Delete this draft invoice?')) return; await api('delete', { key: inv.key }); state.invoices = state.invoices.filter((i) => i.key !== inv.key); state.open = null; render(); status('Draft deleted.'); });
+  if ((a === 'print-inv' || a === 'email-inv') && inv) inv.value = readInvoice(inv);
   if (a === 'print-inv' && inv) { const w = window.open('', '_blank'); if (!w) { status('Allow pop-ups to print invoices.', true); return; } w.document.write(invoiceHtml(inv.value)); w.document.close(); return; }
   if (a === 'email-inv' && inv) {
     const v = inv.value;
@@ -394,14 +402,16 @@ async function chargeFee(bookingId, name) {
     if (!card) { alert(`No saved card for ${name}. Cards are saved automatically when a patient pays online (from this update onwards).`); return; }
     const amount = Number(prompt(`Charge ${name}'s saved ${card.value.brand || 'card'} ending ${card.value.last4 || '••••'}.\n\nAmount in £ (e.g. 50):`, '50'));
     if (!amount || amount < 1 || amount > 200) return;
-    const reason = prompt('Reason (shown on the receipt):', 'Late cancellation fee') || 'Cancellation fee';
+    const reason = (prompt('Reason (shown on the receipt). Include the appointment date, e.g. "Late cancellation fee — 2 Oct". The same patient, amount and reason is only ever charged once.', 'Late cancellation fee') || '').trim();
+    if (!reason) return;
     if (!confirm(`Charge £${amount.toFixed(2)} to ${name}'s card for "${reason}"? This takes payment immediately.`)) return;
-    const d = await api('charge-fee', { bookingId, amount, reason, idempotencyKey: `fee-${bookingId}-${Math.round(amount * 100)}-${today()}-${reason}`.slice(0, 80) });
-    alert(d.status === 'succeeded' ? `✓ £${amount.toFixed(2)} charged.` : `Charge status: ${d.status}. Check Stripe.`);
+    const d = await api('charge-fee', { bookingId, amount, reason, idempotencyKey: `fee-${bookingId}-${Math.round(amount * 100)}-${reason.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`.slice(0, 80) });
+    alert(d.status === 'succeeded' ? `✓ £${amount.toFixed(2)} charged (or already taken earlier for this reason — never twice).` : `Charge status: ${d.status}. Check Stripe before trying again.`);
     load();
   } catch (e) { alert(e.message); }
 }
-function notesFor(bookingId, sessionIndex) {
+async function notesFor(bookingId, sessionIndex) {
+  if (!state.loaded) await load(true);
   const d = state.settings['settings:drive'];
   if (!d?.scriptUrl || !d?.secret) { alert('Connect Google Drive first: Referrals & invoices › Settings › Google Drive notes.'); return; }
   const b = bookings().find((x) => String(x.id) === String(bookingId)); if (!b) return;
@@ -414,8 +424,21 @@ function notesFor(bookingId, sessionIndex) {
     .forEach(([k, v]) => { const i = document.createElement('input'); Object.assign(i, { type: 'hidden', name: k, value: v }); form.appendChild(i); });
   document.body.appendChild(form); form.submit(); form.remove();
 }
-function intakeFor(bookingId) { state.tab = 'intake'; if (typeof adminNav === 'function') adminNav('referrals'); setTimeout(() => { const sel = $('prIntakePatient'); if (sel) sel.value = String(bookingId); }, 50); }
+async function intakeFor(bookingId) {
+  state.tab = 'intake'; state.open = null; state.draft = null;
+  if (!state.loaded) await load();
+  if (typeof adminNav === 'function') adminNav('referrals');
+  render();
+  const sel = $('prIntakePatient'); if (sel) sel.value = String(bookingId);
+}
 function cardBadge(bookingId) { const c = state.cards.find((x) => x.key === 'card:' + bookingId); return c ? `💳 ${esc(c.value.brand || 'Card')} ••${esc(c.value.last4 || '')}` : ''; }
 
-window.CCPPractice = { load, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
+// Sign-out / expiry: drop health data, bank details and the Drive secret from memory and the page.
+function clear() {
+  Object.assign(state, { tab: 'referrals', referrals: [], invoices: [], intakes: [], cards: [], settings: {}, open: null, draft: null, loaded: false });
+  const p = $('prPanel'); if (p) p.innerHTML = '';
+  document.querySelector('.pr-navcount')?.remove();
+}
+
+window.CCPPractice = { clear, load, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
 if (token()) load();

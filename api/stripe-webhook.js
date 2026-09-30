@@ -51,11 +51,12 @@ async function saveCard(session, bookingId) {
     );
     const method = intent.payment_method;
     const customer = typeof intent.customer === 'string' ? intent.customer : intent.customer?.id;
-    if (!customer || !method?.id || !method.card) return;
+    // Cards and Stripe Link can both be reused off-session.
+    if (!customer || !method?.id || !(method.card || method.type === 'link')) return;
     const key = `card:${bookingId}`;
     const details = {
-      customer, paymentMethod: method.id, brand: method.card.brand, last4: method.card.last4,
-      expMonth: method.card.exp_month, expYear: method.card.exp_year, savedAt: new Date().toISOString()
+      customer, paymentMethod: method.id, brand: method.card?.brand || method.type, last4: method.card?.last4 || '',
+      expMonth: method.card?.exp_month || null, expYear: method.card?.exp_year || null, savedAt: new Date().toISOString()
     };
     for (let attempt = 0; attempt < 5; attempt++) {
       const { data: existing, error: readError } = await supabase.from('practice_records')
@@ -133,6 +134,8 @@ export default async function handler(req, res) {
       }
 
       if (existing.paid) {
+        // A Stripe retry after a partial failure still gets a chance to save the card.
+        await saveCard(session, bookingId);
         return res.status(200).json({ received: true });
       }
 

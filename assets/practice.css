@@ -80,3 +80,5 @@
 .if-card .if-chk{font-size:14.5px}.if-card label{font-size:14px}
 .if-card [hidden]{display:none!important}
 html{scroll-padding-top:96px}
+.if-policy{background:var(--warm);border:1px solid rgba(30,77,59,.15);border-radius:12px;padding:16px;margin:0 0 20px;font-size:14px;line-height:1.6}
+.if-policy .btn-p{margin-bottom:12px}

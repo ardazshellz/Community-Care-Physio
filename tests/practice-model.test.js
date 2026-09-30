@@ -183,6 +183,7 @@ function database(initial = []) {
     const query = {
       select() { return query; },
       eq(field, value) { filters.push(row => field === 'value' ? JSON.stringify(row.value) === value : row[field] === value); return query; },
+      gte(field, value) { filters.push(row => String(row[field]) >= value); return query; },
       order(field, opts) { if (field === 'created_at') sort = opts; return query; },
       range(start, end) { range = [start, end]; return query; },
       maybeSingle() { single = true; return query; },
@@ -508,4 +509,17 @@ test('webhook card storage failures cannot break confirmation or log patient dat
   stripe.paymentIntents.retrieve = async () => { throw new Error('private Stripe details'); };
   await assert.doesNotReject(save({ payment_intent: 'pi_example' }, ID));
   assert.equal(logs.length, 2); assert.ok(!JSON.stringify(logs).includes('private'));
+});
+
+test('public referrals are rate limited and each referrer is acknowledged at most once a day', async () => {
+  const { handler, db, emails } = setup();
+  assert.equal((await request(handler, { action: 'referral', data: referral() })).code, 200);
+  assert.equal((await request(handler, { action: 'referral', data: referral() })).code, 200);
+  // Two referrals stored; the clinic is told twice but the referrer is acknowledged once.
+  assert.equal(db.rows.size, 2);
+  assert.equal(emails.filter(email => email.to === 'referrer@example.test').length, 1);
+  const now = new Date().toISOString();
+  for (let i = 0; i < 10; i++) db.rows.set(`referral:flood-${i}`, { key: `referral:flood-${i}`, kind: 'referral', value: { referrer: { email: `x${i}@example.test` } }, created_at: now, updated_at: now });
+  const blocked = await request(handler, { action: 'referral', data: referral() });
+  assert.equal(blocked.code, 429); assert.equal(db.rows.size, 12);
 });

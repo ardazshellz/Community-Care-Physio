@@ -104,8 +104,8 @@
         </fieldset>
         <fieldset><legend>Consent</legend>
           <label class="if-chk"><input type="checkbox" name="consentAssessment" required><span>I consent to a physiotherapy assessment and treatment, which may include hands-on techniques and exercise. The physiotherapist will explain each part and I can stop at any time. *</span></label>
-          <label class="if-chk"><input type="checkbox" name="consentData" required><span>I agree to Community Care Physio keeping records of my care, including health information, as described in the <a href="#" onclick="openLegal('privacy');return false">privacy policy</a>. *</span></label>
-          <label class="if-chk"><input type="checkbox" name="policyAcknowledged" required><span>I have read the <a href="#" onclick="openLegal('terms');return false">cancellation policy</a> (£50 for cancellations within 24 hours or missed appointments). *</span></label>
+          <label class="if-chk"><input type="checkbox" name="consentData" required><span>I agree to Community Care Physio keeping records of my care, including health information, as described in the <a href="#" data-policy="privacy">privacy policy</a>. *</span></label>
+          <label class="if-chk"><input type="checkbox" name="policyAcknowledged" required><span>I have read the <a href="#" data-policy="terms">cancellation policy</a> (£50 for cancellations within 24 hours or missed appointments). *</span></label>
           <label class="if-chk"><input type="checkbox" name="consentShareGp"><span>I'm happy for updates to be shared with my GP if clinically useful.</span></label>
           <label class="if-chk"><input type="checkbox" name="consentShareReferrer"><span>If I was referred by a case manager or insurer, I'm happy for reports to be shared with them.</span></label>
           <label class="if-chk"><input type="checkbox" name="consentPhotos"><span>I'm happy for photos or videos to be taken for my clinical record only (never shared or published).</span></label>
@@ -118,6 +118,17 @@
         <p class="rf-status" id="intakeStatus" role="status" aria-live="polite"></p>
       </form>`;
     const f = body.querySelector('#intakeForm');
+    // Policies open inside this dialog (the site's legal modal sits behind it).
+    f.insertAdjacentHTML('afterbegin', '<div id="ifPolicy" class="if-policy" hidden><button type="button" class="btn-p" id="ifPolicyClose">Back to the form</button><div id="ifPolicyText"></div></div>');
+    f.addEventListener('click', (e) => {
+      const link = e.target.closest('[data-policy]');
+      if (!link) return;
+      e.preventDefault();
+      f.querySelector('#ifPolicyText').innerHTML = (typeof LEGAL !== 'undefined' && LEGAL[link.dataset.policy]) || '';
+      f.querySelector('#ifPolicy').hidden = false;
+      f.querySelector('#ifPolicy').scrollIntoView({ block: 'start' });
+    });
+    f.querySelector('#ifPolicyClose').addEventListener('click', () => { f.querySelector('#ifPolicy').hidden = true; f.querySelector('[name=policyAcknowledged]').scrollIntoView({ block: 'center' }); });
     f.querySelector('#ifBehalf').addEventListener('change', (e) => { f.querySelector('#ifRel').hidden = !e.target.checked; });
     f.addEventListener('submit', async (e) => {
       e.preventDefault();

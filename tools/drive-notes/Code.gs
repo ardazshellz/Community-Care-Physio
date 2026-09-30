@@ -23,11 +23,10 @@ function doPost(e) {
   const session = clean(p.session) || 'Session';
 
   const root = folder_(DriveApp.getRootFolder(), ROOT_FOLDER);
-  const patientFolder = folder_(root, patient + ' — ' + programme);
+  const patientFolder = patientFolder_(root, String(p.bookingId || ''), patient + ' — ' + programme);
   const title = when_(p.date, p.time) + ' — ' + session;
 
-  const existing = patientFolder.getFilesByName(title);
-  const file = existing.hasNext() ? existing.next() : createNote_(patientFolder, title, patient, programme, session, when_(p.date, p.time));
+  const file = firstLive_(patientFolder.getFilesByName(title)) || createNote_(patientFolder, title, patient, programme, session, when_(p.date, p.time));
   const url = file.getUrl();
   return HtmlService.createHtmlOutput(
     '<p style="font-family:Arial">Opening note… <a href="' + url + '" target="_top">Open the note</a></p>' +
@@ -38,14 +37,37 @@ function doPost(e) {
 function doGet() { return page_('This link works from the Community Care Physio admin page only.'); }
 
 function folder_(parent, name) {
-  const it = parent.getFoldersByName(name);
-  return it.hasNext() ? it.next() : parent.createFolder(name);
+  return firstLive_(parent.getFoldersByName(name)) || parent.createFolder(name);
+}
+
+// One folder per booking, remembered by booking ID, so two patients with the same
+// name never share notes. The folder keeps a readable name.
+function patientFolder_(root, bookingId, name) {
+  const props = PropertiesService.getScriptProperties();
+  const key = 'folder:' + bookingId.replace(/[^\w-]/g, '').slice(0, 64);
+  const id = bookingId && props.getProperty(key);
+  if (id) {
+    try { const f = DriveApp.getFolderById(id); if (!f.isTrashed()) return f; } catch (e) { /* deleted: recreate */ }
+  }
+  let folderName = name, n = 2;
+  while (firstLive_(root.getFoldersByName(folderName))) folderName = name + ' (' + n++ + ')';
+  const folder = root.createFolder(folderName);
+  if (bookingId) props.setProperty(key, folder.getId());
+  return folder;
+}
+
+function firstLive_(it) {
+  while (it.hasNext()) { const f = it.next(); if (!f.isTrashed()) return f; }
+  return null;
 }
 
 function when_(date, time) {
-  if (!date) return Utilities.formatDate(new Date(), 'Europe/London', 'EEE d MMM yyyy');
-  const d = new Date(date + 'T' + (time || '12:00') + ':00');
-  return Utilities.formatDate(d, 'Europe/London', time ? "EEE d MMM yyyy, h.mma" : 'EEE d MMM yyyy').replace('AM', 'am').replace('PM', 'pm');
+  const tz = 'Europe/London';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(String(date || ''))) return Utilities.formatDate(new Date(), tz, 'EEE d MMM yyyy');
+  const hasTime = /^\d{1,2}:\d{2}/.test(String(time || ''));
+  // Parse in UK time whatever the script project's own timezone is.
+  const d = Utilities.parseDate(date + ' ' + (hasTime ? String(time).slice(0, 5) : '12:00'), tz, 'yyyy-MM-dd H:mm');
+  return Utilities.formatDate(d, tz, hasTime ? 'EEE d MMM yyyy, h.mma' : 'EEE d MMM yyyy').replace('AM', 'am').replace('PM', 'pm');
 }
 
 function createNote_(folder, title, patient, programme, session, when) {
