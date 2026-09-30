@@ -11,6 +11,16 @@
  */
 const ROOT_FOLDER = 'CC Physio – Patient notes';
 
+function createSecret() {
+  const props = PropertiesService.getScriptProperties();
+  let secret = props.getProperty('SECRET');
+  if (!secret) {
+    secret = Utilities.getUuid().replace(/-/g, '');
+    props.setProperty('SECRET', secret);
+  }
+  Logger.log(secret + ' — paste this into admin > Referrals & invoices > Settings > Google Drive notes');
+}
+
 function doPost(e) {
   const p = (e && e.parameter) || {};
   const secret = PropertiesService.getScriptProperties().getProperty('SECRET');
