@@ -3211,6 +3211,52 @@ window.addEventListener('DOMContentLoaded',()=>{
 },{once:true});
 
 // ── ADMIN BOOKINGS ──
+// ── ADMIN CONFIRMATIONS ──
+// Every admin action that saves, sends or charges through /api shows a short
+// confirmation (or error) bar, so it is always clear the click was processed.
+const ADMIN_ACTION_LABELS={
+  'save-rota':'Availability published','blocks':'Slots updated',
+  confirm:'Booking confirmed',markPaid:'Payment status updated',saveSessions:'Appointments saved',
+  delete:'Removed',purge:'Removed',
+  save:'Saved','invoice-create':'Invoice created','invoice-save':'Invoice saved','intake-create':'Intake link created','charge-fee':'Fee charged',
+  custom:'Email sent from infoccphysio',dna:'Missed-appointment notice sent',review:'Review email sent',
+  sent:'Recorded as sent',checkout:'Payment link created',cancel:'Payment link closed'
+};
+const ADMIN_READ_ONLY=new Set(['list','get','refresh','intake-get']);
+function adminToast(message,ok=true){
+  let el=document.getElementById('adminToast');
+  if(!el){
+    el=document.createElement('div');el.id='adminToast';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
+    el.style.cssText='position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:100000;padding:12px 18px;border-radius:12px;font:500 14px Outfit,Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.18);max-width:min(92vw,520px);text-align:center;transition:opacity .2s';
+    document.body.appendChild(el);
+  }
+  el.textContent=(ok?'✓ ':'✗ ')+message;
+  el.style.background=ok?'#1e4d3b':'#b42318';el.style.color='#fff';el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>{el.style.opacity='0';},ok?3000:6000);
+}
+(function(){
+  const nativeFetch=window.fetch.bind(window);
+  window.fetch=async function(input,init){
+    const url=typeof input==='string'?input:(input&&input.url)||'';
+    let body=null;
+    try{ body=init&&typeof init.body==='string'?JSON.parse(init.body):null; }catch(e){}
+    const isAdminWrite=/^\/api\//.test(url)&&!/admin-login|get-slots/.test(url)&&init&&String(init.method).toUpperCase()==='POST'&&body&&body.token&&typeof adminSessionToken!=='undefined'&&adminSessionToken;
+    const key=body&&(body.action==='enquiries'?body.operation:(body.emailType||body.action));
+    const label=isAdminWrite&&key&&!ADMIN_READ_ONLY.has(key)?(ADMIN_ACTION_LABELS[key]||'Done'):(isAdminWrite&&/send-reminders/.test(url)?'Reminder sent':null);
+    try{
+      const res=await nativeFetch(input,init);
+      if(label){
+        if(res.ok) adminToast(label);
+        else res.clone().json().catch(()=>({})).then(d=>adminToast((d&&d.error)||('Not saved (error '+res.status+')'),false));
+      }
+      return res;
+    }catch(err){
+      if(label) adminToast('Not saved — check your connection and try again',false);
+      throw err;
+    }
+  };
+})();
+
 let adminBookings=[];
 
 window.CCP_ADMIN_STATE = window.CCP_ADMIN_STATE || {
