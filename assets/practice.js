@@ -240,7 +240,7 @@ function invoiceHtml(v) {
     table{width:100%;border-collapse:collapse;margin:16px 0}th,td{border-bottom:1px solid #ddd;padding:8px;text-align:left}th{background:#e8f2ee;color:#1e4d3b}.n{text-align:right;white-space:nowrap}
     .tot td{font-weight:bold;border-top:2px solid #1e4d3b}.grid{display:flex;gap:40px}.box{background:#f8f5f0;padding:12px;border-radius:8px;margin-top:16px}
   </style></head><body>
-  <div class="top"><div><h1>Invoice</h1><div class="muted">${esc(v.number)}</div></div><img src="/assets/email-signature.png" alt="Community Care Physio" style="width:210px;border-radius:6px"></div>
+  <div class="top"><div><h1>Invoice</h1><div class="muted">${esc(v.number)}</div></div><img src="/assets/email-signature-cream.png" alt="Community Care Physio" style="width:220px"></div>
   <div class="grid"><div><strong>From</strong><br>${esc(s.businessName || 'Community Care Physio')}<br>${esc(s.address || '114 Durnsford Road, London SW19 8HQ').replace(/\n/g, '<br>')}<br>infoccphysio@gmail.com · 07508 401627</div>
   <div><strong>Bill to</strong><br>${esc(v.payer?.name)}<br>${esc(v.payer?.address || '').replace(/\n/g, '<br>')}<br>${esc(v.payer?.email || '')}</div>
   <div><strong>Issue date:</strong> ${ukDate(v.issueDate)}<br><strong>Due date:</strong> ${ukDate(v.dueDate)}<br>${v.caseRef ? `<strong>Claim ref:</strong> ${esc(v.caseRef)}<br>` : ''}${v.poNumber ? `<strong>PO:</strong> ${esc(v.poNumber)}<br>` : ''}${v.client?.name ? `<strong>Client:</strong> ${esc(v.client.name)}` : ''}</div></div>
