@@ -91,9 +91,25 @@ html{scroll-padding-top:96px}
 .rf-q span{font-weight:400;color:var(--muted)}
 .rf-chips{display:flex;flex-wrap:wrap;gap:8px}
 .rf-form .rf-chip{flex-direction:row;align-items:center;gap:0;font-weight:400}
-.rf-chip input{position:absolute;opacity:0;width:1px;height:1px}
+.rf-form .rf-chip{position:relative}
+.rf-chip input{position:absolute;left:0;top:0;opacity:0;width:1px;height:1px;margin:0}
 .rf-chip span{padding:8px 14px;border-radius:20px;border:1px solid rgba(30,77,59,.25);font-size:13px;background:var(--warm);cursor:pointer;transition:all .15s}
 .rf-chip input:checked+span{background:var(--forest);color:#fff;border-color:var(--forest)}
 .rf-chip input:focus-visible+span{outline:3px solid var(--gold);outline-offset:2px}
 .rf-triage{margin:12px 0 4px;padding:10px 12px;border-radius:10px;background:var(--fp);font-size:13.5px;line-height:1.6;color:var(--forest)}
 .rf-triage.complex{background:#fbf4ea;color:#7a5520;border:1px solid rgba(196,151,90,.45)}
+.rf-opt{font-weight:400;color:var(--muted)}
+.rf-travel{grid-column:1/-1;margin:-2px 0 0;font-size:13px;color:var(--muted);min-height:1em}
+.rf-travel.included{color:var(--forest);font-weight:500}
+.rf-travel.nearby,.rf-travel.extended{color:#7a5520;font-weight:500}
+.rf-flags{display:flex;flex-direction:column;gap:2px;margin-bottom:6px}
+.rf-flags .rf-check{margin:4px 0}
+.rf-form fieldset[hidden]{display:none}
+.rf-dialog{border:0;border-radius:16px;padding:26px 28px;max-width:420px;width:calc(100% - 32px);box-shadow:0 20px 50px rgba(0,0,0,.25);text-align:center;color:var(--char)}
+.rf-dialog::backdrop{background:rgba(26,31,29,.45)}
+.rf-dialog h3{font-family:'Playfair Display',serif;font-weight:500;color:var(--forest);font-size:24px;margin:0 0 10px}
+.rf-dialog p{font-size:15px;line-height:1.6;margin:0 0 18px}
+/* Laptop widths: Legal and Affiliations stay in the footer so the top bar never overflows. */
+@media(max-width:1250px){.nav-links{gap:18px}.nav-links li:nth-last-child(-n+2){display:none}}
+.nav-cta{white-space:nowrap}
+.rf-dialog[open]{position:fixed;inset:0;margin:auto;height:fit-content}

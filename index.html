@@ -1327,10 +1327,10 @@ body.admin-active .chat-win{display:none!important}
 <section class="sec" id="referrals" style="background:var(--W)">
   <div class="sl">Referrals</div>
   <h2 class="st">Refer someone for home physiotherapy</h2>
-  <span class="ss" id="rfIntro">Worried about a parent, relative or friend? Tell us a little about them and we'll get in touch to talk it through. Clinicians and case managers can use the clinician form.</span>
+  <span class="ss" id="rfIntro">Looking for help for yourself, a parent, relative or friend? Tell us a little about what's happening and we'll get in touch to talk it through. Clinicians and case managers can use the clinician form.</span>
 
   <div class="rf-toggle" role="tablist" aria-label="Who is making the referral?">
-    <button type="button" role="tab" id="rfTabFamily" aria-controls="rfFamily" aria-selected="true" data-rf-mode="family">Refer a friend or family member</button>
+    <button type="button" role="tab" id="rfTabFamily" aria-controls="rfFamily" aria-selected="true" data-rf-mode="family">Refer yourself, a friend or family member</button>
     <button type="button" role="tab" id="rfTabClinician" aria-controls="rfClinician" aria-selected="false" data-rf-mode="clinician">Refer as a clinician</button>
   </div>
 
@@ -1349,46 +1349,70 @@ body.admin-active .chat-win{display:none!important}
 
     <form class="rf-form" id="familyForm" novalidate>
       <fieldset>
+        <legend>Who is this referral for?</legend>
+        <div class="rf-chips" role="radiogroup">
+          <label class="rf-chip"><input type="radio" name="forWhom" value="someone" checked><span>Someone else</span></label>
+          <label class="rf-chip"><input type="radio" name="forWhom" value="me"><span>Me</span></label>
+        </div>
+      </fieldset>
+
+      <fieldset id="rfAboutYou">
         <legend>About you</legend>
         <div class="rf-grid">
           <label>Your full name *<input name="referrer.name" required autocomplete="name"></label>
-          <label>Your relationship to them *<input name="referrer.role" required placeholder="e.g. daughter, friend, neighbour"></label>
+          <label>Your relationship to them <span class="rf-opt">(optional)</span><input name="referrer.role" placeholder="e.g. daughter, friend, neighbour"></label>
           <label>Your phone *<input name="referrer.phone" type="tel" required autocomplete="tel"></label>
           <label>Your email *<input name="referrer.email" type="email" required autocomplete="email"></label>
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>About the person you're referring</legend>
+        <legend id="rfClientLegend">About the person you're referring</legend>
         <div class="rf-grid">
-          <label>Their full name *<input name="client.name" required></label>
+          <label><span data-self="Your full name *">Their full name *</span><input name="client.name" required></label>
           <label>Date of birth<input name="client.dob" type="date"></label>
-          <label>Their phone<input name="client.phone" type="tel"></label>
-          <label>Their email<input name="client.email" type="email"></label>
-          <label class="rf-wide">Their address *<input name="client.address" required autocomplete="street-address"></label>
-          <label>Postcode *<input name="client.postcode" required autocapitalize="characters" autocomplete="postal-code"></label>
+          <label><span data-self="Your phone *">Their phone</span><input name="client.phone" type="tel"></label>
+          <label><span data-self="Your email *">Their email</span><input name="client.email" type="email"></label>
+          <label class="rf-wide"><span data-self="Your address *">Their address *</span><input name="client.address" required autocomplete="street-address"></label>
+          <label>Postcode *<input name="client.postcode" required autocapitalize="characters" autocomplete="postal-code" aria-describedby="rfTravel"></label>
+          <p class="rf-travel" id="rfTravel" aria-live="polite"></p>
         </div>
       </fieldset>
 
       <fieldset>
         <legend>What's happening</legend>
-        <label class="rf-wide">Reason for referral *<textarea name="reason" required rows="3" placeholder="What are they struggling with? e.g. walking, balance, pain, getting out of a chair"></textarea></label>
+        <label class="rf-wide">Reason for referral *<textarea name="reason" required rows="3" placeholder="What's the main difficulty? e.g. walking, balance, getting out of a chair, pain, recovering after a hospital stay or operation"></textarea></label>
         <label class="rf-wide">Relevant history<textarea name="history" rows="3" placeholder="Anything that has happened: falls, operations, hospital stays, stroke, other health conditions"></textarea></label>
         <p class="rf-q" id="rfAreasLabel">Areas of concern * <span>(tick all that apply)</span></p>
-        <div class="rf-chips" role="group" aria-labelledby="rfAreasLabel"><label class="rf-chip"><input type="checkbox" name="area" value="Neurological / Stroke"><span>Neurological / Stroke</span></label><label class="rf-chip"><input type="checkbox" name="area" value="MSK Issue"><span>MSK Issue</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Respiratory Issue"><span>Respiratory Issue</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Falls Prevention &amp; Management"><span>Falls Prevention &amp; Management</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Sports Rehab"><span>Sports Rehab</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Post-Surgical / Post-Op Recovery"><span>Post-Surgical / Post-Op Recovery</span></label></div>
+        <div class="rf-chips" role="group" aria-labelledby="rfAreasLabel"><label class="rf-chip"><input type="checkbox" name="area" value="Neurological / Stroke"><span>Neurological issues (e.g. stroke, Parkinson's, MS)</span></label><label class="rf-chip"><input type="checkbox" name="area" value="MSK Issue"><span>MSK concerns (joints, back, muscles)</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Respiratory Issue"><span>Breathing / respiratory</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Falls Prevention &amp; Management"><span>Falls or poor balance</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Sports Rehab"><span>Sports injury</span></label><label class="rf-chip"><input type="checkbox" name="area" value="Post-Surgical / Post-Op Recovery"><span>Recovery after surgery or a hospital stay</span></label></div>
+        <p class="rf-q" id="rfFlagsLabel">Do any of these apply? <span>(tick any that do)</span></p>
+        <div class="rf-flags" role="group" aria-labelledby="rfFlagsLabel">
+          <label class="rf-check"><input type="checkbox" name="flag" value="helpToMove"> Needs help from another person to walk, stand or get out of a chair</label>
+          <label class="rf-check"><input type="checkbox" name="flag" value="recentHospital"> Home from hospital in the last 6 weeks</label>
+          <label class="rf-check"><input type="checkbox" name="flag" value="falls"> Two or more falls in the last year</label>
+          <label class="rf-check"><input type="checkbox" name="flag" value="memory"> Memory problems or confusion</label>
+          <label class="rf-check"><input type="checkbox" name="flag" value="conditions"> Several long-term health conditions (e.g. heart, lung, diabetes)</label>
+          <label class="rf-check"><input type="checkbox" name="flag" value="livesAlone"> Lives alone</label>
+        </div>
         <div class="rf-triage" id="rfTriage" role="status" aria-live="polite" hidden></div>
         <label class="rf-wide">Best way to reach you
           <select name="contactPref"><option>Phone call</option><option>WhatsApp</option><option>Email</option></select>
         </label>
       </fieldset>
 
-      <label class="rf-check"><input type="checkbox" name="consent" required> They know about this referral and are happy for Community Care Physio to contact them (or I have the right to act on their behalf). *</label>
+      <label class="rf-check"><input type="checkbox" name="consent" required> <span data-self="I'm happy for Community Care Physio to contact me about this referral. *">They know about this referral and are happy for Community Care Physio to contact them (or I have the right to act on their behalf). *</span></label>
       <input class="rf-hp" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
       <button type="submit" class="btn-p rf-submit">Send referral</button>
       <p class="rf-status" id="familyStatus" role="status" aria-live="polite"></p>
       <p class="rf-small">Your details are used only to arrange their care. See our <a href="#" onclick="openLegal('privacy');return false">privacy policy</a>.</p>
     </form>
   </div>
+
+  <dialog class="rf-dialog" id="rfSent" aria-labelledby="rfSentTitle">
+    <h3 id="rfSentTitle">✓ Referral sent</h3>
+    <p id="rfSentText">Thank you. We'll be in touch within one working day.</p>
+    <form method="dialog"><button class="btn-p">OK</button></form>
+  </dialog>
 
   <div class="rf-wrap" id="rfClinician" role="tabpanel" aria-labelledby="rfTabClinician" hidden>
     <aside class="rf-side">

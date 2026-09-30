@@ -112,7 +112,7 @@ function referralSummary(value) {
       if (detail !== '' && detail !== null) lines.push(`${key.replace(/([A-Z])/g, ' $1')}: ${detail}`);
     }
   }
-  if (value.triage) lines.push('', 'TRIAGE', `Areas: ${value.triage.areas.join(', ')}`, `Complex: ${value.triage.complex ? 'yes' : 'no'}`, `Suggested: ${value.triage.suggested}`);
+  if (value.triage) lines.push('', 'TRIAGE', `Areas: ${value.triage.areas.join(', ')}`, `Complex: ${value.triage.complex ? `yes (${value.triage.reasons.join('; ')})` : 'no'}`, `Also noted: ${value.triage.flags.includes('livesAlone') ? 'lives alone' : 'none'}`, `Suggested: ${value.triage.suggested}`);
   lines.push('', 'Referral consent: confirmed', '', 'View it in admin.');
   return lines.join('\n');
 }

@@ -13,7 +13,7 @@
   const collect = (form) => {
     const out = {};
     form.querySelectorAll('input[name],input[data-list],select[name],textarea[name]').forEach((el) => {
-      if (el.name === 'website' || el.name === 'area') return;
+      if (['website', 'area', 'flag', 'forWhom'].includes(el.name) || el.disabled) return;
       if (el.type === 'checkbox' && el.dataset.list) {
         if (!el.checked) return;
         const list = (out[el.dataset.list] = out[el.dataset.list] || []);
@@ -73,52 +73,98 @@
   // Deep link for case managers: /#referrals-clinician
   if (location.hash === '#referrals-clinician') setMode('clinician');
 
-  // ── Family / friend referral with booking-style triage ──
+  // ── Self / family / friend referral with booking-style triage ──
   const ff = document.getElementById('familyForm');
   if (ff) {
-    // Same rule as the booking flow; the server recalculates it independently.
+    // Same rules as the server (lib/practice-model.js), which recalculates independently.
     const COMPLEX = typeof COMPLEX_CATS !== 'undefined' ? COMPLEX_CATS : ['Neurological / Stroke', 'Respiratory Issue', 'Post-Surgical / Post-Op Recovery', 'Falls Prevention & Management'];
-    const areas = () => Array.from(ff.querySelectorAll('input[name=area]:checked')).map((i) => i.value);
+    const FLAG_TEXT = { helpToMove: 'needs help from another person to move', recentHospital: 'recently home from hospital', falls: 'repeated falls', memory: 'memory problems or confusion', conditions: 'several long-term conditions' };
+    const checked = (name) => Array.from(ff.querySelectorAll(`input[name=${name}]:checked`)).map((i) => i.value);
+    const isSelf = () => ff.querySelector('input[name=forWhom]:checked')?.value === 'me';
+    const aboutYou = document.getElementById('rfAboutYou');
+    const clientPhone = ff.querySelector('[name="client.phone"]');
+    const clientEmail = ff.querySelector('[name="client.email"]');
+    ff.querySelectorAll('[data-self]').forEach((el) => { el.dataset.other = el.textContent; });
+
+    const applyWho = () => {
+      const self = isSelf();
+      aboutYou.hidden = self;
+      aboutYou.querySelectorAll('input').forEach((i) => { i.disabled = self; });
+      document.getElementById('rfClientLegend').textContent = self ? 'Your details' : "About the person you're referring";
+      ff.querySelectorAll('[data-self]').forEach((el) => { el.textContent = self ? el.dataset.self : el.dataset.other; });
+      // When referring yourself we need a way to reach you.
+      clientPhone.required = self; clientEmail.required = self;
+    };
+
+    // Travel charge from the coverage map, shown next to the postcode.
+    const travelEl = document.getElementById('rfTravel');
+    const travelBand = () => (window.CCPCoverage ? window.CCPCoverage.coverageBand(ff.querySelector('[name="client.postcode"]').value) : null);
+    const showTravel = () => {
+      const pc = ff.querySelector('[name="client.postcode"]').value.trim();
+      const band = travelBand();
+      if (!pc || !band) { travelEl.textContent = ''; return; }
+      travelEl.className = 'rf-travel ' + band.tier;
+      travelEl.textContent = band.fee === null ? 'Outside our usual map — we’ll confirm travel with you.'
+        : band.fee === 0 ? '✓ Travel included in this area.'
+        : `+ £${band.fee} travel charge per visit for this area.`;
+    };
+
     const triageBox = document.getElementById('rfTriage');
     const showTriage = () => {
-      const a = areas();
+      const a = checked('area');
       triageBox.hidden = !a.length;
       if (!a.length) return;
-      const complex = a.some((x) => COMPLEX.includes(x));
+      const flags = checked('flag').filter((f) => FLAG_TEXT[f]);
+      const why = [...a.filter((x) => COMPLEX.includes(x)).map((x) => x.toLowerCase()), ...flags.map((f) => FLAG_TEXT[f])];
+      const complex = why.length > 0;
+      const band = travelBand();
+      const travel = band && band.fee ? ` plus £${band.fee} travel` : '';
       triageBox.className = 'rf-triage' + (complex ? ' complex' : '');
       triageBox.textContent = complex
-        ? 'Based on the areas selected, this is treated as a complex case, which needs a longer, more thorough assessment. Initial assessment: £130 (60 minutes).'
-        : 'Initial assessment: £100 (60 minutes).';
+        ? `This looks like a complex case (${why.join(', ')}), which needs a longer, more thorough first visit. Initial assessment: £130${travel} (60 minutes).`
+        : `Initial assessment: £100${travel} (60 minutes).`;
     };
-    ff.addEventListener('change', (e) => { if (e.target.name === 'area') showTriage(); });
+
+    ff.addEventListener('change', (e) => {
+      if (e.target.name === 'forWhom') applyWho();
+      if (['area', 'flag'].includes(e.target.name)) showTriage();
+    });
+    ff.querySelector('[name="client.postcode"]').addEventListener('input', () => { showTravel(); showTriage(); });
+
     const status = document.getElementById('familyStatus');
+    const dialog = document.getElementById('rfSent');
     ff.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const bad = firstInvalid(ff);
+      const bad = Array.from(ff.querySelectorAll('[required]')).find((el) => !el.disabled && (el.type === 'checkbox' ? !el.checked : !el.value.trim() || (el.type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim()))));
       if (bad) { status.className = 'rf-status err'; status.textContent = 'Please complete the required fields marked *.'; bad.focus(); return; }
-      if (!areas().length) { status.className = 'rf-status err'; status.textContent = 'Please tick at least one area of concern.'; ff.querySelector('input[name=area]').focus(); return; }
+      if (!checked('area').length) { status.className = 'rf-status err'; status.textContent = 'Please tick at least one area of concern.'; ff.querySelector('input[name=area]').focus(); return; }
       const d = collect(ff);
+      const self = isSelf();
+      const you = self ? { name: d.client.name, role: 'self-referral', phone: d.client.phone, email: d.client.email } : d.referrer;
       const data = {
         source: 'family',
-        referrer: { name: d.referrer.name, role: d.referrer.role, phone: d.referrer.phone, email: d.referrer.email, organisation: '' },
+        referrer: { name: you.name, role: you.role || '', phone: you.phone, email: you.email, organisation: '' },
         client: { name: d.client.name, dob: d.client.dob || '', phone: d.client.phone, email: d.client.email, address: d.client.address, postcode: d.client.postcode, contactName: '', contactPhone: '', contactRelation: '' },
         clinical: { condition: d.reason + (d.history ? `\n\nRelevant history: ${d.history}` : ''), precautions: '' },
-        service: { type: 'assessment-treatment', urgency: 'routine', notes: `Best way to reach the referrer: ${d.contactPref}` },
+        service: { type: 'assessment-treatment', urgency: 'routine', notes: `${self ? 'Self-referral. ' : ''}Best way to reach the referrer: ${d.contactPref}` },
         funding: { caseRef: '', payerName: '', invoiceEmail: '', poNumber: '', authorisedSessions: null, reportDue: null, invoiceAddress: '' },
-        triage: { areas: areas() },
+        triage: { areas: checked('area'), flags: Object.fromEntries(checked('flag').map((f) => [f, true])) },
         consent: d.consent === true
       };
       const btn = ff.querySelector('.rf-submit');
       btn.disabled = true; status.className = 'rf-status'; status.textContent = 'Sending…';
       try {
         const res = await post({ action: 'referral', data, website: ff.website.value });
-        ff.reset(); showTriage();
-        status.className = 'rf-status ok';
-        status.textContent = `Thank you — we've received your referral${res.ref ? ` (reference ${res.ref})` : ''} and will be in touch within one working day.`;
+        ff.reset(); applyWho(); showTravel(); showTriage();
+        const msg = `Thank you — we've received your referral${res.ref ? ` (reference ${res.ref})` : ''} and will be in touch within one working day.`;
+        status.className = 'rf-status ok'; status.textContent = msg;
+        document.getElementById('rfSentText').textContent = msg;
+        if (dialog?.showModal) dialog.showModal();
       } catch (err) {
         status.className = 'rf-status err'; status.textContent = err.message;
       } finally { btn.disabled = false; }
     });
+    applyWho();
   }
 
   // ── Intake & consent form ──

@@ -529,6 +529,13 @@ test('family referrals are triaged on the server like online bookings', () => {
   const simple = family(['MSK Issue']);
   assert.equal(simple.source, 'family'); assert.equal(simple.triage.complex, false);
   assert.match(simple.triage.suggested, /£100/);
+  // Triage questions: needing help to move makes it complex; living alone alone does not.
+  assert.equal(family(['MSK Issue'], { flags: { livesAlone: true } }).triage.complex, false);
+  const helped = family(['MSK Issue'], { flags: { helpToMove: true, bogus: true } });
+  assert.equal(helped.triage.complex, true); assert.deepEqual(helped.triage.flags, ['helpToMove']);
+  // Travel comes from the coverage map for the client's postcode.
+  const withPostcode = cleanReferral({ ...referral(), client: { name: 'X', postcode: 'SW19 8HQ' }, source: 'family', triage: { areas: ['MSK Issue'] } });
+  assert.equal(withPostcode.triage.travelFee, 0); assert.match(withPostcode.triage.suggested, /travel included/);
   // The browser cannot downgrade a complex case: complexity is recomputed from the areas.
   const complex = family(['MSK Issue', 'Falls Prevention & Management'], { complex: false });
   assert.equal(complex.triage.complex, true); assert.match(complex.triage.suggested, /£130/);
