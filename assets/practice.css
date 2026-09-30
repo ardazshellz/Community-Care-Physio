@@ -116,3 +116,37 @@ html{scroll-padding-top:96px}
 .bk-flags{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .bk-flags label{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;font-weight:400;color:var(--char);line-height:1.45;cursor:pointer}
 .bk-flags input{width:17px;height:17px;margin-top:1px;flex-shrink:0;accent-color:var(--forest);padding:0}
+
+/* ── Mobile sizing and placement ── */
+/* Floating WhatsApp/chat buttons never sit on top of pop-ups or the intake form. */
+body:has(#bModal.open) .float-wa, body:has(#bModal.open) .chat-bub,
+body:has(.if-overlay) .float-wa, body:has(.if-overlay) .chat-bub,
+body:has(.rf-dialog[open]) .float-wa, body:has(.rf-dialog[open]) .chat-bub{display:none}
+@media(max-width:600px){
+  /* Smaller, tucked-in floating buttons so they cover less text. */
+  .float-wa{width:42px;height:42px;right:12px;bottom:calc(66px + env(safe-area-inset-bottom,0px))}
+  .chat-bub{width:44px;height:44px;right:12px;bottom:calc(14px + env(safe-area-inset-bottom,0px))}
+  .float-wa svg,.chat-bub svg{transform:scale(.88)}
+  /* Keep the last lines of the footer clear of the floating buttons. */
+  footer{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  /* Referral: form first, "what happens next" after it; full-width buttons. */
+  .rf-wrap .rf-side{order:2}
+  .rf-toggle button{flex:1 1 100%}
+  .rf-submit{width:100%;justify-content:center}
+}
+@media(max-width:480px){
+  /* One column where two columns squeeze the text. */
+  .how-grid{grid-template-columns:1fr}
+  .contact-grid{grid-template-columns:1fr}
+}
+.if-card #intakeForm{margin-top:18px}
+/* Admin practice panel on phones: nothing wider than the screen. */
+#prPanel .eq-layout>*{min-width:0}
+#prPanel select,#prPanel .eq-search{max-width:100%}
+@media(max-width:600px){
+  .pr-line{grid-template-columns:1fr 1fr}
+  .pr-line .pr-desc,.pr-line label:nth-of-type(2){grid-column:1/-1}
+  .pr-amt{text-align:left;padding-bottom:0;align-self:center}
+  .pr-line .eq-btn{justify-self:end}
+  .pr-kv{grid-template-columns:1fr}
+}
