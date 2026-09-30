@@ -77,7 +77,7 @@ function field(k,title,type='text',wide=false){
 }
 function messageCard(k,title){
  const e=state.current;
- return '<section class="eq-section"><h3>'+title+'</h3><label class="eq-field">Editable message<textarea id="eq-'+k+'" class="eq-draft">'+esc(e.drafts[k]||'')+'</textarea></label><div class="eq-actions"><button class="eq-btn" data-action="generate" data-kind="'+k+'">Generate draft</button><button class="eq-btn" data-action="open" data-kind="'+k+'">Open '+(e.details.channel==='whatsapp'?'WhatsApp':'Gmail')+' draft</button><button class="eq-btn" data-action="sent" data-kind="'+k+'">I have sent this message</button></div><p class="eq-muted">'+(sent(e,k)?'Recorded as sent. You can edit and send a follow-up.':'Review, save, then send the draft. Record it as sent afterwards.')+'</p></section>';
+ return '<section class="eq-section"><h3>'+title+'</h3><label class="eq-field">Editable message<textarea id="eq-'+k+'" class="eq-draft">'+esc(e.drafts[k]||'')+'</textarea></label><div class="eq-actions"><button class="eq-btn" data-action="generate" data-kind="'+k+'">Generate draft</button>'+(e.details.channel==='whatsapp'?'':'<button class="eq-btn" data-action="send" data-kind="'+k+'">Send from infoccphysio</button>')+'<button class="eq-btn" data-action="open" data-kind="'+k+'">Open '+(e.details.channel==='whatsapp'?'WhatsApp':'Gmail')+' draft</button><button class="eq-btn" data-action="sent" data-kind="'+k+'">I have sent this message</button></div><p class="eq-muted">'+(sent(e,k)?'Recorded as sent. You can edit and send a follow-up.':'Review, save, then send the draft. Record it as sent afterwards.')+'</p></section>';
 }
 function renderEditor(){
  const e=state.current,host=$('eqEditor');
@@ -124,12 +124,30 @@ function newEnquiry(){
  state.current={id:crypto.randomUUID(),version:0,payment_state:'none',details:Object.fromEntries(detailFields.map(k=>[k,k==='channel'?'email':k==='amount'?'100':''])),drafts:{subject:'Your enquiry — Community Care Physio'},communications:[]};
  state.dirty=true;renderEditor();renderList();status('Enter the patient details and save them as a query patient.');
 }
+function readyToSend(k){
+ if(state.dirty||!state.current.version){status('Save the enquiry and draft before opening it.',true);return null;}
+ const e=state.current,body=e.drafts[k];
+ if(!body){status('Generate and save this message first.',true);return null;}
+ if(k==='payment'&&(e.payment_state!=='open'||!body.includes(e.payment_url)||new Date(e.expires_at)<=new Date())){status('Create an active payment link and include it in the saved draft.',true);return null;}
+ if(k==='confirmation'&&e.payment_state!=='paid'){status('Payment has not been confirmed.',true);return null;}
+ return body;
+}
+// Send the saved draft from infoccphysio via the server (adds the branded signature), then record it as sent.
+async function sendMessage(k){
+ const body=readyToSend(k);if(!body)return;
+ const e=state.current,d=e.details;
+ if(!d.email){status('Enter and save an email address first.',true);return;}
+ if(!confirm('Send this message to '+d.email+' from infoccphysio@gmail.com?'))return;
+ const token=sessionStorage.getItem('ccp_admin_token');
+ const r=await fetch('/api/send-patient-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({emailType:'custom',token,to:d.email,subject:e.drafts.subject,body})});
+ const out=await r.json().catch(()=>({}));
+ if(!r.ok)throw new Error(out.error||'Email could not be sent.');
+ updateRecord((await api('sent',{id:e.id,version:e.version,kind:k,channel:'email'})).enquiry);
+ status('Sent from infoccphysio and recorded as sent.');
+}
 function openMessage(k){
- if(state.dirty||!state.current.version){status('Save the enquiry and draft before opening it.',true);return;}
- const e=state.current,d=e.details,body=e.drafts[k];
- if(!body){status('Generate and save this message first.',true);return;}
- if(k==='payment'&&(e.payment_state!=='open'||!body.includes(e.payment_url)||new Date(e.expires_at)<=new Date())){status('Create an active payment link and include it in the saved draft.',true);return;}
- if(k==='confirmation'&&e.payment_state!=='paid'){status('Payment has not been confirmed.',true);return;}
+ const body=readyToSend(k);if(!body)return;
+ const e=state.current,d=e.details;
  let url;
  if(d.channel==='whatsapp'){
   const phone=normalisePhone(d.phone);if(!phone){status('Enter and save a valid mobile number first.',true);return;}
@@ -155,6 +173,7 @@ $('eqPanel').addEventListener('click',event=>{
   const e=readForm();$('eq-'+k).value=template(k,e);dirty();return;
  }
  if(action==='open'){openMessage(k);return;}
+ if(action==='send'){run(()=>sendMessage(k));return;}
  if(action==='patients'){window.adminNav('patients');return;}
  run(async()=>{
   if(action==='save'){await save();return;}

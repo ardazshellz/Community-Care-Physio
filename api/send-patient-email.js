@@ -142,6 +142,31 @@ ${SIGNATURE_TEXT}`;
   return { subject, text, html };
 }
 
+// Any admin-generated email (confirmation, payment link, cancellation, reminder,
+// exercise programme, enquiry replies). The admin drafts the plain text; the
+// sign-off is replaced with the branded signature so every email matches.
+export function customEmail(body) {
+  const subject = String(body.subject || '').trim();
+  let text = String(body.body || '').replace(/\r\n/g, '\n').trim();
+  if (!subject || subject.length > 200) return { error: 'Please provide a subject (max 200 characters).' };
+  if (!text || text.length > 20000) return { error: 'Please provide an email body (max 20,000 characters).' };
+
+  // Drop any plain-text sign-off the draft already carries; the formal one is added below.
+  const cut = text.lastIndexOf('Kind regards,');
+  if (cut !== -1 && /Zakery/.test(text.slice(cut))) text = text.slice(0, cut).trim();
+
+  const linkify = (html) => html.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color:#1e4d3b">$1</a>');
+  const paragraphs = text.split(/\n{2,}/)
+    .map(p => `<p style="margin:0 0 16px;line-height:1.65">${linkify(esc(p)).replace(/\n/g, '<br>')}</p>`)
+    .join('');
+
+  return {
+    subject,
+    text: `${text}\n\n${SIGNATURE_TEXT}`,
+    html: `<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#ffffff;font-family:Arial,sans-serif;font-size:14px;color:#1a1f1d"><div style="max-width:600px">${paragraphs}<div style="margin-top:24px;color:#586860;font-size:13px;line-height:1.6">${SIGNATURE_HTML}</div></div></body></html>`
+  };
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://communitycarephysio.co.uk');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -162,12 +187,13 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Email is not configured on the server. GMAIL_APP_PASSWORD is missing.' });
   }
 
-  const emailType = body.emailType === 'dna' ? 'dna' : body.emailType === 'review' ? 'review' : '';
+  const emailType = ['dna', 'review', 'custom'].includes(body.emailType) ? body.emailType : '';
   if (!emailType) {
     return res.status(400).json({ error: 'Unknown email type.' });
   }
 
-  const message = emailType === 'dna' ? dnaEmail(body) : reviewEmail(body);
+  const message = emailType === 'dna' ? dnaEmail(body) : emailType === 'review' ? reviewEmail(body) : customEmail(body);
+  if (message.error) return res.status(400).json({ error: message.error });
 
   try {
     const transporter = nodemailer.createTransport({
@@ -193,9 +219,7 @@ export default async function handler(req, res) {
       message: error?.message || String(error)
     });
     return res.status(502).json({
-      error: emailType === 'dna'
-        ? `The DNA notice could not be sent: ${error?.message || 'email service error'}`
-        : `The review email could not be sent: ${error?.message || 'email service error'}`
+      error: `The ${emailType === 'dna' ? 'DNA notice' : emailType === 'review' ? 'review email' : 'email'} could not be sent: ${error?.message || 'email service error'}`
     });
   }
 }
