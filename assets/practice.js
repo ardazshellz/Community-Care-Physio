@@ -33,7 +33,7 @@ async function api(action, extra = {}) {
   if (!r.ok) throw new Error(r.status === 401 ? 'Your admin session has expired. Sign out and back in.' : d.error || 'Request failed.');
   return d;
 }
-function status(msg, bad = false) { const el = $('prStatus'); if (el) { el.textContent = msg; el.className = 'eq-status' + (bad ? ' error' : ''); } }
+function status(msg, bad = false) { const el = $('prStatus'); if (el) { el.textContent = msg; el.className = 'eq-status' + (bad ? ' error' : ''); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
 
 // quiet: background refresh after a bookings sync. It never replaces lists or
 // re-renders while a referral or invoice is open, so unsaved edits survive.
@@ -364,13 +364,13 @@ document.addEventListener('click', (ev) => {
   if (a === 'print-intake') { const r = state.intakes.find((x) => x.key === btn.dataset.key); const w = window.open('', '_blank'); if (w && r) { w.document.write(`<!doctype html><title>Intake — ${esc(r.value.name)}</title><body style="font-family:Arial;font-size:13px;max-width:720px;margin:20px auto">${intakeView(r).replace(/<div class="eq-actions">.*?<\/div>/s, '')}<script>onload=()=>print()<\/script></body>`); w.document.close(); } return; }
   if (a === 'save-inv-settings') run(async () => {
     const value = { businessName: $('psBiz').value.trim(), paymentTermsDays: Number($('psTerms').value || 30), address: $('psAddr').value.trim(), accountName: $('psAccName').value.trim(), sortCode: $('psSort').value.trim(), accountNumber: $('psAcc').value.trim(), vatNote: $('psVat').value.trim() };
-    const d = await api('save', { key: 'settings:invoice', value }); state.settings['settings:invoice'] = d.value; status('Invoice details saved.');
+    const d = await api('save', { key: 'settings:invoice', value }); state.settings['settings:invoice'] = d.value; status('✓ Invoice details saved.');
   });
   if (a === 'gen-secret') { $('pdSecret').value = crypto.randomUUID().replace(/-/g, ''); return; }
   if (a === 'save-drive') run(async () => {
     const url = $('pdUrl').value.trim();
     if (url && !/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url)) throw new Error('That does not look like an Apps Script web app URL (https://script.google.com/macros/s/…/exec).');
-    const d = await api('save', { key: 'settings:drive', value: { scriptUrl: url, secret: $('pdSecret').value.trim() } }); state.settings['settings:drive'] = d.value; status('Drive settings saved.');
+    const d = await api('save', { key: 'settings:drive', value: { scriptUrl: url, secret: $('pdSecret').value.trim() } }); state.settings['settings:drive'] = d.value; status('✓ Drive settings saved. Test it with the 📝 Notes button on any patient.');
   });
 });
 document.addEventListener('change', (ev) => {
