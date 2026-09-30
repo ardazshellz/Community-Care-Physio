@@ -43,7 +43,7 @@
 .if-card .if-chk{flex-direction:row;align-items:flex-start;gap:10px;font-weight:400;line-height:1.5;margin:0 0 8px}
 .if-chk input{width:19px;height:19px;margin-top:1px;flex-shrink:0;accent-color:var(--forest)}
 .if-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.if-warn{background:#fff4e5;border-left:3px solid #c4975a;padding:10px 12px;border-radius:8px;font-size:13.5px!important}
+.if-warn{background:#fff4e5;border:1px solid rgba(196,151,90,.45);padding:10px 12px;border-radius:8px;font-size:13.5px!important}
 @media(max-width:600px){.if-chks,.if-row{grid-template-columns:1fr}.if-card{padding:20px}}
 
 /* Admin: referrals, invoices, practice tools */
