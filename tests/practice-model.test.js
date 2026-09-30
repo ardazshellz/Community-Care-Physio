@@ -523,3 +523,18 @@ test('public referrals are rate limited and each referrer is acknowledged at mos
   const blocked = await request(handler, { action: 'referral', data: referral() });
   assert.equal(blocked.code, 429); assert.equal(db.rows.size, 12);
 });
+
+test('family referrals are triaged on the server like online bookings', () => {
+  const family = (areas, extra = {}) => cleanReferral({ ...referral(), source: 'family', triage: { areas, complex: false, ...extra } });
+  const simple = family(['MSK Issue']);
+  assert.equal(simple.source, 'family'); assert.equal(simple.triage.complex, false);
+  assert.match(simple.triage.suggested, /£100/);
+  // The browser cannot downgrade a complex case: complexity is recomputed from the areas.
+  const complex = family(['MSK Issue', 'Falls Prevention & Management'], { complex: false });
+  assert.equal(complex.triage.complex, true); assert.match(complex.triage.suggested, /£130/);
+  assert.throws(() => family([]), /area of concern/);
+  assert.throws(() => family(['Made-up area']), /area of concern/);
+  assert.equal(cleanReferral(referral()).source, 'clinician');
+  assert.equal(cleanReferral(referral()).triage, undefined);
+  assert.throws(() => cleanReferral({ ...referral(), client: { name: 'X', email: 'not-an-email' } }), /client email/);
+});

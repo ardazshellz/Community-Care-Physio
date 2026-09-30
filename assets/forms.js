@@ -13,7 +13,7 @@
   const collect = (form) => {
     const out = {};
     form.querySelectorAll('input[name],input[data-list],select[name],textarea[name]').forEach((el) => {
-      if (el.name === 'website') return;
+      if (el.name === 'website' || el.name === 'area') return;
       if (el.type === 'checkbox' && el.dataset.list) {
         if (!el.checked) return;
         const list = (out[el.dataset.list] = out[el.dataset.list] || []);
@@ -50,6 +50,71 @@
         rf.reset();
         status.className = 'rf-status ok';
         status.textContent = `Thank you — referral received${res.ref ? ` (reference ${res.ref})` : ''}. We've emailed you a confirmation and will reply within one working day.`;
+      } catch (err) {
+        status.className = 'rf-status err'; status.textContent = err.message;
+      } finally { btn.disabled = false; }
+    });
+  }
+
+  // ── Referral type toggle: family/friend (default) or clinician ──
+  const tabs = document.querySelectorAll('[data-rf-mode]');
+  const intro = document.getElementById('rfIntro');
+  const INTRO = {
+    family: "Worried about a parent, relative or friend? Tell us a little about them and we'll get in touch to talk it through. Clinicians and case managers can use the clinician form.",
+    clinician: "For rehabilitation case managers, solicitors, insurers, GPs and care teams. Chartered, HCPC-registered physiotherapy in the client's own home, with clear reporting and invoicing to your organisation."
+  };
+  const setMode = (mode) => {
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.rfMode === mode)));
+    document.getElementById('rfFamily').hidden = mode !== 'family';
+    document.getElementById('rfClinician').hidden = mode !== 'clinician';
+    if (intro) intro.textContent = INTRO[mode];
+  };
+  tabs.forEach((t) => t.addEventListener('click', () => setMode(t.dataset.rfMode)));
+  // Deep link for case managers: /#referrals-clinician
+  if (location.hash === '#referrals-clinician') setMode('clinician');
+
+  // ── Family / friend referral with booking-style triage ──
+  const ff = document.getElementById('familyForm');
+  if (ff) {
+    // Same rule as the booking flow; the server recalculates it independently.
+    const COMPLEX = typeof COMPLEX_CATS !== 'undefined' ? COMPLEX_CATS : ['Neurological / Stroke', 'Respiratory Issue', 'Post-Surgical / Post-Op Recovery', 'Falls Prevention & Management'];
+    const areas = () => Array.from(ff.querySelectorAll('input[name=area]:checked')).map((i) => i.value);
+    const triageBox = document.getElementById('rfTriage');
+    const showTriage = () => {
+      const a = areas();
+      triageBox.hidden = !a.length;
+      if (!a.length) return;
+      const complex = a.some((x) => COMPLEX.includes(x));
+      triageBox.className = 'rf-triage' + (complex ? ' complex' : '');
+      triageBox.textContent = complex
+        ? 'Based on the areas selected, this is treated as a complex case, which needs a longer, more thorough assessment. Initial assessment: £130 (60 minutes).'
+        : 'Initial assessment: £100 (60 minutes).';
+    };
+    ff.addEventListener('change', (e) => { if (e.target.name === 'area') showTriage(); });
+    const status = document.getElementById('familyStatus');
+    ff.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const bad = firstInvalid(ff);
+      if (bad) { status.className = 'rf-status err'; status.textContent = 'Please complete the required fields marked *.'; bad.focus(); return; }
+      if (!areas().length) { status.className = 'rf-status err'; status.textContent = 'Please tick at least one area of concern.'; ff.querySelector('input[name=area]').focus(); return; }
+      const d = collect(ff);
+      const data = {
+        source: 'family',
+        referrer: { name: d.referrer.name, role: d.referrer.role, phone: d.referrer.phone, email: d.referrer.email, organisation: '' },
+        client: { name: d.client.name, dob: d.client.dob || '', phone: d.client.phone, email: d.client.email, address: d.client.address, postcode: d.client.postcode, contactName: '', contactPhone: '', contactRelation: '' },
+        clinical: { condition: d.reason + (d.history ? `\n\nRelevant history: ${d.history}` : ''), precautions: '' },
+        service: { type: 'assessment-treatment', urgency: 'routine', notes: `Best way to reach the referrer: ${d.contactPref}` },
+        funding: { caseRef: '', payerName: '', invoiceEmail: '', poNumber: '', authorisedSessions: null, reportDue: null, invoiceAddress: '' },
+        triage: { areas: areas() },
+        consent: d.consent === true
+      };
+      const btn = ff.querySelector('.rf-submit');
+      btn.disabled = true; status.className = 'rf-status'; status.textContent = 'Sending…';
+      try {
+        const res = await post({ action: 'referral', data, website: ff.website.value });
+        ff.reset(); showTriage();
+        status.className = 'rf-status ok';
+        status.textContent = `Thank you — we've received your referral${res.ref ? ` (reference ${res.ref})` : ''} and will be in touch within one working day.`;
       } catch (err) {
         status.className = 'rf-status err'; status.textContent = err.message;
       } finally { btn.disabled = false; }

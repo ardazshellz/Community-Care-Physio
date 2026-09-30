@@ -112,6 +112,7 @@ function referralSummary(value) {
       if (detail !== '' && detail !== null) lines.push(`${key.replace(/([A-Z])/g, ' $1')}: ${detail}`);
     }
   }
+  if (value.triage) lines.push('', 'TRIAGE', `Areas: ${value.triage.areas.join(', ')}`, `Complex: ${value.triage.complex ? 'yes' : 'no'}`, `Suggested: ${value.triage.suggested}`);
   lines.push('', 'Referral consent: confirmed', '', 'View it in admin.');
   return lines.join('\n');
 }
@@ -164,7 +165,7 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
         await Promise.all([
           bestEffortMail(mail, action, {
             to: FROM_EMAIL,
-            subject: `New referral ${ref} — ${data.referrer.organisation || data.referrer.name}`.replace(/[\r\n]/g, ' '),
+            subject: `New ${data.source === 'family' ? 'family/friend ' : ''}referral ${ref} — ${data.referrer.organisation || data.referrer.name}`.replace(/[\r\n]/g, ' '),
             text: referralSummary(value)
           }),
           !acknowledged && bestEffortMail(mail, action, {

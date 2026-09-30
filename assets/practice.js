@@ -108,7 +108,7 @@ function renderReferrals() {
   const cur = state.referrals.find((r) => r.key === state.open);
   const list = state.referrals.map((r) => {
     const v = r.value, auth = Number(v.funding?.authorisedSessions || 0);
-    return `<button data-pr="open" data-key="${esc(r.key)}" aria-current="${r.key === state.open}"><strong>${esc(v.client?.name)}</strong><span class="pr-badge ${esc(v.status)}">${esc(v.status)}</span><small>${esc(v.referrer?.organisation || v.referrer?.name)} · ${esc(v.ref || '')}${auth ? ` · ${sessionsUsed(r)}/${auth} sessions` : ''}</small></button>`;
+    return `<button data-pr="open" data-key="${esc(r.key)}" aria-current="${r.key === state.open}"><strong>${esc(v.client?.name)}</strong><span class="pr-badge ${esc(v.status)}">${esc(v.status)}</span><small>${v.source === 'family' ? `Family/friend · ${esc(v.referrer?.name)}` : esc(v.referrer?.organisation || v.referrer?.name)} · ${esc(v.ref || '')}${v.triage?.complex ? ' · complex' : ''}${auth ? ` · ${sessionsUsed(r)}/${auth} sessions` : ''}</small></button>`;
   }).join('') || '<p class="eq-muted">No referrals yet. Referrals from the website form appear here, or add one manually.</p>';
   body.innerHTML = `<div class="eq-layout"><div><button class="eq-btn primary" data-pr="new-ref">＋ Add referral</button><div class="eq-list">${list}</div></div><div id="prDetail">${cur ? referralEditor(cur) : '<p class="eq-muted">Select a referral.</p>'}</div></div>`;
 }
@@ -121,7 +121,8 @@ function referralEditor(r) {
   const reports = (v.reports || []).map((rep, i) => `<tr><td><input data-rep="${i}" data-f="label" value="${esc(rep.label)}"></td><td><input type="date" data-rep="${i}" data-f="due" value="${esc(rep.due || '')}"></td><td><label><input type="checkbox" data-rep="${i}" data-f="done" ${rep.done ? 'checked' : ''}> Done</label></td></tr>`).join('');
   const field = (path, label, val, type = 'text', wide = false) => `<label class="eq-field${wide ? ' eq-wide' : ''}">${label}<input data-path="${path}" type="${type}" value="${esc(val ?? '')}"></label>`;
   return `<section class="eq-section"><h3>${esc(c.name || 'New referral')} <span class="pr-badge ${esc(v.status)}">${esc(v.status)}</span></h3>
-    <p class="eq-muted">Ref ${esc(v.ref || '—')} · received ${ukDate((v.submittedAt || r.created_at || '').slice(0, 10))}${v.service?.urgency === 'urgent' ? ' · <strong>URGENT</strong>' : ''}</p>
+    <p class="eq-muted">${v.source === 'family' ? 'Family/friend referral' : 'Clinician referral'} · Ref ${esc(v.ref || '—')} · received ${ukDate((v.submittedAt || r.created_at || '').slice(0, 10))}${v.service?.urgency === 'urgent' ? ' · <strong>URGENT</strong>' : ''}</p>
+    ${v.triage ? `<div class="pr-alert${v.triage.complex ? ' bad' : ''}" style="margin-bottom:12px"><strong>Triage:</strong> ${esc((v.triage.areas || []).join(', '))} — ${v.triage.complex ? 'complex needs' : 'standard'}. Suggested: ${esc(v.triage.suggested || '')}.${v.service?.notes ? ` ${esc(v.service.notes)}.` : ''}</div>` : ''}
     <div class="eq-grid">
       <label class="eq-field">Status<select data-path="status">${REF_STATUS.map((s) => `<option ${s === v.status ? 'selected' : ''}>${s}</option>`).join('')}</select></label>
       <label class="eq-field">Linked patient (for session counting)<select data-path="bookingId"><option value="">— not linked —</option>${opts}</select></label>
@@ -142,10 +143,10 @@ function referralEditor(r) {
       <table class="pr-lines"><thead><tr><th>Report</th><th>Due</th><th></th></tr></thead><tbody>${reports || '<tr><td colspan="3" class="eq-muted">No reports tracked yet.</td></tr>'}</tbody></table>
       <div class="eq-actions"><button class="eq-btn" data-pr="add-report" data-label="Initial assessment report">＋ Initial report (5 working days)</button><button class="eq-btn" data-pr="add-report" data-label="Progress report">＋ Progress report</button><button class="eq-btn" data-pr="add-report" data-label="Discharge report">＋ Discharge report</button></div></section>
     <section class="eq-section"><h3>Referrer and client</h3><div class="eq-grid">
-      ${field('referrer.name', 'Referrer', rf.name)}${field('referrer.organisation', 'Organisation', rf.organisation)}
+      ${field('referrer.name', 'Referrer', rf.name)}${v.source === 'family' ? field('referrer.role', 'Relationship to client', rf.role) : field('referrer.organisation', 'Organisation', rf.organisation)}
       ${field('referrer.email', 'Referrer email', rf.email, 'email')}${field('referrer.phone', 'Referrer phone', rf.phone)}
       ${field('client.name', 'Client name', c.name)}${field('client.dob', 'Date of birth', c.dob, 'date')}
-      ${field('client.phone', 'Client phone', c.phone)}${field('client.postcode', 'Postcode', c.postcode)}
+      ${field('client.phone', 'Client phone', c.phone)}${field('client.email', 'Client email', c.email, 'email')}${field('client.postcode', 'Postcode', c.postcode)}
       ${field('client.address', 'Address', c.address, 'text', true)}
       ${field('client.contactName', 'Appointments contact', c.contactName)}${field('client.contactPhone', 'Contact phone', c.contactPhone)}
       <label class="eq-field eq-wide">Condition / history<textarea data-path="clinical.condition">${esc(v.clinical?.condition)}</textarea></label>

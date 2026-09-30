@@ -82,3 +82,18 @@
 html{scroll-padding-top:96px}
 .if-policy{background:var(--warm);border:1px solid rgba(30,77,59,.15);border-radius:12px;padding:16px;margin:0 0 20px;font-size:14px;line-height:1.6}
 .if-policy .btn-p{margin-bottom:12px}
+.rf-wrap[hidden]{display:none}
+.rf-toggle{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 0}
+.rf-toggle button{font:inherit;font-size:14.5px;font-weight:500;padding:11px 18px;border-radius:999px;border:1.5px solid var(--forest);background:#fff;color:var(--forest);cursor:pointer}
+.rf-toggle button[aria-selected=true]{background:var(--forest);color:#fff}
+.rf-toggle button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.rf-q{font-size:12.5px;font-weight:500;margin:12px 0 6px;color:var(--char)}
+.rf-q span{font-weight:400;color:var(--muted)}
+.rf-chips{display:flex;flex-wrap:wrap;gap:8px}
+.rf-form .rf-chip{flex-direction:row;align-items:center;gap:0;font-weight:400}
+.rf-chip input{position:absolute;opacity:0;width:1px;height:1px}
+.rf-chip span{padding:8px 14px;border-radius:20px;border:1px solid rgba(30,77,59,.25);font-size:13px;background:var(--warm);cursor:pointer;transition:all .15s}
+.rf-chip input:checked+span{background:var(--forest);color:#fff;border-color:var(--forest)}
+.rf-chip input:focus-visible+span{outline:3px solid var(--gold);outline-offset:2px}
+.rf-triage{margin:12px 0 4px;padding:10px 12px;border-radius:10px;background:var(--fp);font-size:13.5px;line-height:1.6;color:var(--forest)}
+.rf-triage.complex{background:#fbf4ea;color:#7a5520;border:1px solid rgba(196,151,90,.45)}
