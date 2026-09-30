@@ -217,7 +217,7 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
           key = recordKey(body.key, 'referral');
           kind = 'referral';
           if (!['new', 'accepted', 'active', 'declined', 'closed'].includes(value.status)) invalid('Invalid referral status.');
-        } else if (['settings:invoice', 'settings:drive'].includes(body.key)) {
+        } else if (['settings:invoice', 'settings:drive', 'settings:patient-groups'].includes(body.key)) {
           key = body.key;
           kind = 'settings';
         } else invalid('This record cannot be saved here.');

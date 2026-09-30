@@ -6,31 +6,9 @@ import Stripe from 'stripe';
 import {checkoutQuote,bookingFlags} from '../lib/checkout-pricing.js';
 import {TRIAGE_FLAGS} from '../lib/practice-model.js';
 import { supabase } from '../lib/supabase.js';
+import { durationMins, occupiedSlots, overlaps } from '../lib/slots.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-
-function getBlockedSlots(timeStr, durationMins) {
-  const [h, m] = timeStr.split(':').map(Number);
-  const startMins = h * 60 + m;
-  const totalBlock = durationMins + 45;
-  const blocked = [];
-  for (let t = 0; t < totalBlock; t += 30) {
-    const slotMins = startMins + t;
-    const sh = Math.floor(slotMins / 60);
-    const sm = slotMins % 60;
-    if (sh < 24) blocked.push(`${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`);
-  }
-  return blocked;
-}
-
-function getDurationMins(appt) {
-  const map = {
-    'Initial Assessment':60,'Standard Session':45,'Extended Session':60,
-    'Starter Programme':60,'Full Programme':60,
-    'Block of 4 Sessions':45,'Block of 6 Sessions':45
-  };
-  return map[appt] || 60;
-}
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -64,6 +42,11 @@ export default async function handler(req, res) {
     const chargedPrice=priceInPence/100;
     const serverComplexityFee=quote.complexityFee;
 
+    const ukToday = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
+    if (bd.bookedDate && bd.bookedDate < ukToday) {
+      return res.status(400).json({ error: 'Please choose a future date.' });
+    }
+
     // 1. Check slot isn't already taken
     if (bd.bookedDate && bd.bookedTime) {
       const { data: existing } = await supabase
@@ -76,8 +59,32 @@ export default async function handler(req, res) {
       if (existing) {
         return res.status(409).json({ error: 'Slot already booked', code: 'SLOT_TAKEN' });
       }
+
+      const [{ data: blocked, error: blockedErr }, { data: pending, error: pendingErr }] = await Promise.all([
+        supabase.from('blocked_slots').select('slot_time').eq('booking_date', bd.bookedDate),
+        supabase.from('pending_bookings').select('booked_time, booking_data')
+          .eq('booked_date', bd.bookedDate).gt('expires_at', new Date().toISOString())
+      ]);
+      if (blockedErr) throw blockedErr;
+      if (pendingErr) throw pendingErr;
+      if (pending.some(hold => hold.booked_time === bd.bookedTime)) {
+        return res.status(409).json({ error: 'Slot temporarily held', code: 'SLOT_HELD' });
+      }
+      const taken = new Set(blocked.map(slot => slot.slot_time));
+      pending.forEach(hold => {
+        if (!hold.booked_time) return;
+        occupiedSlots(hold.booked_time, durationMins(hold.booking_data?.appointment))
+          .forEach(slot => taken.add(slot));
+      });
+      if (overlaps(taken, bd.bookedTime, durationMins(bd.appointment))) {
+        return res.status(409).json({
+          error: 'That time overlaps another appointment. Please choose another time.', code: 'SLOT_TAKEN'
+        });
+      }
     }
 
+    // ponytail: A check-then-insert race remains for two checkouts in the same second.
+    // Upgrade to a Postgres function with row locks to make reservation atomic.
     // 2. Create pending booking in Supabase
     const { data: booking, error: bookingErr } = await supabase
       .from('bookings')

@@ -3,6 +3,7 @@
 // No auth needed as it only exposes dates/times, not patient data
 
 import { supabase } from '../lib/supabase.js';
+import { durationMins, occupiedSlots } from '../lib/slots.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://communitycarephysio.co.uk');
@@ -24,7 +25,7 @@ export default async function handler(req, res) {
     // Get pending slots (someone is mid-checkout right now)
     const { data: pending, error: pendingErr } = await supabase
       .from('pending_bookings')
-      .select('booked_date, booked_time')
+      .select('booked_date, booked_time, booking_data')
       .gt('expires_at', new Date().toISOString())
       .not('booked_date', 'is', null);
 
@@ -40,11 +41,13 @@ export default async function handler(req, res) {
       if (!bookedSlots[key].includes(slot_time)) bookedSlots[key].push(slot_time);
     });
 
-    pending.forEach(({ booked_date, booked_time }) => {
+    pending.forEach(({ booked_date, booked_time, booking_data }) => {
       if (!booked_date || !booked_time) return;
       const key = booked_date;
       if (!bookedSlots[key]) bookedSlots[key] = [];
-      if (!bookedSlots[key].includes(booked_time)) bookedSlots[key].push(booked_time);
+      occupiedSlots(booked_time, durationMins(booking_data?.appointment)).forEach(slot => {
+        if (!bookedSlots[key].includes(slot)) bookedSlots[key].push(slot);
+      });
     });
 
     return res.status(200).json({ bookedSlots });

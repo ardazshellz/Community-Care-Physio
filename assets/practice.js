@@ -47,6 +47,9 @@ async function load(quiet = false) {
     state.settings = Object.fromEntries(settings.map((r) => [r.key, r.value]));
     if (!editing) { Object.assign(state, { referrals: ref, invoices: inv, intakes: intake }); if (!quiet || isVisible()) render(); }
     navBadge();
+    // Linked patient records live in settings; redraw the patient list when they change.
+    const groups = JSON.stringify(state.settings['settings:patient-groups'] || null);
+    if (groups !== state.lastGroups) { state.lastGroups = groups; if (typeof renderAdminBookings === 'function') try { renderAdminBookings(); } catch (e) { /* list redraws on next sync */ } }
   } catch (e) { if (!quiet) status(e.message, true); }
 }
 function isVisible() { const p = document.getElementById('prPanel'); return !!p && p.style.display !== 'none'; }
@@ -436,10 +439,23 @@ function cardBadge(bookingId) { const c = state.cards.find((x) => x.key === 'car
 
 // Sign-out / expiry: drop health data, bank details and the Drive secret from memory and the page.
 function clear() {
-  Object.assign(state, { tab: 'referrals', referrals: [], invoices: [], intakes: [], cards: [], settings: {}, open: null, draft: null, loaded: false });
+  Object.assign(state, { tab: 'referrals', referrals: [], invoices: [], intakes: [], cards: [], settings: {}, open: null, draft: null, loaded: false, lastGroups: undefined });
   const p = $('prPanel'); if (p) p.innerHTML = '';
   document.querySelector('.pr-navcount')?.remove();
 }
 
-window.CCPPractice = { clear, load, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
+// Linked patient records: { groups: [{ id, name, bookingIds: [] }], notSame: ['idA|idB'] }.
+// ponytail: stored as one settings document (fine for a solo practice's patient count).
+function patientGroups() {
+  const v = state.settings['settings:patient-groups'] || {};
+  return { groups: Array.isArray(v.groups) ? v.groups : [], notSame: Array.isArray(v.notSame) ? v.notSame : [] };
+}
+async function saveGroups(value) {
+  const d = await api('save', { key: 'settings:patient-groups', value });
+  state.settings['settings:patient-groups'] = d.value;
+  state.lastGroups = JSON.stringify(d.value);
+  if (typeof renderAdminBookings === 'function') renderAdminBookings();
+}
+
+window.CCPPractice = { patientGroups, saveGroups, clear, load, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
 if (token()) load();

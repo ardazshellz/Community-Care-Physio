@@ -4,6 +4,7 @@
 
 import Stripe from 'stripe';
 import { supabase } from '../lib/supabase.js';
+import { durationMins, occupiedSlots } from '../lib/slots.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
@@ -16,29 +17,6 @@ async function getRawBody(req) {
     req.on('end', () => resolve(Buffer.concat(chunks)));
     req.on('error', reject);
   });
-}
-
-function getBlockedSlots(timeStr, durationMins) {
-  const [h, m] = timeStr.split(':').map(Number);
-  const startMins = h * 60 + m;
-  const totalBlock = durationMins + 45;
-  const blocked = [];
-  for (let t = 0; t < totalBlock; t += 30) {
-    const slotMins = startMins + t;
-    const sh = Math.floor(slotMins / 60);
-    const sm = slotMins % 60;
-    if (sh < 24) blocked.push(`${String(sh).padStart(2,'0')}:${String(sm).padStart(2,'0')}`);
-  }
-  return blocked;
-}
-
-function getDurationMins(appt) {
-  const map = {
-    'Initial Assessment':60,'Standard Session':45,'Extended Session':60,
-    'Starter Programme':60,'Full Programme':60,
-    'Block of 4 Sessions':45,'Block of 6 Sessions':45
-  };
-  return map[appt] || 60;
 }
 
 async function saveCard(session, bookingId) {
@@ -114,6 +92,7 @@ export default async function handler(req, res) {
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
+    if (session.payment_status !== 'paid') return res.status(200).json({ received: true });
     const bookingId = session.metadata?.booking_id;
 
     if (!bookingId) {
@@ -122,11 +101,12 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { data: existing } = await supabase
+      const { data: existing, error: readError } = await supabase
         .from('bookings')
         .select('*')
         .eq('id', bookingId)
         .single();
+      if (readError) throw readError;
 
       if (!existing) {
         console.error('stripe-webhook', { action: 'confirm-booking', code: 'not_found' });
@@ -139,36 +119,48 @@ export default async function handler(req, res) {
         return res.status(200).json({ received: true });
       }
 
-      await supabase.from('bookings').update({ paid: true, confirmed: true }).eq('id', bookingId);
-
-      await saveCard(session, bookingId);
-
+      // Slots are blocked BEFORE marking paid: if anything fails, the 500 makes Stripe
+      // retry and the retry redoes the (idempotent) blocking instead of skipping it.
       // Custom bookings carry a list of sessions — block every one of their slots.
       let customSessions = null;
       if (existing.custom_sessions) {
         try { customSessions = JSON.parse(existing.custom_sessions); } catch(e) { customSessions = null; }
       }
 
+      const rows = [];
       if (Array.isArray(customSessions) && customSessions.length) {
-        const rows = [];
         customSessions.forEach(s => {
           if (!s.date || !s.time) return;
           const durationMins = s.length === '60' ? 60 : 45;
-          getBlockedSlots(s.time, durationMins).forEach(slot => {
+          occupiedSlots(s.time, durationMins).forEach(slot => {
             rows.push({ booking_date: s.date, slot_time: slot, booking_id: existing.id });
           });
         });
-        if (rows.length) {
-          await supabase.from('blocked_slots').upsert(rows, { onConflict: 'booking_date,slot_time', ignoreDuplicates: true });
-        }
       } else if (existing.booked_date && existing.booked_time) {
-        const durationMins = getDurationMins(existing.appointment);
-        const slotsToBlock = getBlockedSlots(existing.booked_time, durationMins);
-        await supabase.from('blocked_slots').upsert(
-          slotsToBlock.map(slot => ({ booking_date: existing.booked_date, slot_time: slot, booking_id: existing.id })),
-          { onConflict: 'booking_date,slot_time', ignoreDuplicates: true }
-        );
+        const slotsToBlock = occupiedSlots(existing.booked_time, durationMins(existing.appointment));
+        rows.push(...slotsToBlock.map(slot => ({ booking_date: existing.booked_date, slot_time: slot, booking_id: existing.id })));
       }
+      let timeClash = false;
+      if (rows.length) {
+        const { error: blockError } = await supabase.from('blocked_slots')
+          .upsert(rows, { onConflict: 'booking_date,slot_time', ignoreDuplicates: true });
+        if (blockError) throw blockError;
+        for (const date of new Set(rows.map(row => row.booking_date))) {
+          const { data: clashes, error: clashError } = await supabase.from('blocked_slots').select('slot_time')
+            .eq('booking_date', date).in('slot_time', rows.filter(row => row.booking_date === date).map(row => row.slot_time))
+            .neq('booking_id', existing.id);
+          if (clashError) throw clashError;
+          if (clashes.length) timeClash = true;
+        }
+      }
+      if (timeClash) console.error('stripe-webhook', { action: 'slot-clash', code: 'overlap' });
+      const clashWarning = timeClash ? '⚠️ TIME CLASH: this paid booking overlaps another appointment — please rearrange.' : '';
+
+      const { error: paidError } = await supabase.from('bookings').update({ paid: true, confirmed: true }).eq('id', bookingId);
+      if (paidError) throw paidError;
+
+      await saveCard(session, bookingId);
+
 
       await supabase.from('pending_bookings').delete().eq('stripe_session_id', `pending_${bookingId}`);
 
@@ -193,7 +185,12 @@ export default async function handler(req, res) {
           from: '"CCP Bookings" <infoccphysio@gmail.com>',
           to: 'infoccphysio@gmail.com',
           subject: `New booking — ${existing.appointment} · ${existing.name} · ${formattedDate}`,
-          html: `<div style="font-family:Arial,sans-serif;max-width:560px">
+          text: [clashWarning, 'New booking confirmed', `Name: ${existing.name}`, `Phone: ${existing.phone}`,
+            `Email: ${existing.email || '—'}`, `Address: ${existing.address || '—'}, ${existing.postcode || ''}`,
+            `Appointment: ${existing.appointment}`, `Date: ${formattedDate}`, `Time: ${formattedTime}`,
+            `Reason/notes: ${existing.reason || 'Not provided'}`, `Amount paid: £${existing.price}`,
+            'View in admin panel: https://communitycarephysio.co.uk/#admin'].filter(Boolean).join('\n'),
+          html: `${clashWarning ? `<p><strong>${clashWarning}</strong></p>` : ''}<div style="font-family:Arial,sans-serif;max-width:560px">
             <div style="background:#1e4d3b;padding:20px;border-radius:10px 10px 0 0">
               <h2 style="color:#fff;margin:0">New booking confirmed</h2>
               <p style="color:rgba(255,255,255,.6);font-size:12px;margin:4px 0 0">Payment received via Stripe</p>
@@ -262,6 +259,7 @@ export default async function handler(req, res) {
 
     } catch (err) {
       console.error('stripe-webhook', { action: 'confirm-booking', code: safeCode(err) });
+      return res.status(500).json({ error: 'Booking confirmation failed; retry required' });
     }
   }
 

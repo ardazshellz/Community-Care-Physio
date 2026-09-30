@@ -17,8 +17,135 @@
 <link rel="manifest" href="/site.webmanifest">
 <meta name="theme-color" content="#174B3A">
 <meta property="og:site_name" content="Community Care Physio">
-<meta property="og:title" content="Community Care Physio">
+<meta property="og:title" content="Community Care Physio | Home Visit Physiotherapy South West London">
 <meta property="og:type" content="website">
+<link rel="canonical" href="https://www.communitycarephysio.co.uk/">
+<meta property="og:url" content="https://www.communitycarephysio.co.uk/">
+<meta property="og:description" content="Expert home visit physiotherapy across South West London. NHS-trained, HCPC registered. Serving Putney, Wimbledon, Tooting, Southfields, Morden, Colliers Wood and Raynes Park. No referral needed.">
+<meta property="og:image" content="https://www.communitycarephysio.co.uk/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "Physiotherapy",
+ "@id": "https://www.communitycarephysio.co.uk/#business",
+ "name": "Community Care Physio",
+ "alternateName": "CC Physio",
+ "description": "Home visit physiotherapy across South West London: neurological rehabilitation, falls prevention, post-operative and MSK care in your own home. HCPC registered, NHS trained.",
+ "url": "https://www.communitycarephysio.co.uk/",
+ "logo": "https://www.communitycarephysio.co.uk/assets/email-signature-cream.png",
+ "image": "https://www.communitycarephysio.co.uk/assets/og-image.png",
+ "telephone": "+447508401627",
+ "email": "infoccphysio@gmail.com",
+ "priceRange": "££",
+ "currenciesAccepted": "GBP",
+ "address": {
+  "@type": "PostalAddress",
+  "addressLocality": "London",
+  "addressRegion": "Greater London",
+  "addressCountry": "GB"
+ },
+ "areaServed": [
+  {
+   "@type": "Place",
+   "name": "Wimbledon"
+  },
+  {
+   "@type": "Place",
+   "name": "Putney"
+  },
+  {
+   "@type": "Place",
+   "name": "Tooting"
+  },
+  {
+   "@type": "Place",
+   "name": "Southfields"
+  },
+  {
+   "@type": "Place",
+   "name": "Wandsworth"
+  },
+  {
+   "@type": "Place",
+   "name": "Morden"
+  },
+  {
+   "@type": "Place",
+   "name": "Colliers Wood"
+  },
+  {
+   "@type": "Place",
+   "name": "Raynes Park"
+  },
+  {
+   "@type": "Place",
+   "name": "Mitcham"
+  },
+  {
+   "@type": "Place",
+   "name": "Kingston upon Thames"
+  },
+  {
+   "@type": "Place",
+   "name": "New Malden"
+  },
+  {
+   "@type": "Place",
+   "name": "Richmond"
+  },
+  {
+   "@type": "Place",
+   "name": "Battersea"
+  },
+  {
+   "@type": "Place",
+   "name": "Clapham"
+  },
+  {
+   "@type": "Place",
+   "name": "Balham"
+  },
+  {
+   "@type": "Place",
+   "name": "Streatham"
+  },
+  {
+   "@type": "Place",
+   "name": "Fulham"
+  },
+  {
+   "@type": "Place",
+   "name": "Chelsea"
+  }
+ ],
+ "founder": {
+  "@type": "Person",
+  "name": "Zakery Shelley",
+  "jobTitle": "Physiotherapist"
+ },
+ "makesOffer": [
+  {
+   "@type": "Offer",
+   "name": "Initial assessment (home visit, 60 min)",
+   "price": "100",
+   "priceCurrency": "GBP"
+  },
+  {
+   "@type": "Offer",
+   "name": "Follow-up session (home visit, 45 min)",
+   "price": "75",
+   "priceCurrency": "GBP"
+  }
+ ],
+ "sameAs": [
+  "https://g.page/r/CTNprE1O874TEBl"
+ ]
+}
+</script>
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
@@ -1990,6 +2117,17 @@ function isSlotBooked(dateKey, timeStr) {
   const dayPkg = manualPackageBlocks()[dateKey] || [];
   return dayBooked.includes(timeStr) || dayManual.includes(timeStr) || dayPkg.includes(timeStr);
 }
+// Public start times: the whole visit plus 45 min travel buffer must be free, not just
+// the start. Mirrors lib/slots.js (the server re-checks at checkout).
+const APPT_MINS={'Initial Assessment':60,'Standard Session':45,'Extended Session':60,'Starter Programme':60,'Full Programme':60,'Block of 4 Sessions':45,'Block of 6 Sessions':45};
+function isSlotClash(dateKey, timeStr){
+  const mins=(typeof sA!=='undefined'&&APPT_MINS[sA])||60;
+  const [h,m]=timeStr.split(':').map(Number);
+  for(let t=h*60+m; t<h*60+m+mins+45 && t<1440; t+=30){
+    if(isSlotBooked(dateKey, String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'))) return true;
+  }
+  return false;
+}
 
 // ── HANDLE STRIPE RETURN ──
 (function(){
@@ -2166,7 +2304,7 @@ function pickDate(key){
   const label=`${d.getDate()} ${MN[d.getMonth()]}`;
   const container=document.getElementById('timeSlots');
   container.innerHTML=slots.map(t=>{
-    const booked=isSlotBooked(key,t);
+    const booked=isSlotClash(key,t);
     return `<div class="tc${booked?' booked-slot':''}" ${booked?'style="opacity:.4;cursor:not-allowed;text-decoration:line-through;" title="Already booked"':'onclick="pickTime(this,\''+t+'\',\''+label+'\')"'}>${fmt12(t)}${booked?' ✕':''}</div>`;
   }).join('');
   if(!slots.length){
@@ -2209,7 +2347,7 @@ function buildHeroSlots(){
     const dt=new Date(key+'T12:00:00');
     if(dt<=today)continue;
     // Filter out booked slots AND time-expired slots
-    const slots=availableSlots(key, ROTA[key]).filter(t=>!isSlotBooked(key,t));
+    const slots=availableSlots(key, ROTA[key]).filter(t=>!isSlotClash(key,t));
     if(!slots||!slots.length)continue;
     const firstSlot=fmt12(slots[0]);
     const opt=document.createElement('option');
@@ -2289,7 +2427,7 @@ function heroTimesView(key){
   const dt=new Date(key+'T12:00:00');
   const DN=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   const MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const slots=availableSlots(key, ROTA[key]).filter(t=>!isSlotBooked(key,t));
+  const slots=availableSlots(key, ROTA[key]).filter(t=>!isSlotClash(key,t));
   let h=`<button type="button" class="hero-cal-back" onclick="heroBackToCal()">‹ Back to calendar</button>
     <div class="hero-cal-dayttl">${DN[dt.getDay()]} ${dt.getDate()} ${MN[dt.getMonth()]}</div>`;
   if(!slots.length){
@@ -3266,10 +3404,16 @@ async function doAdminLogin(){
       document.getElementById('adminContent').style.display='block';
       initAdmin();
     } else {
-      document.getElementById('adminLoginErr').style.display='block';
+      // 5 wrong passwords locks sign-in for 15 minutes (server-side).
+      const err=document.getElementById('adminLoginErr');
+      err.textContent=res.status===429?(data.error||'Too many attempts. Please wait 15 minutes and try again.')
+        :'Incorrect password.'+(typeof data.attemptsLeft==='number'?` ${data.attemptsLeft} attempt${data.attemptsLeft===1?'':'s'} left.`:' Try again.');
+      err.style.display='block';
     }
   }catch(e){
-    document.getElementById('adminLoginErr').style.display='block';
+    const err=document.getElementById('adminLoginErr');
+    err.textContent='Could not reach the server. Check your connection and try again.';
+    err.style.display='block';
   }
   if(btn){btn.textContent='Sign in →';btn.disabled=false;}
 }
@@ -4705,7 +4849,7 @@ function renderAdminBookings(){
     applyPatientHighlights();
     return;
   }
-  el.innerHTML=recent.map(b=>{
+  const cardFor=b=>{
     try{
       if(aIsPackage(b))return aPackageCard(b);
       const isPkg=['Starter Programme','Full Programme','Block of 4 Sessions','Block of 6 Sessions'].includes(b.appointment);
@@ -4753,9 +4897,116 @@ function renderAdminBookings(){
     }catch(e){
       return '<div class="booking-item" style="padding:10px;font-size:12px;color:#dc2626">A booking could not be displayed ('+aEsc(e&&e.message||'error')+') — it is still safe in your records.</div>';
     }
+  };
+  // Linked records (same patient booked under different names) render together,
+  // newest at the top and the first booking (usually the initial) at the bottom.
+  // Archived (finished) blocks still belong in a linked patient's history.
+  const pool=recent.concat(adminBookings.filter(b=>aIsPackage(b)&&aPkgIsArchived(b)&&!(b.id&&cbDismissed.includes(b.id))));
+  const drawn=new Set();
+  el.innerHTML=aLinkSuggestionsHtml(pool,recent)+recent.map(b=>{
+    const g=aPatientGroup(b);
+    if(!g) return cardFor(b);
+    if(drawn.has(g.id)) return '';
+    drawn.add(g.id);
+    const members=pool.filter(x=>aPatientGroup(x)===g).sort((x,y)=>aBookingStart(y).localeCompare(aBookingStart(x)));
+    const trail=[...members].reverse().map((m,i)=>`${i?'<span style="color:var(--gold)">＋</span> ':''}${aEsc(m.appointment||'Booking')} <span style="color:var(--muted)">(${aEsc(m.name)})</span>`).join(' ');
+    return `<div class="patient-group" style="border-left:3px solid var(--sage);padding:10px 0 2px 12px;margin:0 0 14px">
+      <div style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-bottom:8px">
+        <strong style="color:var(--forest);font-size:14px">👥 ${aEsc(g.name)}</strong>
+        <span style="font-size:11.5px;color:var(--char)">${trail}</span>
+        <button class="bi-btn" style="background:#f5f3ef;color:var(--muted);padding:3px 8px;font-size:10.5px;margin-left:auto" onclick="aUnlinkPatient('${aEsc(g.id)}')">Unlink</button>
+      </div>
+      ${members.map(cardFor).join('')}
+    </div>`;
   }).join('');
   restoreOpenPatientCards();
   applyPatientHighlights();
+}
+
+// ── Linking one patient's bookings made under different names ──
+// e.g. a spouse books a second block for her husband. Nothing links automatically:
+// likely matches are suggested and you confirm Yes / No. Stored via CCPPractice
+// (practice_records settings:patient-groups) so it follows you across devices.
+function aGroups(){ return (window.CCPPractice&&CCPPractice.patientGroups)?CCPPractice.patientGroups():{groups:[],notSame:[]}; }
+function aPatientGroup(b){ return b&&b.id?aGroups().groups.find(g=>(g.bookingIds||[]).includes(String(b.id)))||null:null; }
+function aBookingStart(b){
+  const dates=(aIsPackage(b)?aPkgSessions(b).map(s=>s.date):[]).concat(b.bookedDate||[]).filter(Boolean).sort();
+  return dates[0]||String(b.timestamp||'');
+}
+function aNormPostcode(v){ return String(v||'').replace(/\s+/g,'').toUpperCase(); }
+// Why two differently-named bookings might be the same patient (or household).
+function aLinkReasons(a,b){
+  const why=[], na=aNormName(a).split(' '), nb=aNormName(b).split(' ');
+  const surA=na.length>1?na[na.length-1]:'', surB=nb.length>1?nb[nb.length-1]:'';
+  if(surA.length>1 && surA===surB) why.push('same surname');
+  const ea=aNormTxt(a.email), eb=aNormTxt(b.email);
+  if(ea && ea===eb) why.push('same email');
+  else if(ea && eb){
+    const local=e=>e.split('@')[0];
+    const hit=(e,names)=>names.some(t=>t.length>=3 && local(e).includes(t));
+    if(hit(ea,nb)||hit(eb,na)) why.push('similar email');
+  }
+  const pa=aNormPhone(a.phone).slice(-10), pb=aNormPhone(b.phone).slice(-10);
+  if(pa.length>=9 && pa===pb) why.push('same phone');
+  const aa=aNormTxt(a.address), ba=aNormTxt(b.address);
+  if(aa && aa===ba) why.push('same address');
+  else if(aNormPostcode(a.postcode) && aNormPostcode(a.postcode)===aNormPostcode(b.postcode)) why.push('same postcode');
+  return why;
+}
+// A single weak signal (e.g. only a shared surname) is not enough to ask.
+function aLinkScore(why){ return why.reduce((n,w)=>n+(['same email','same phone','same address'].includes(w)?2:1),0); }
+// Only asks about pairs where at least one booking is still active.
+function aLinkSuggestions(list, active=list){
+  const {notSame}=aGroups(), out=[];
+  for(let i=0;i<list.length;i++) for(let j=i+1;j<list.length;j++){
+    const a=list[i], b=list[j];
+    if(!a.id||!b.id||aNormName(a)===aNormName(b)) continue;
+    if(!active.includes(a)&&!active.includes(b)) continue;
+    const ga=aPatientGroup(a), gb=aPatientGroup(b);
+    if(ga && ga===gb) continue;
+    if(notSame.includes([a.id,b.id].map(String).sort().join('|'))) continue;
+    const why=aLinkReasons(a,b);
+    if(aLinkScore(why)>=2) out.push({a,b,why});
+  }
+  return out.slice(0,3);
+}
+function aLinkSuggestionsHtml(list, active){
+  return aLinkSuggestions(list, active).map(({a,b,why})=>{
+    const lbl=x=>`<strong>${aEsc(x.name)}</strong> <span style="color:var(--muted)">(${aEsc(x.appointment||'booking')}${x.bookedDate?', '+aFmtDay(x.bookedDate,''):''})</span>`;
+    const ids=`'${aEsc(a.id)}','${aEsc(b.id)}'`;
+    return `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin:0 0 12px;font-size:12.5px;color:var(--char);line-height:1.6">
+      🔗 <strong>Same patient?</strong> ${lbl(a)} and ${lbl(b)} · ${aEsc(why.join(', '))}
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+        <button class="bi-btn confirm" style="padding:4px 9px;font-size:11px" onclick="aLinkPatients(${ids},${aEscJs(a.name)})">Yes · file under ${aEsc(a.name)}</button>
+        <button class="bi-btn confirm" style="padding:4px 9px;font-size:11px" onclick="aLinkPatients(${ids},${aEscJs(b.name)})">Yes · file under ${aEsc(b.name)}</button>
+        <button class="bi-btn" style="background:#f5f3ef;color:var(--muted);padding:4px 9px;font-size:11px" onclick="aNotSamePatient(${ids})">No, different people</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+async function aSaveGroups(value, done){
+  if(!window.CCPPractice||!CCPPractice.saveGroups){ adminToast('Records are still loading — try again in a moment',false); return; }
+  try{ await CCPPractice.saveGroups(value); adminToast(done); }
+  catch(e){ /* the admin fetch wrapper already shows the error */ }
+}
+function aLinkPatients(idA, idB, name){
+  const v=aGroups(), groups=v.groups.map(g=>({...g,bookingIds:[...(g.bookingIds||[])]}));
+  const find=id=>groups.find(g=>g.bookingIds.includes(String(id)));
+  let g=find(idA)||find(idB);
+  const other=g&&find(idA)&&find(idB)&&find(idA)!==find(idB)?(g===find(idA)?find(idB):find(idA)):null;
+  if(!g){ g={id:'g'+Date.now().toString(36),name,bookingIds:[]}; groups.push(g); }
+  if(other){ g.bookingIds.push(...other.bookingIds); groups.splice(groups.indexOf(other),1); }
+  g.name=name;
+  [idA,idB].map(String).forEach(id=>{ if(!g.bookingIds.includes(id)) g.bookingIds.push(id); });
+  aSaveGroups({...v,groups}, 'Linked under '+name);
+}
+function aNotSamePatient(idA, idB){
+  const v=aGroups();
+  aSaveGroups({...v,notSame:[...v.notSame,[idA,idB].map(String).sort().join('|')]}, 'Kept as different people');
+}
+function aUnlinkPatient(id){
+  const v=aGroups();
+  aSaveGroups({...v,groups:v.groups.filter(g=>g.id!==id)}, 'Records unlinked');
 }
 
 function aEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
