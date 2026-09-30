@@ -151,6 +151,26 @@ export function customEmail(body) {
   if (!subject || subject.length > 200) return { error: 'Please provide a subject (max 200 characters).' };
   if (!text || text.length > 20000) return { error: 'Please provide an email body (max 20,000 characters).' };
 
+  // Optional attachments (e.g. home exercise programme). Vercel caps request
+  // bodies at ~4.5 MB, so keep the decoded total under 3 MB.
+  const files = Array.isArray(body.attachments) ? body.attachments : [];
+  if (files.length > 5) return { error: 'Attach up to 5 files.' };
+  const allowed = /^(application\/pdf|image\/(png|jpeg)|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|application\/msword)$/;
+  let total = 0;
+  const attachments = [];
+  for (const f of files) {
+    const filename = String(f?.filename || '').replace(/[\\/\r\n]/g, '').slice(0, 120);
+    const contentType = String(f?.contentType || '');
+    const data = String(f?.data || '');
+    if (!filename || !allowed.test(contentType) || !/^[A-Za-z0-9+/=]+$/.test(data)) {
+      return { error: `Unsupported attachment: ${filename || 'unnamed file'}. Use PDF, Word, PNG or JPG.` };
+    }
+    const content = Buffer.from(data, 'base64');
+    total += content.length;
+    attachments.push({ filename, contentType, content });
+  }
+  if (total > 3 * 1024 * 1024) return { error: 'Attachments are too large (3 MB total maximum).' };
+
   // Drop any plain-text sign-off the draft already carries; the formal one is added below.
   const cut = text.lastIndexOf('Kind regards,');
   if (cut !== -1 && /Zakery/.test(text.slice(cut))) text = text.slice(0, cut).trim();
@@ -162,6 +182,7 @@ export function customEmail(body) {
 
   return {
     subject,
+    attachments,
     text: `${text}\n\n${SIGNATURE_TEXT}`,
     html: `<!doctype html><html lang="en"><body style="margin:0;padding:24px;background:#ffffff;font-family:Arial,sans-serif;font-size:14px;color:#1a1f1d"><div style="max-width:600px">${paragraphs}<div style="margin-top:24px;color:#586860;font-size:13px;line-height:1.6">${SIGNATURE_HTML}</div></div></body></html>`
   };
@@ -209,7 +230,8 @@ export default async function handler(req, res) {
       replyTo: FROM_EMAIL,
       subject: message.subject,
       text: message.text,
-      html: message.html
+      html: message.html,
+      ...(message.attachments?.length ? { attachments: message.attachments } : {})
     });
 
     return res.status(200).json({ success: true });

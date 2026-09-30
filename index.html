@@ -4087,12 +4087,13 @@ async function aSendReminderNow(id, i){
       if(res.status===404){
         // The send-reminder-now API isn't deployed. Don't dead-end the user —
         // offer to send the exact same reminder straight from Gmail instead.
-        if(confirm('The one-click "Send now" service isn\'t available yet (HTTP 404 — the /api/send-reminder-now function still needs to be deployed to the site).\n\nOpen this reminder in Gmail so you can send it manually right now?')){
+        if(confirm('The one-click "Send now" service isn\'t available yet (HTTP 404 — the /api/send-reminder-now function still needs to be deployed to the site).\n\nSend this reminder another way instead (from infoccphysio, or Gmail if there is no email address)?')){
           const first=(b.name||'there').split(' ')[0];
           const dFull=new Date(s.date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
           const subject='Appointment reminder — Community Care Physio';
           const body=`Dear ${first},\n\nThis is a reminder of your upcoming physiotherapy appointment with Community Care Physio:\n\n• ${dFull} at ${fmt12(s.time)}\n\nPlease wear comfortable clothing, and have any relevant letters, scan results or x-rays to hand.\n\nShould you need to rearrange, please reply to this email or contact us on WhatsApp at your earliest convenience. Please note that cancellations within 24 hours may be subject to a £50 fee.\n\nWe look forward to seeing you.\n\n${EMAIL_SIGNATURE}`;
-          window.open(gmailComposeUrl(b.email||'', subject, body), '_blank');
+          if(b.email) emailSendDirect(b.email, subject, body).then(ok=>{ if(ok) alert('✓ Reminder sent from infoccphysio.'); });
+          else window.open(gmailComposeUrl('', subject, body), '_blank');
         }
       } else if(res.status===401){
         alert('Your admin session has expired. Please Sign out and back in, then try "Send now" again.');
@@ -5078,28 +5079,43 @@ function emailCopy(btn, data){
 
 // Send an admin-drafted email from infoccphysio via the server, which adds the
 // branded signature and logo. Returns true when sent.
-async function emailSendDirect(to, subject, body){
+async function emailSendDirect(to, subject, body, attachments){
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(to||'').trim())){ alert('This patient has no valid email address. Use Open in Gmail instead.'); return false; }
   if(!confirm(`Send "${subject}" to ${to} from ${GMAIL_SENDER}?`)) return false;
   const r = await fetch('/api/send-patient-email',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({emailType:'custom',token:adminSessionToken,to,subject,body})});
+    body:JSON.stringify({emailType:'custom',token:adminSessionToken,to,subject,body,attachments:attachments||[]})});
   const d = await r.json().catch(()=>({}));
   if(!r.ok){ alert(r.status===401?'Your admin session has expired. Sign out and back in, then try again.':(d.error||'Email could not be sent.')); return false; }
   return true;
 }
-async function emailSendBtn(btn, toB, sB, bB){
+// Read files chosen in an attachment picker as base64 for the send API.
+function emailReadFiles(input){
+  return Promise.all(Array.from((input&&input.files)||[]).map(f=>new Promise((res,rej)=>{
+    const r=new FileReader();
+    r.onload=()=>res({filename:f.name,contentType:f.type||'application/octet-stream',data:String(r.result).split(',')[1]||''});
+    r.onerror=()=>rej(new Error('Could not read '+f.name));
+    r.readAsDataURL(f);
+  })));
+}
+async function emailSendBtn(btn, toB, sB, bB, fileInputId, requireFile){
   const dec = x => decodeURIComponent(escape(atob(x)));
+  const input = fileInputId ? document.getElementById(fileInputId) : null;
+  if(requireFile && !(input && input.files && input.files.length)){ alert('Choose the programme file to attach first.'); return; }
   const o = btn.textContent; btn.disabled = true; btn.textContent = 'Sending…';
-  const ok = await emailSendDirect(dec(toB), dec(sB), dec(bB));
+  let files = [];
+  try{ files = await emailReadFiles(input); }catch(e){ alert(e.message); btn.disabled=false; btn.textContent=o; return; }
+  const ok = await emailSendDirect(dec(toB), dec(sB), dec(bB), files);
   btn.textContent = ok ? '✓ Sent from infoccphysio' : o; btn.disabled = ok;
 }
 
 // Shared action row: Send (branded, from infoccphysio) + Open in Gmail + Copy subject + Copy body.
-function emailActions(subject, body, gmailUrl, to){
+// opts.attach: show a file picker; opts.requireFile: block sending without one.
+function emailActions(subject, body, gmailUrl, to, opts){
   const s = emailB64(subject), b = emailB64(body);
   const canSend = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(to||'').trim());
-  return `<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
-      ${canSend?`<button onclick="emailSendBtn(this,'${emailB64(to)}','${s}','${b}')" style="flex:1 1 100%;padding:11px;background:#1e4d3b;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif">✉️ Send from infoccphysio (with signature)</button>`:''}
+  const fid = opts && opts.attach ? 'emailAttach'+Math.random().toString(36).slice(2,8) : '';
+  return `${fid&&canSend?`<label style="display:block;margin-top:10px;font-size:11px;color:var(--muted)">Attach file(s) — PDF, Word, PNG or JPG, 3 MB total<input type="file" id="${fid}" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" style="display:block;margin-top:4px;font-size:12px"></label>`:''}<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      ${canSend?`<button onclick="emailSendBtn(this,'${emailB64(to)}','${s}','${b}','${fid}',${!!(opts&&opts.requireFile)})" style="flex:1 1 100%;padding:11px;background:#1e4d3b;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:'Outfit',sans-serif">✉️ Send from infoccphysio (with signature)</button>`:''}
       <a href="${gmailUrl}" target="_blank" rel="noopener" style="flex:1;min-width:130px;text-align:center;padding:10px;background:#eef3ef;color:#1e4d3b;border-radius:8px;font-size:12px;font-weight:500;text-decoration:none">Open in Gmail</a>
       <button onclick="emailCopy(this,'${s}')" style="flex:1;min-width:110px;padding:10px;background:var(--stone);border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif">📋 Copy subject</button>
       <button onclick="emailCopy(this,'${b}')" style="flex:1;min-width:110px;padding:10px;background:var(--stone);border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif">📋 Copy body</button>
@@ -5933,10 +5949,10 @@ ${EMAIL_SIGNATURE}`;
   const gmailUrl = gmailComposeUrl(patientEmail, subject, emailBody);
   out.innerHTML = `
     <div style="background:var(--fp);border:1px solid rgba(30,77,59,.15);border-radius:10px;padding:16px">
-      <div style="font-size:12px;font-weight:500;color:var(--char);margin-bottom:8px">✓ Exercise programme email ready — remember to attach the programme file in Gmail before sending</div>
+      <div style="font-size:12px;font-weight:500;color:var(--char);margin-bottom:8px">✓ Exercise programme email ready — attach the programme file below, then send</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Draft email (review before sending):</div>
       <textarea readonly style="width:100%;height:220px;padding:10px;border-radius:8px;border:1px solid rgba(30,77,59,.15);font-size:12px;font-family:inherit;box-sizing:border-box;resize:vertical">${emailBody.replace(/</g,'&lt;')}</textarea>
-      ${emailActions(subject, emailBody, gmailUrl)}
+      ${emailActions(subject, emailBody, gmailUrl, patientEmail, {attach:true, requireFile:true})}
     </div>`;
 }
 
