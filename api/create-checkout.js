@@ -3,7 +3,8 @@
 // This is the proper way to integrate Stripe with a booking system
 
 import Stripe from 'stripe';
-import {checkoutQuote} from '../lib/checkout-pricing.js';
+import {checkoutQuote,bookingFlags} from '../lib/checkout-pricing.js';
+import {TRIAGE_FLAGS} from '../lib/practice-model.js';
 import { supabase } from '../lib/supabase.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -95,7 +96,8 @@ export default async function handler(req, res) {
         area: bd.area,
         patient_type: bd.patientType,
         booking_for: bd.bookingFor,
-        reason: bd.reason,
+        // Triage answers are kept with the reason so they show on the admin booking.
+        reason: [bd.reason, bookingFlags(bd.triageFlags).map(f => TRIAGE_FLAGS[f]).join('; ')].filter(Boolean).join('\n\nTriage: '),
         preferred_days: bd.preferredDays,
         concern_areas: bd.concernAreas || null,
         complexity_fee: serverComplexityFee,

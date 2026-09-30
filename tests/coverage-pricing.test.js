@@ -27,3 +27,12 @@ test('complex extended sessions add the £15 surcharge',()=>{
 test('unknown services, incomplete postcodes and outside-map locations cannot create checkout',()=>{
  for(const bd of [{appointment:'fake',postcode:'W4 1AA'},{appointment:'Initial Assessment',postcode:'W4'},{appointment:'Initial Assessment',postcode:'M1 1AA'}])assert.throws(()=>checkoutQuote(bd));
 });
+
+test('booking triage questions make a booking complex, except living alone',()=>{
+ const base={appointment:'Initial Assessment',postcode:'SW19 8HQ',concernAreas:'MSK Issue'};
+ assert.equal(checkoutQuote(base).treatment,10000);
+ assert.equal(checkoutQuote({...base,triageFlags:['livesAlone']}).treatment,10000);
+ assert.equal(checkoutQuote({...base,triageFlags:['helpToMove']}).treatment,13000);
+ assert.equal(checkoutQuote({...base,triageFlags:['not-a-flag']}).treatment,10000);
+ assert.equal(checkoutQuote({...base,triageFlags:'helpToMove'}).treatment,10000);
+});
