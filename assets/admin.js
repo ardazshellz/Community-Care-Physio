@@ -1534,7 +1534,8 @@ function renderAdminBookings(){
       <div style="display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin-bottom:8px">
         <strong style="color:var(--forest);font-size:14px">👥 ${aEsc(g.name)}</strong>
         <span style="font-size:11.5px;color:var(--char)">${trail}</span>
-        <button class="bi-btn" style="background:#f5f3ef;color:var(--muted);padding:3px 8px;font-size:10.5px;margin-left:auto" onclick="aUnlinkPatient('${aEsc(g.id)}')">Unlink</button>
+        <button class="bi-btn" style="background:#fff7ed;color:#b45309;padding:3px 8px;font-size:10.5px;margin-left:auto" title="Review request to whoever made the latest booking for this patient" onclick="openReviewRequestForBooking('${aEsc(members[0].id)}')">⭐ Review email</button>
+        <button class="bi-btn" style="background:#f5f3ef;color:var(--muted);padding:3px 8px;font-size:10.5px" onclick="aUnlinkPatient('${aEsc(g.id)}')">Unlink</button>
       </div>
       ${members.map(cardFor).join('')}
     </div>`;
