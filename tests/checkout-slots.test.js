@@ -67,7 +67,7 @@ test('past-date rejection uses the UK date, even without a time', async () => {
   const db = fakeDb();
   const res = await checkout(db, { ...booking, bookedDate: '2026-06-01', bookedTime: '' }, LondonMidnight);
   assert.equal(res.statusCode, 400);
-  assert.equal(res.body.error, 'Please choose a future date.');
+  assert.equal(res.body.error, 'Please choose a future date and time.');
   assert.equal(db.calls.length, 0);
   assert.equal((await checkout(db, { ...booking, bookedDate: '2026-06-02' }, LondonMidnight)).statusCode, 200);
 });

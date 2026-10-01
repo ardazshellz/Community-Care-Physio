@@ -19,15 +19,16 @@ function setup(initial = {}) {
   } };
 }
 
-test('unpaid completed sessions and standard async events leave the booking unpaid', async () => {
+test('unpaid completed sessions leave the booking unpaid; async success confirms it', async () => {
   const ctx = setup();
   for (const status of ['unpaid', 'no_payment_required', undefined]) {
     assert.equal((await ctx.deliver(status === undefined ? null : status)).statusCode, 200);
   }
-  assert.equal((await ctx.deliver('paid', 'checkout.session.async_payment_succeeded')).statusCode, 200);
   assert.equal(ctx.db.calls.length, 0);
-  assert.equal(ctx.mail.length, 0);
   assert.equal(ctx.db.tables.bookings[0].paid, false);
+  assert.equal((await ctx.deliver('paid', 'checkout.session.async_payment_succeeded')).statusCode, 200);
+  assert.equal(ctx.db.tables.bookings[0].paid, true);
+  assert.equal(ctx.mail.length, 2);
 });
 
 test('paid-update errors return 500; a successful retry sends once and later retries send nothing', async () => {

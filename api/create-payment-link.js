@@ -115,7 +115,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ success: true, url: link.url, amount: pence / 100, bookingId: booking.id });
   } catch (err) {
-    console.error('create-payment-link error:', err);
-    return res.status(500).json({ error: err.message });
+    console.error('create-payment-link', { code: err?.code || err?.type || 'unknown' });
+    return res.status(500).json({ error: 'Could not create the payment link. Please try again.' });
   }
 }

@@ -21,6 +21,11 @@ export function fakeDb(initial = {}) {
       select(columns) { query.columns = columns; return chain; },
       eq(key, value) { query.filters.push(row => row[key] === value); return chain; },
       neq(key, value) { query.filters.push(row => row[key] != null && row[key] !== value); return chain; },
+      or(expr) { // supports 'key.is.null,key.neq.value'
+        const parts = expr.split(',').map(p => p.split('.'));
+        query.filters.push(row => parts.some(([key, op, value]) => op === 'is' ? row[key] == null : op === 'neq' ? row[key] !== value : row[key] === value));
+        return chain;
+      },
       gt(key, value) { query.filters.push(row => row[key] > value); return chain; },
       gte(key, value) { query.filters.push(row => row[key] >= value); return chain; },
       in(key, values) { query.filters.push(row => values.includes(row[key])); return chain; },

@@ -90,7 +90,7 @@ export default async function handler(req, res) {
     }
   }
 
-  if (event.type === 'checkout.session.completed') {
+  if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const session = event.data.object;
     if (session.payment_status !== 'paid') return res.status(200).json({ received: true });
     const bookingId = session.metadata?.booking_id;
@@ -131,7 +131,7 @@ export default async function handler(req, res) {
       if (Array.isArray(customSessions) && customSessions.length) {
         customSessions.forEach(s => {
           if (!s.date || !s.time) return;
-          const durationMins = s.length === '60' ? 60 : 45;
+          const durationMins = Number(s.length) === 60 ? 60 : 45;
           occupiedSlots(s.time, durationMins).forEach(slot => {
             rows.push({ booking_date: s.date, slot_time: slot, booking_id: existing.id });
           });
@@ -148,7 +148,7 @@ export default async function handler(req, res) {
         for (const date of new Set(rows.map(row => row.booking_date))) {
           const { data: clashes, error: clashError } = await supabase.from('blocked_slots').select('slot_time')
             .eq('booking_date', date).in('slot_time', rows.filter(row => row.booking_date === date).map(row => row.slot_time))
-            .neq('booking_id', existing.id);
+            .or(`booking_id.is.null,booking_id.neq.${existing.id}`);
           if (clashError) throw clashError;
           if (clashes.length) timeClash = true;
         }

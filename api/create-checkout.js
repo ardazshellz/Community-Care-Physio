@@ -11,7 +11,7 @@ import { durationMins, occupiedSlots, overlaps } from '../lib/slots.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.communitycarephysio.co.uk');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -42,9 +42,13 @@ export default async function handler(req, res) {
     const chargedPrice=priceInPence/100;
     const serverComplexityFee=quote.complexityFee;
 
-    const ukToday = new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/London' });
-    if (bd.bookedDate && bd.bookedDate < ukToday) {
-      return res.status(400).json({ error: 'Please choose a future date.' });
+    // Times must sit on the 30-minute grid the slot checks use, and be in the future (UK time).
+    if (bd.bookedTime && !/^([01]\d|2[0-3]):(00|30)$/.test(bd.bookedTime)) {
+      return res.status(400).json({ error: 'Please choose one of the listed times.' });
+    }
+    const ukNow = new Date().toLocaleString('sv-SE', { timeZone: 'Europe/London' }); // YYYY-MM-DD HH:MM:SS
+    if (bd.bookedDate && `${bd.bookedDate} ${bd.bookedTime || '23:59'}` <= ukNow) {
+      return res.status(400).json({ error: 'Please choose a future date and time.' });
     }
 
     // 1. Check slot isn't already taken

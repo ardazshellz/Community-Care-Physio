@@ -244,11 +244,11 @@ async function handleCron(req, res) {
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
-    if (process.env.CRON_SECRET) {
-      const auth = req.headers['authorization'] || '';
-      if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-        return res.status(401).json({ error: 'Unauthorised cron request' });
-      }
+    // Only Vercel's cron (which sends CRON_SECRET) may trigger the daily send.
+    if (!process.env.CRON_SECRET) return res.status(503).json({ error: 'CRON_SECRET is not configured' });
+    const auth = req.headers['authorization'] || '';
+    if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+      return res.status(401).json({ error: 'Unauthorised cron request' });
     }
     return handleCron(req, res);
   }
