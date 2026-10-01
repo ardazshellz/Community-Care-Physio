@@ -4,7 +4,8 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import {reconcilePackageCompletion} from '../lib/package-completion.js';
 
-const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
+// The admin functions under test live in assets/admin.js (split out of index.html).
+const html=readFileSync(new URL('../assets/admin.js',import.meta.url),'utf8');
 function source(name){
  const start=html.search(new RegExp('(?:async )?function '+name+'\\('));
  assert.ok(start>=0,name);
