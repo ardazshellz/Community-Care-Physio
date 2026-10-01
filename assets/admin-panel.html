@@ -1,0 +1,390 @@
+<div class="admin-overlay" id="adminOverlay">
+
+  <!-- LOGIN -->
+  <div id="adminLoginWrap" class="admin-login-wrap">
+    <div class="admin-login-box">
+      <div class="alogin-logo">Community Care Physio</div>
+      <div class="alogin-sub">Admin portal — clinician access only</div>
+      <label>Password</label>
+      <input type="password" id="adminPwInput" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doAdminLogin()">
+      <button class="alogin-btn" onclick="doAdminLogin()">Sign in →</button>
+      <div class="alogin-err" id="adminLoginErr">Incorrect password. Try again.</div>
+    </div>
+  </div>
+
+  <!-- ADMIN CONTENT -->
+  <div id="adminContent" style="display:none">
+    <div class="admin-top-nav">
+      <div>
+        <div class="admin-top-logo">Community Care Physio</div>
+        <div class="admin-top-sub">Admin portal</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button onclick="syncFromSupabase()" class="js-sync-bookings" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:8px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif">↻ Sync bookings</button>
+        <button class="logout-btn" onclick="doAdminLogout()">Sign out</button>
+      </div>
+    </div>
+
+    <div class="admin-body">
+      <nav class="admin-nav" id="adminNav">
+        <button type="button" class="admin-mobile-nav-toggle" onclick="toggleAdminMobileNav()" aria-expanded="false" aria-controls="adminNavItems">
+          <span class="admin-mobile-nav-label" id="adminMobileNavLabel"><span class="ani-ic">📊</span> Dashboard</span>
+          <span class="admin-mobile-nav-arrow" aria-hidden="true">⌄</span>
+        </button>
+        <div class="admin-nav-items" id="adminNavItems">
+          <button class="admin-nav-item active" data-nav="dashboard" data-label="📊 Dashboard" onclick="adminNav('dashboard')"><span class="ani-ic">📊</span> Dashboard</button>
+          <button class="admin-nav-item" data-nav="patients" data-label="👥 Patients" onclick="adminNav('patients')"><span class="ani-ic">👥</span> Patients</button>
+          <button class="admin-nav-item" data-nav="bookings" data-label="🧾 Bookings" onclick="adminNav('bookings')"><span class="ani-ic">🧾</span> Bookings</button>
+          <button class="admin-nav-item" data-nav="enquiries" data-label="🌱 Patient enquiries" onclick="adminNav('enquiries')"><span class="ani-ic">🌱</span> Patient enquiries</button>
+          <button class="admin-nav-item" data-nav="referrals" data-label="📋 Referrals &amp; invoices" onclick="adminNav('referrals')"><span class="ani-ic">📋</span> Referrals &amp; invoices</button>
+          <button class="admin-nav-item" data-nav="programmes" data-label="✉️ Generate Emails" onclick="adminNav('programmes')"><span class="ani-ic">✉️</span> Generate Emails</button>
+          <button class="admin-nav-item" data-nav="availability" data-label="📅 Availability" onclick="adminNav('availability')"><span class="ani-ic">📅</span> Availability</button>
+          <button class="admin-nav-item" data-nav="finance" data-label="💷 Finance" onclick="adminNav('finance')"><span class="ani-ic">💷</span> Finance</button>
+          <button class="admin-nav-item" data-nav="settings" data-label="⚙️ Settings" onclick="adminNav('settings')"><span class="ani-ic">⚙️</span> Settings</button>
+        </div>
+      </nav>
+      <div class="admin-main">
+
+      <!-- PRIORITY STATS -->
+      <div class="astats-row" data-asec="dashboard">
+        <div class="stat-box">
+          <div class="stat-val" id="aStatToday">0</div>
+          <div class="stat-lbl">Today's appointments</div>
+          <div class="stat-sub" id="aStatTodaySub">No appointments today</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="aStatOutstanding" style="color:#c0392b">0</div>
+          <div class="stat-lbl">Outstanding payments</div>
+          <div class="stat-sub" id="aStatOutstandingSub">£0 outstanding</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="aStatToBook" style="color:var(--gold)">0</div>
+          <div class="stat-lbl">Sessions to book</div>
+          <div class="stat-sub" id="aStatToBookSub">All purchased sessions scheduled</div>
+        </div>
+      </div>
+
+      <div class="admin-grid2">
+
+        <!-- DASHBOARD OVERVIEW -->
+        <div class="acard" style="grid-column:1/-1" data-asec="dashboard">
+          <div class="acard-title">📊 Dashboard <span>overview at a glance</span></div>
+          <div id="aDashboard"><div class="admin-empty">Loading overview… click ↻ Sync bookings if nothing appears.</div></div>
+        </div>
+
+        <!-- BOOKINGS -->
+        <div class="acard" style="grid-column:1/-1" data-asec="patients">
+          <div class="acard-title">👥 Active Patients <span id="aNewBadge"></span></div>
+          <div id="aDebug" style="font-size:11px;color:var(--muted);margin:4px 0 10px"></div>
+          <div id="aPatientHighlightNotice" class="patient-highlight-notice"></div>
+          <div id="aBookingsList"><div class="admin-empty">No bookings yet. They'll appear here automatically when patients book through your site.</div></div>
+        </div>
+
+        <!-- COMPLETED / ARCHIVED PATIENTS -->
+        <div class="acard" style="grid-column:1/-1" data-asec="patients">
+          <details id="aArchivedWrap">
+            <summary class="acard-title" style="cursor:pointer">✅ Completed / archived patients <span id="aArchivedBadge" style="font-size:11px;color:var(--muted);font-weight:400"></span></summary>
+            <p style="font-size:11px;color:var(--muted);margin:8px 0 10px;line-height:1.6">Packages that have been completed for more than 24 hours. Nothing is deleted — the patient and full history stay in <strong>All clients &amp; payments</strong>. Use <strong>Restore to Active</strong> to bring one back.</p>
+            <div id="aArchivedList"></div>
+          </details>
+        </div>
+
+        <!-- CUSTOM FOLLOW-UP BOOKING TOOL -->
+        <div class="acard" style="grid-column:1/-1" data-asec="bookings">
+          <div class="acard-title">🧾 Build a custom booking</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Add follow-up sessions on the dates you agreed with the patient, set the options, and it works out the price. It drafts an email with the dates, total and a Stripe payment link — you review and send it yourself.</p>
+
+          <div class="cb-builder-grid">
+            <div class="cb-picker-col">
+              <div style="margin-bottom:14px">
+                <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Patient (search existing bookings by name)</label>
+                <input type="text" id="cbPatientSearch" oninput="cbSearchPatients()" placeholder="Start typing a name…" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid rgba(30,77,59,.2);font-size:13px;font-family:'Outfit',sans-serif;box-sizing:border-box">
+                <div id="cbPatientResults" style="margin-top:4px"></div>
+                <div id="cbSelectedPatient" style="margin-top:8px;font-size:12px;color:var(--forest);font-weight:500"></div>
+              </div>
+
+              <div style="background:var(--fp);border-radius:10px;padding:12px">
+                <div class="cb-section-title">Add a session</div>
+                <div style="display:flex;gap:8px;align-items:flex-end;margin-bottom:10px;flex-wrap:wrap">
+                  <div style="flex:1;min-width:120px">
+                    <label style="display:block;font-size:10px;color:var(--muted);margin-bottom:3px">Session length</label>
+                    <select id="cbLength" style="width:100%;padding:8px;border-radius:8px;border:1px solid rgba(30,77,59,.2);font-size:12px;font-family:'Outfit',sans-serif;box-sizing:border-box">
+                      <option value="45">45 min (standard)</option>
+                      <option value="60">60 min (extended)</option>
+                    </select>
+                  </div>
+                  <div id="cbSelectedSlot" style="flex:1;min-width:150px;font-size:12px;color:var(--muted);padding-bottom:8px">Pick a date and time below</div>
+                </div>
+
+                <div id="cbCalWrap" style="background:#fff;border-radius:10px;border:1px solid rgba(30,77,59,.1)">
+                  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+                    <button type="button" onclick="cbCalNav(-1)" style="background:var(--fp);border:none;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:14px">‹</button>
+                    <div id="cbCalMonth" style="font-size:13px;font-weight:500;color:var(--char)"></div>
+                    <button type="button" onclick="cbCalNav(1)" style="background:var(--fp);border:none;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:14px">›</button>
+                  </div>
+                  <div id="cbCalGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
+                  <div id="cbTimeWrap" style="display:none;margin-top:10px">
+                    <div style="font-size:10.5px;color:var(--muted);margin-bottom:6px">Available times <span style="font-weight:400">(greyed = outside your normal shift, but you can still click to override)</span></div>
+                    <div id="cbTimeSlots" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px"></div>
+                  </div>
+                </div>
+                <button onclick="cbAddSession()" style="width:100%;margin-top:10px;padding:9px;background:#1e4d3b;color:#fff;border:none;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif">+ Add this session</button>
+              </div>
+            </div>
+
+            <div class="cb-summary-col">
+              <div class="cb-section-title">Selected sessions and payment</div>
+              <div id="cbSessionList" style="margin-bottom:14px"></div>
+
+              <div style="margin-bottom:12px">
+                <label for="cbPayStatus" style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Payment status</label>
+                <select id="cbPayStatus" onchange="cbToggleConfirmOnly()" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid rgba(30,77,59,.2);font-size:13px;font-family:'Outfit',sans-serif;box-sizing:border-box">
+                  <option value="await">Awaiting payment — create Stripe link</option>
+                  <option value="prepaid">Already prepaid — no link (covered by package/block)</option>
+                </select>
+              </div>
+
+              <div style="display:flex;gap:18px;flex-wrap:wrap;margin-bottom:16px">
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--char);cursor:pointer">
+                  <input type="checkbox" id="cbComplex" onchange="cbRecalc()" style="width:16px;height:16px;cursor:pointer"> Complex patient
+                </label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;color:var(--char);cursor:pointer">
+                  <input type="checkbox" id="cbOutOfArea" onchange="cbRecalc()" style="width:16px;height:16px;cursor:pointer"> Out of area (+£15/session)
+                </label>
+              </div>
+              <div id="cbExtNote" style="display:none;background:var(--fp);border-left:3px solid var(--forest);border-radius:8px;padding:9px 12px;margin:-6px 0 16px;font-size:11.5px;color:var(--muted);line-height:1.6">Complex needs add £15 to each 60-minute extended session.</div>
+
+              <div style="background:var(--fp);border-radius:10px;padding:14px;margin-bottom:16px">
+                <div id="cbSubtotalRow" style="display:none;justify-content:space-between;align-items:center;margin-bottom:5px">
+                  <span style="font-size:12px;color:var(--muted)">Subtotal</span>
+                  <span id="cbSubtotal" style="font-size:13px;color:var(--muted)">£0</span>
+                </div>
+                <div id="cbDiscountRow" style="display:none;justify-content:space-between;align-items:center;margin-bottom:5px">
+                  <span id="cbDiscountLabel" style="font-size:12px;color:var(--gold)">Block discount</span>
+                  <span id="cbDiscount" style="font-size:13px;color:var(--gold)">–£0</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <span style="font-size:12px;color:var(--muted)">Suggested total</span>
+                  <span id="cbSuggested" style="font-size:20px;font-weight:600;color:var(--forest)">£0</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <label style="font-size:11px;color:var(--muted);white-space:nowrap">Override £</label>
+                  <input type="number" id="cbOverride" oninput="cbRecalc()" placeholder="leave blank to use suggested" style="flex:1;padding:8px;border-radius:8px;border:1px solid rgba(30,77,59,.2);font-size:12px;font-family:'Outfit',sans-serif;box-sizing:border-box">
+                </div>
+              </div>
+
+              <button onclick="cbGenerate()" id="cbGenerateBtn" style="width:100%;padding:12px;background:#1e4d3b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif">Generate payment link &amp; draft email</button>
+              <div id="cbOutput" style="margin-top:16px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="acard" style="grid-column:1/-1" data-asec="programmes">
+          <div class="acard-title">🌱 New patient enquiry</div>
+          <p class="eq-muted">Save a query patient, prepare an introduction by email or WhatsApp, and follow through to a paid appointment.</p>
+          <button class="eq-btn primary" onclick="adminNav('enquiries')">Open patient enquiry workflow →</button>
+        </div>
+        <div class="acard" style="grid-column:1/-1" data-asec="dashboard">
+          <div class="acard-title">🌱 Patient enquiries</div>
+          <p id="eqSummary" class="eq-muted">Manage people enquiring about their first home visit.</p>
+          <button class="eq-btn" onclick="adminNav('enquiries')">View enquiries →</button>
+        </div>
+        <div class="acard" style="grid-column:1/-1;display:none" data-asec="referrals" id="prPanel"></div>
+        <div class="acard" style="grid-column:1/-1" data-asec="enquiries" id="eqPanel">
+          <div class="eq-top"><div><h2>From first conversation to first visit</h2><p class="eq-muted">Patient enquiries · email and WhatsApp</p></div><div class="eq-actions"><button class="eq-btn" data-action="reload">Reload enquiries</button><button class="eq-btn primary" data-action="new">+ New query patient</button></div></div>
+          <div id="eqStatus" class="eq-status" role="status" aria-live="polite">Save details, prepare your messages, then confirm an appointment.</div>
+          <div class="eq-layout"><aside><label class="eq-field" for="eqSearch">Find an enquiry</label><input class="eq-search" id="eqSearch" type="search" placeholder="Name, email or mobile"><div class="eq-list" id="eqList"></div></aside><div id="eqEditor"></div></div>
+        </div>
+
+        <!-- HOME EXERCISE PROGRAMME EMAIL -->
+        <div class="acard" style="grid-column:1/-1" data-asec="programmes">
+          <div class="acard-title">🏋️ Send Home Exercise Programme</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Drafts the email that goes alongside a home exercise programme you attach yourself (image, PDF or Google Drive link). No payment and no Stripe link — just pick the patient, add any extra advice, and generate.</p>
+
+          <!-- Patient search -->
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Patient (search existing bookings by name)</label>
+            <input type="text" id="hepPatientSearch" oninput="hepSearchPatients()" placeholder="Start typing a name…" style="width:100%;padding:9px 12px;border-radius:8px;border:1px solid rgba(30,77,59,.2);font-size:13px;font-family:'Outfit',sans-serif;box-sizing:border-box">
+            <div id="hepPatientResults" style="margin-top:4px"></div>
+            <div id="hepSelectedPatient" style="margin-top:8px;font-size:12px;color:var(--forest);font-weight:500"></div>
+          </div>
+
+          <!-- Optional extra message -->
+          <div style="margin-bottom:16px">
+            <label style="display:block;font-size:11px;color:var(--muted);margin-bottom:4px">Extra message / exercise advice (optional)</label>
+            <textarea id="hepExtra" placeholder="e.g. Focus on the glute bridges this week and reduce the reps if your knee flares up." style="width:100%;height:80px;padding:10px 12px;border-radius:8px;border:1px solid rgba(30,77,59,.2);font-size:13px;font-family:'Outfit',sans-serif;box-sizing:border-box;resize:vertical"></textarea>
+          </div>
+
+          <button onclick="hepGenerate()" style="width:100%;padding:12px;background:#1e4d3b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif">Generate exercise programme email</button>
+
+          <!-- Output -->
+          <div id="hepOutput" style="margin-top:16px"></div>
+        </div>
+
+        <!-- GOOGLE REVIEW REQUEST -->
+        <div class="acard" id="reviewRequestCard" style="grid-column:1/-1" data-asec="programmes">
+          <div class="acard-title">⭐ Request a Google review</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Search every patient record, including completed and archived patients, or enter the details manually. You can prepare the request for email, mobile/SMS, or both. Every request uses the short Community Care Physio review link.</p>
+
+          <div class="review-grid">
+            <div class="review-field">
+              <label for="reviewPatientSearch">Patient name (active, completed or archived)</label>
+              <input type="text" id="reviewPatientSearch" oninput="reviewSearchPatients()" placeholder="Start typing a name…" autocomplete="off">
+              <div id="reviewPatientResults"></div>
+              <div id="reviewSelectedPatient" style="margin-top:8px;font-size:12px;color:var(--forest);font-weight:500"></div>
+            </div>
+            <div class="review-field">
+              <label for="reviewRecipientEmail">Email address</label>
+              <input type="email" id="reviewRecipientEmail" placeholder="patient@example.com" autocomplete="email">
+            </div>
+            <div class="review-field">
+              <label for="reviewRecipientPhone">Mobile number</label>
+              <input type="tel" id="reviewRecipientPhone" placeholder="07… or +44…" autocomplete="tel">
+            </div>
+          </div>
+
+          <div class="review-field" style="margin-bottom:14px">
+            <label for="reviewPersonalMessage">Optional personal message</label>
+            <textarea id="reviewPersonalMessage" placeholder="e.g. It was a pleasure supporting you with your rehabilitation."></textarea>
+          </div>
+
+          <button onclick="reviewGenerate()" style="width:100%;padding:12px;background:#1e4d3b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif">Preview review request</button>
+          <div id="reviewOutput"></div>
+        </div>
+
+        <!-- DNA / MISSED APPOINTMENT NOTICE -->
+        <div class="acard" id="dnaNoticeCard" style="grid-column:1/-1" data-asec="programmes">
+          <div class="acard-title">⚠️ Missed appointment (DNA) email</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Generate or resend a professional missed-appointment notice. Select an existing DNA appointment or enter the details manually. Package appointments are counted as used with no extra charge; single prepaid appointments normally retain £50 and require a manual partial refund of the remaining balance in Stripe.</p>
+
+          <div class="review-grid">
+            <div class="review-field">
+              <label for="dnaPatientSearch">Patient or DNA appointment</label>
+              <input type="text" id="dnaPatientSearch" oninput="dnaSearchPatients()" placeholder="Search by name, email or mobile…" autocomplete="off">
+              <div id="dnaPatientResults"></div>
+              <div id="dnaSelectedPatient" style="margin-top:8px;font-size:12px;color:var(--forest);font-weight:500"></div>
+            </div>
+            <div class="review-field"><label for="dnaRecipientEmail">Email address</label><input type="email" id="dnaRecipientEmail" placeholder="patient@example.com"></div>
+            <div class="review-field"><label for="dnaRecipientPhone">Mobile number</label><input type="tel" id="dnaRecipientPhone" placeholder="07… or +44…"></div>
+            <div class="review-field"><label for="dnaAppointmentDate">Missed appointment date</label><input type="date" id="dnaAppointmentDate"></div>
+            <div class="review-field"><label for="dnaAppointmentTime">Appointment time</label><input type="time" id="dnaAppointmentTime"></div>
+            <div class="review-field"><label for="dnaAppointmentLabel">Appointment / session</label><input type="text" id="dnaAppointmentLabel" placeholder="Initial Assessment or Follow-up 2" oninput="dnaMaybeInferFundingType()"></div>
+            <div class="review-field"><label for="dnaFundingType">Payment arrangement</label><select id="dnaFundingType" onchange="dnaFundingChanged()"><option value="single_paid">Single appointment paid in advance</option><option value="package">Prepaid package / block</option><option value="unpaid">Appointment not yet paid</option></select></div>
+            <div class="review-field"><label for="dnaOriginalAmount">Original amount paid (£)</label><input type="number" id="dnaOriginalAmount" min="0" step="0.01" value="100" oninput="dnaRecalculate(false)"></div>
+            <div class="review-field"><label for="dnaFeeRetained">Fee / session value retained (£)</label><input type="number" id="dnaFeeRetained" min="0" step="0.01" value="50" oninput="dnaRecalculate(false)"></div>
+            <div class="review-field"><label for="dnaRefundDue">Refund due (£)</label><input type="number" id="dnaRefundDue" min="0" step="0.01" value="50" readonly></div>
+            <div class="review-field"><label for="dnaRefundStatus">Refund status</label><select id="dnaRefundStatus"><option value="required">Required — not yet completed</option><option value="completed">Completed in Stripe</option><option value="not_applicable">Not applicable</option><option value="waived">Fee waived / exceptional circumstances</option></select></div>
+          </div>
+          <div class="review-field" style="margin-bottom:14px"><label for="dnaExtraMessage">Optional additional message</label><textarea id="dnaExtraMessage" placeholder="e.g. Please get in touch if there were exceptional circumstances you would like us to consider."></textarea></div>
+          <button onclick="dnaGenerate()" style="width:100%;padding:12px;background:#1e4d3b;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif">Preview DNA notice</button>
+          <div id="dnaOutput"></div>
+        </div>
+
+        <!-- ROTA EDITOR -->
+        <div class="acard" style="grid-column:1/-1" data-asec="availability">
+          <div class="acard-title">📅 Availability rota editor</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">Green dates are available for booking. Click any available date to remove it. Add new dates using the form below.</p>
+          <div id="aRotaDisplay"></div>
+          <div class="add-date-form">
+            <input type="date" id="aAddDateInput">
+            <select id="aAddShiftInput">
+              <option value="FULL">Full day (9am–5pm)</option>
+              <option value="E">Early shift (6:30pm–8pm)</option>
+              <option value="L">Late shift (9am–9:30am)</option>
+            </select>
+            <button class="add-btn" onclick="aAddDate()">+ Add date</button>
+          </div>
+          <div style="margin-top:10px;font-size:11px;color:var(--muted)">
+            Changes update the live website immediately (stored in browser). <strong>To permanently publish to GitHub, copy the rota data below.</strong>
+          </div>
+          <div class="rota-action-row">
+            <button onclick="aExportRota()" class="rota-action-btn copy">📋 Copy rota for GitHub update</button>
+            <button onclick="aPublishRota(this)" class="rota-action-btn publish">☁️ Publish rota to live site</button>
+          </div>
+        </div>
+
+        <!-- CLIENT LIST (bottom) -->
+        <div class="acard" style="grid-column:1/-1" data-asec="finance">
+          <div class="acard-title" style="justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <span>👥 All clients &amp; payments</span>
+            <button class="a-export-btn" onclick="exportClientsXLSX()">⤓ Export to Excel</button>
+          </div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">Every booking, including past appointments, is shown here for your records and HMRC. Filter by appointment date; the Excel export uses whatever range you set. Use <strong>Remove test/refunded record</strong> only for genuine trial or refunded entries that should be excluded from Supabase and future exports.</p>
+          <div class="finance-filter-bar">
+            <div class="finance-date-field"><label for="aClientFrom">From</label><input type="date" id="aClientFrom" onchange="renderClientList()"></div>
+            <div class="finance-date-field"><label for="aClientTo">To</label><input type="date" id="aClientTo" onchange="renderClientList()"></div>
+            <button class="finance-show-all" onclick="document.getElementById('aClientFrom').value='';document.getElementById('aClientTo').value='';renderClientList()">Show all</button>
+            <span id="aClientCount" class="finance-record-count"></span>
+          </div>
+          <div class="a-client-wrap"><div id="aClientList"></div></div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div class="acard" style="grid-column:1/-1" data-asec="settings">
+          <div class="acard-title">⚙️ System and account</div>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6">A read-only overview of booking synchronisation, live availability, connected services, business details and current pricing. Secure keys and server credentials are never shown here.</p>
+
+          <div class="settings-grid">
+            <section class="settings-card">
+              <div class="settings-title">Booking synchronisation</div>
+              <div class="settings-desc">Pulls the latest Supabase bookings and rebuilds availability from the current patient records.</div>
+              <button onclick="syncFromSupabase()" class="js-sync-bookings" style="background:var(--forest);color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif">↻ Sync bookings</button>
+              <div class="settings-row"><span class="settings-key">Status</span><span class="settings-value" id="setSyncStatus">Not synced in this browser</span></div>
+              <div class="settings-row"><span class="settings-key">Last successful sync</span><span class="settings-value" id="setLastSync">—</span></div>
+              <div class="settings-row"><span class="settings-key">Records processed</span><span class="settings-value" id="setSyncRecords">—</span></div>
+            </section>
+
+            <section class="settings-card">
+              <div class="settings-title">Live availability status</div>
+              <div class="settings-desc">Shows the rota currently published to the patient-facing booking calendar.</div>
+              <button onclick="adminNav('availability')" style="background:#fff;color:var(--forest);border:1px solid rgba(30,77,59,.22);padding:9px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Outfit',sans-serif">Open Availability</button>
+              <div class="settings-row"><span class="settings-key">Published status</span><span class="settings-value" id="setRotaStatus">Checking…</span></div>
+              <div class="settings-row"><span class="settings-key">Last published</span><span class="settings-value" id="setRotaPublished">—</span></div>
+              <div class="settings-row"><span class="settings-key">Available dates</span><span class="settings-value" id="setRotaDays">—</span></div>
+            </section>
+
+            <section class="settings-card">
+              <div class="settings-title">Connected services</div>
+              <div class="settings-desc">Connection labels show only what the application can verify without exposing credentials.</div>
+              <div class="settings-row"><span class="settings-key">Supabase</span><span class="service-status" id="svcSupabase">Status unavailable</span></div>
+              <div class="settings-row"><span class="settings-key">Stripe</span><span class="service-status" id="svcStripe">Status unavailable</span></div>
+              <div class="settings-row"><span class="settings-key">Google Calendar</span><span class="service-status" id="svcGoogle">Status unavailable</span></div>
+            </section>
+
+            <section class="settings-card">
+              <div class="settings-title">Business information</div>
+              <div class="settings-desc">Current public contact details and primary service area.</div>
+              <div class="settings-row"><span class="settings-key">Business</span><span class="settings-value">Community Care Physio</span></div>
+              <div class="settings-row"><span class="settings-key">Telephone</span><span class="settings-value">07508 401627</span></div>
+              <div class="settings-row"><span class="settings-key">Email</span><span class="settings-value">infoccphysio@gmail.com</span></div>
+              <div class="settings-row"><span class="settings-key">Service area</span><span class="settings-value">South West London and surrounding areas by arrangement</span></div>
+            </section>
+
+            <section class="settings-card wide">
+              <div class="settings-title">Current pricing summary</div>
+              <div class="settings-desc">Read-only values matching the live booking system. Complex-needs additions remain unchanged.</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px">
+                <div class="settings-row"><span class="settings-key">Initial Assessment</span><span class="settings-value">£100 · +£30 complex needs</span></div>
+                <div class="settings-row"><span class="settings-key">Standard Session</span><span class="settings-value">£75 · +£15 complex needs</span></div>
+                <div class="settings-row"><span class="settings-key">Extended Session</span><span class="settings-value">£90 · +£15 complex needs</span></div>
+                <div class="settings-row"><span class="settings-key">Starter Programme</span><span class="settings-value">£295 · +£60 complex needs</span></div>
+                <div class="settings-row"><span class="settings-key">Full Programme</span><span class="settings-value">£435 · +£90 complex needs</span></div>
+              </div>
+            </section>
+
+            <section class="settings-card wide">
+              <div class="settings-title">Account and application</div>
+              <div class="settings-desc">The current admin session lasts up to 12 hours. Application version is taken from the supplied project package.</div>
+              <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                <button class="logout-btn" onclick="doAdminLogout()" style="background:var(--forest)">Sign out</button>
+                <span style="font-size:11.5px;color:var(--muted)">Application version <strong style="color:var(--char)">1.0.0</strong></span>
+              </div>
+            </section>
+          </div>
+        </div>
+
+      </div>
+      </div>
+    </div>
+  </div>
+</div>
