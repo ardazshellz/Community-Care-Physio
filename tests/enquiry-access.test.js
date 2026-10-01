@@ -27,5 +27,5 @@ test('forged payment webhook is rejected before booking promotion', async () => 
   req.method='POST';req.headers={'stripe-signature':'invalid'};
   const res=response();await webhook(req,res);
   assert.equal(res.code,400);
-  assert.match(res.body.error,/Webhook Error/);
+  assert.match(res.body.error,/Invalid webhook signature/);
 });

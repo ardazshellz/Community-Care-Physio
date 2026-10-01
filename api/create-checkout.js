@@ -87,8 +87,9 @@ export default async function handler(req, res) {
       }
     }
 
-    // ponytail: A check-then-insert race remains for two checkouts in the same second.
-    // Upgrade to a Postgres function with row locks to make reservation atomic.
+    // The checks above are the fast path. The pending_bookings insert below is the
+    // authority: the protect_slot_overlap trigger re-checks under a table lock, so two
+    // checkouts in the same second cannot both hold overlapping times.
     // 2. Create pending booking in Supabase
     const { data: booking, error: bookingErr } = await supabase
       .from('bookings')
