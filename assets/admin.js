@@ -1057,6 +1057,23 @@ function refreshCalendars(){
 // ── AUTOMATIC 24-HOUR REMINDERS ──
 // The reminder cron emails the patient the morning before each appointment.
 // This shows its state on the card, ticks itself once sent, and lets you cancel it.
+// Manual WhatsApp reminder — shown only for appointments tomorrow (UK time).
+// Opens WhatsApp with the message prefilled; the owner presses send.
+// ponytail: "sent" tick lives in localStorage (one admin, one phone); move to
+// the booking record if a second device ever needs to see it.
+function aWaReminderBtn(b, date, time, key){
+  if(!date || !time || !b.phone) return '';
+  const tomorrow=new Date(Date.now()+864e5).toLocaleDateString('en-CA',{timeZone:'Europe/London'});
+  if(date!==tomorrow) return '';
+  const lsKey='ccp_wa_'+key;
+  let sent=false; try{ sent=!!localStorage.getItem(lsKey); }catch(e){}
+  if(sent) return `<span style="font-size:10.5px;color:#16a34a;margin-left:6px">✓ WhatsApp reminder sent</span>`;
+  let ph=aNormPhone(b.phone); if(ph.startsWith('0')) ph='44'+ph.slice(1);
+  const day=new Date(date+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long'});
+  const first=String(b.name||'').trim().split(/\s+/)[0]||'there';
+  const msg=`Hi ${first}, reminder that Zakery from Community Care Physio is visiting ${day} at ${fmt12(time)}. Reply here if anything has changed. See you then.`;
+  return `<a class="bi-btn" style="background:#e7f6ec;color:#1a7a45;padding:2px 7px;font-size:10px;margin-left:6px;text-decoration:none" target="_blank" rel="noopener" href="https://wa.me/${ph}?text=${encodeURIComponent(msg)}" onclick="try{localStorage.setItem('${lsKey}','1')}catch(e){};setTimeout(renderAdminBookings,300)">💬 WhatsApp reminder</a>`;
+}
 function aReminderLine(b, s, i){
   if(!s.date || ['cancelled','dna','expired','unscheduled'].includes(s.status)) return '';
   const rd=new Date(s.date+'T12:00:00'); rd.setDate(rd.getDate()-1);
@@ -1072,7 +1089,7 @@ function aReminderLine(b, s, i){
   const sendBtn = s.reminderSent ? ''
     : `<button class="bi-btn" style="background:#e7f0ea;color:#1e4d3b;padding:2px 7px;font-size:10px;margin-left:6px" title="Email this reminder to the patient right now — the same email the automatic 24-hour reminder sends" onclick="aSendReminderNow('${b.id}',${i})">\uD83D\uDCE8 Send now</button>`;
   return `<div style="display:flex;align-items:center;flex-wrap:wrap;padding-left:24px;margin-top:6px;font-size:10.5px;color:${color}">
-      <span style="width:16px">${icon}</span><span>${text}</span>${btn}${sendBtn}
+      <span style="width:16px">${icon}</span><span>${text}</span>${btn}${sendBtn}${aWaReminderBtn(b,s.date,s.time,b.id+':'+i)}
     </div>`;
 }
 function aToggleReminder(id, i){
@@ -1507,6 +1524,7 @@ function renderAdminBookings(){
             ${overdue?`<button class="bi-btn" style="background:#fef3c7;color:#b45309" onclick="aReleaseBooking(${idx})" title="Mark expired and free the slot">⏱ Release slots</button>`:''}
             <button class="bi-btn" style="background:#fef3c7;color:#b45309" onclick="aCancelBooking(${idx})" title="Cancel — checks the 24h window, drafts the email, frees the slot">⊘ Cancel / release slot</button>
             <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${b.id}')">⭐ Review email</button>
+            ${aWaReminderBtn(b,b.bookedDate,b.bookedTime,b.id)}
             <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${b.id}')">📋 Intake form</button>
         <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.notesFor('${b.id}',null)">📝 Notes</button>
         <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${b.id}',${aEscJs(b.name)})">💳 Charge fee</button>
@@ -1668,7 +1686,7 @@ function aArchivedReminderSummary(s){
   const rd=new Date(s.date+'T12:00:00');
   rd.setDate(rd.getDate()-1);
   const rdLabel=rd.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-  return '<span style="color:#4338ca">🔔 Reminder scheduled for '+rdLabel+' (8am)</span>';
+  return '<span style="color:#4338ca">🔔 Reminder scheduled for '+rdLabel+' (morning)</span>';
 }
 
 // Completed packages that have passed the 24-hour window — shown in their own
