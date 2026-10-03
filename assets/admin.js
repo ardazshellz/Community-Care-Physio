@@ -1066,7 +1066,7 @@ function aReminderLine(b, s, i){
   if(s.reminderSent){ icon='✓'; color='#16a34a'; text='Reminder sent'; }
   else if(s.reminderOff){ icon='✕'; color='#8a8a80'; text='Reminder cancelled'; }
   else if(past){ icon='–'; color='#8a8a80'; text='Reminder window passed'; }
-  else { icon='🔔'; color='#4338ca'; text='Reminder scheduled for '+rdLabel+' (8am)'; }
+  else { icon='🔔'; color='#4338ca'; text='Reminder scheduled for '+rdLabel+' (morning)'; }
   const btn = s.reminderSent ? ''
     : `<button class="bi-btn" style="background:${s.reminderOff?'#eef2ff':'#f6f5f2'};color:${s.reminderOff?'#4338ca':'#8a8a80'};padding:2px 7px;font-size:10px;margin-left:8px" title="${s.reminderOff?'Turn the automatic reminder back on':'Stop the automatic reminder email for this appointment'}" onclick="aToggleReminder('${b.id}',${i})">${s.reminderOff?'↩ Enable reminder':'✕ Cancel reminder'}</button>`;
   const sendBtn = s.reminderSent ? ''
