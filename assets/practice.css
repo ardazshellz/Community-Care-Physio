@@ -1,6 +1,6 @@
 /* Referral form (public) */
 .rf-wrap{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.6fr);gap:32px;margin-top:28px;align-items:start}
-.rf-side{background:var(--fp);border-radius:16px;padding:24px;color:var(--char);position:sticky;top:110px}
+.rf-side{background:var(--fp);border-radius:16px;padding:24px;color:var(--char);position:sticky;top:24px}
 .rf-side h3{font-family:'Playfair Display',serif;font-weight:500;color:var(--forest);font-size:20px;margin:0 0 12px}
 .rf-points{margin:0 0 16px;padding-left:18px;font-size:14px;line-height:1.7;color:var(--char)}
 .rf-points li{margin-bottom:6px}
