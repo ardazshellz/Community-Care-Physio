@@ -6,6 +6,7 @@
 import { supabase } from '../lib/supabase.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
 import { reconcilePackageCompletion } from '../lib/package-completion.js';
+import { durationMins, occupiedSlots } from '../lib/slots.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://communitycarephysio.co.uk');
@@ -14,9 +15,55 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { token, action, bookingId, sessions, packageStatus, packageCompletedAt } = req.body || {};
+  const { token, action, bookingId, sessions, packageStatus, packageCompletedAt, booking } = req.body || {};
   if (!verifyAdminToken(token)) {
     return res.status(401).json({ error: 'Unauthorised' });
+  }
+
+  // Invoiced work (case managers, insurers, care homes): a booking with no Stripe
+  // checkout. Status 'invoiced' shows as confirmed in the admin; payment is tracked
+  // through the Referrals & invoices tab. Slots are blocked under the booking id so
+  // cancelling or deleting it frees them. blockUntil (HH:MM) reserves the rest of
+  // the day too, e.g. for report writing after the visit.
+  if (action === 'create') {
+    const b = booking && typeof booking === 'object' ? booking : {};
+    const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+    const name = str(b.name, 200), bookedDate = str(b.bookedDate, 10), bookedTime = str(b.bookedTime, 5);
+    const price = Number(b.price);
+    if (!name) return res.status(400).json({ error: 'Name is required' });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(bookedDate) || !/^([01]\d|2[0-3]):(00|30)$/.test(bookedTime)) {
+      return res.status(400).json({ error: 'Date (YYYY-MM-DD) and a half-hour time (HH:MM) are required' });
+    }
+    if (!Number.isFinite(price) || price < 0 || price > 5000) return res.status(400).json({ error: 'Invalid price' });
+    const appointment = str(b.appointment, 100) || 'Initial Assessment';
+    const mins = durationMins(appointment);
+    try {
+      const { data: row, error } = await supabase.from('bookings').insert({
+        name, phone: str(b.phone, 50), email: str(b.email, 200), address: str(b.address, 500), postcode: str(b.postcode, 12),
+        appointment, duration: `${mins} mins`, price, booked_date: bookedDate, booked_time: bookedTime,
+        preferred_time: bookedTime, patient_type: str(b.patientType, 20) || 'new', booking_for: str(b.bookingFor, 40) || 'referral',
+        reason: str(b.reason, 4000), concern_areas: str(b.concernAreas, 500) || null, complexity_fee: Number(b.complexityFee) || 0,
+        paid: false, confirmed: true, status: 'invoiced',
+        timestamp: new Date().toLocaleString('en-GB', { timeZone: 'Europe/London' })
+      }).select().single();
+      if (error) throw error;
+      const slots = new Set(occupiedSlots(bookedTime, mins));
+      const until = str(b.blockUntil, 5);
+      if (/^([01]\d|2[0-3]):(00|30)$/.test(until)) {
+        const [h, m] = bookedTime.split(':').map(Number);
+        for (let t = h * 60 + m; t < Number(until.slice(0, 2)) * 60 + Number(until.slice(3)); t += 30) {
+          slots.add(`${String(Math.floor(t / 60)).padStart(2, '0')}:${String(t % 60).padStart(2, '0')}`);
+        }
+      }
+      const { error: slotError } = await supabase.from('blocked_slots').upsert(
+        [...slots].map(slot_time => ({ booking_date: bookedDate, slot_time, booking_id: row.id })),
+        { onConflict: 'booking_date,slot_time', ignoreDuplicates: true });
+      if (slotError) throw slotError;
+      return res.status(200).json({ success: true, bookingId: row.id, blocked: [...slots] });
+    } catch (err) {
+      console.error('update-booking', { action: 'create', code: err?.code || 'unknown' });
+      return res.status(500).json({ error: 'Could not create the booking' });
+    }
   }
   if (!bookingId) return res.status(400).json({ error: 'Missing bookingId' });
 

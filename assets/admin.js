@@ -78,7 +78,7 @@ function openAdmin(){
 // confirmation (or error) bar, so it is always clear the click was processed.
 const ADMIN_ACTION_LABELS={
   'save-rota':'Availability published','blocks':'Slots updated',
-  confirm:'Booking confirmed',markPaid:'Payment status updated',saveSessions:'Appointments saved',
+  confirm:'Booking confirmed',create:'Booking added',markPaid:'Payment status updated',saveSessions:'Appointments saved',
   delete:'Removed',purge:'Removed',
   save:'Saved','invoice-create':'Invoice created','invoice-save':'Invoice saved','intake-create':'Intake link created','charge-fee':'Fee charged',
   custom:'Email sent from infoccphysio',dna:'Missed-appointment notice sent',review:'Review email sent',
@@ -639,6 +639,7 @@ function aStatus(b){
   if(b.status==='expired')   return {label:'Expired', color:'#b45309', bg:'#fffbeb'};
   if(b.status==='completed') return {label:'Completed', color:'#0369a1', bg:'#e0f2fe'};
   if(b.status==='prepaid')   return {label:'Prepaid / Confirmed', color:'#16a34a', bg:'#f0fdf4'};
+  if(b.status==='invoiced')  return {label:'Invoiced / Confirmed', color:'#16a34a', bg:'#f0fdf4'};
   if(b.paid!==false)         return {label:'Paid / Confirmed', color:'#16a34a', bg:'#f0fdf4'};
   return {label:'Pending payment', color:'#b45309', bg:'#fffbeb'};
 }
