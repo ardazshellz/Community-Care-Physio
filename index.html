@@ -763,8 +763,8 @@ textarea{resize:none;height:72px}
 
 /* ── RESPONSIVE ── */
 @media(max-width:660px){
-  nav{padding:10px 12px 0;gap:8px;flex-wrap:wrap}.nav-links{display:none}
-  .mnav{display:flex;flex:1 1 100%;list-style:none;margin:8px -12px 0;padding:0 4px;border-top:1px solid rgba(30,77,59,.1)}
+  nav{padding:10px 12px;gap:8px;position:static}.nav-links{display:none}
+  .mnav{display:flex;list-style:none;margin:0;padding:0 4px;background:rgba(248,245,240,.97);border-bottom:1px solid rgba(30,77,59,.1)}
   .mnav li{flex:1}.mnav a{display:block;text-align:center;padding:9px 2px;font-size:12px;font-weight:500;color:var(--forest);text-decoration:none;white-space:nowrap}
   .logo-wrap{gap:6px;min-width:0;flex:1 1 auto}
   .logo-main{font-size:15px;line-height:1.02;max-width:142px}
@@ -931,13 +931,13 @@ textarea{resize:none;height:72px}
     </div>
     <button class="nav-cta" onclick="openM()">Book a visit →</button>
   </div>
-  <ul class="mnav" aria-label="Quick links">
-    <li><a href="#pricing">Pricing</a></li>
-    <li><a href="#areas">Areas</a></li>
-    <li><a href="#referrers" onclick="openReferrers();return false">Case managers</a></li>
-    <li><a href="#faq">FAQs</a></li>
-  </ul>
 </nav>
+<ul class="mnav" aria-label="Quick links">
+  <li><a href="#pricing">Pricing</a></li>
+  <li><a href="#areas">Areas</a></li>
+  <li><a href="#referrers" onclick="openReferrers();return false">Case managers</a></li>
+  <li><a href="#faq">FAQs</a></li>
+</ul>
 
 <!-- 1. HERO — warm -->
 <section class="hero">
