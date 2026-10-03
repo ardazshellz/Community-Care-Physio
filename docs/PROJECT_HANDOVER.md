@@ -1,0 +1,73 @@
+# Community Care Physio — portable handover
+
+## Current feature work (15 September 2026)
+The local branch is now `feature/patient-enquiries`. The enquiry → message → appointment → payment → confirmed-patient workflow has been implemented and tested locally. Read **PATIENT_ENQUIRIES.md** for architecture, 18-test verification, browser checks, production prerequisites and known limits. No migration or deployment has been applied to production. Changes remain uncommitted. The setup-era statements below describe the original baseline; the current checkout now includes dependencies, a lockfile and test scripts and requires Node >=22.
+Verified 15 September 2026. Repository baseline: `e9defdf7a25594ad22b436d4a01af9a1a9805a97` on upstream main, commit dated 8 August 2026. Local setup branch: setup/portable-handover-2026-09-15.
+
+## Start here
+Source of truth: https://github.com/ardazshellz/Community-Care-Physio . Local checkout: `/Users/ardazshellz/Documents/Codex/2026-09-15/community-care/Community-Care-Physio`. Website: https://www.communitycarephysio.co.uk/ . The public page was retrieved and describes home physiotherapy in South West London, founded by Zakery. Public marketing claims are website statements, not independent clinical verification.
+
+Read SERVICE_INVENTORY.md, HISTORY.md, DESIGN_ASSETS.md and OPEN_ISSUES.md before changing code. Historical imported index files are references only. No application changes, deployments, database changes, emails or payment operations were performed during setup.
+
+## Architecture
+Static index.html includes public site and substantial admin UI; admin.html is another admin entry point. ES module serverless functions are in api/, shared authentication and database client in lib/. package.json expects Node >=18 and Supabase JS, Nodemailer and Stripe. No build/start/test scripts or lockfile exist in the baseline. vercel.json defines API headers, review redirects and a daily /api/send-reminders cron at 08:00 UTC. This is 09:00 UK during BST; the UI says 8am, so verify intended seasonal timing.
+
+Database-backed paths reference bookings, blocked_slots, pending_bookings and site_config. Payments use checkout/payment-link handlers and stripe-webhook.js. Email code uses Gmail SMTP; save-booking.js also references Resend.
+
+## Local use
+For a static preview: `python3 -m http.server 8000 --directory "/Users/ardazshellz/Documents/Codex/2026-09-15/community-care/Community-Care-Physio"`. This does not run serverless API functions. For full backend work, use an isolated development database, test payments and controlled email recipients. Dependencies are not installed and backend flows are not tested in this setup. Obtain environment values via authenticated service dashboards; keep them outside Git and knowledge uploads.
+
+## Claude and concurrent editing
+Open the local checkout folder in Claude Code or grant that folder to Claude desktop; read CLAUDE.md first. This setup does not automatically connect Claude, import all Claude history or synchronize ChatGPT. Use one branch/worktree per simultaneous agent and avoid shared uncommitted files. Fetch upstream before new work; coordinate merge/review before deploying.
+
+## ChatGPT knowledge
+Upload the Markdown files and selected public design assets from this bundle to a Project named Community Care Physio. Use PROJECT_INSTRUCTIONS.md as project instructions. Refresh the bundle after approved changes, recording new commit and verification date. It is a snapshot, not a live repo connection.
+
+## 16 September 2026 — desktop pricing readability
+Desktop-only (>950px) pricing CSS enlarges appointment/package names, durations, prices and summary labels while retaining font families and the five-card arrangement. Dark-card metadata contrast increased. Padding adjusted to keep card height growth to 2–5px at 1440px. Verified all five cards in a 1440×1000 viewport; 390px mobile font sizes unchanged. Browser viewport restored. No prices or booking logic changed.
+
+## 16 September 2026 — hero email choices
+The homepage hero now has an “Email us” button alongside the primary booking, phone and WhatsApp buttons. On mobile the four large contact choices use an accessible two-by-two layout. Opening Email us offers the visitor's default email app, Gmail or Outlook with large tap targets; each choice addresses `infoccphysio@gmail.com` and prefills the subject “Physiotherapy enquiry”. Verified in the desktop layout and at a 390×844 mobile viewport. The existing test suite passes (29 tests).
+
+## 30 September 2026 — practice tools (branch feat/practice-tools, not yet deployed)
+Added: public case-manager referral section and form (`#referrals`, redirects `/referrals`, `/refer`), Registration & Insurance legal tab (HCPC PH132358 shown, other documents "available on request"), Google reviews links (`/reviews`), cookie-free Vercel Web Analytics script, and privacy/terms/cookie text updates. Admin gains "Referrals & invoices" (assets/practice.js): referral records with authorised-session and report-due tracking and alerts, numbered third-party invoices (CCP-YYYY-NNNN, atomic counter, print/save PDF, email with attachment, draft/sent/paid/overdue), intake & e-consent links (`/?intake=<token>`, 30 days, one submission), invoice/bank settings stored in the database (never in code) and Google Drive notes settings. Patient cards gain Intake form, Notes (per session too) and Charge fee buttons. Stripe Checkout now saves the card (customer_creation always, setup_future_usage off_session, policy text on the pay button); the webhook stores only Stripe IDs, brand and last 4 in practice_records; admin can charge £1–£200 off-session with an idempotency key. Drive notes use the clinic's own Apps Script (tools/drive-notes). Unused unauthenticated api/save-booking.js and api/hold-slot.js were removed (function count now 11).
+
+Backend: api/practice.js (single endpoint; public actions referral, intake-get, intake-submit with honeypot; admin actions list/save/invoice-create/invoice-save/delete/intake-create/charge-fee), lib/practice-model.js validators, lib/mailer.js shared SMTP and signature, migration supabase/migrations/20260930120000_practice_records.sql (RLS on, anon/authenticated revoked, service_role granted, next_invoice_number()). Optimistic concurrency uses updated_at.
+
+Verified: node --check on all changed JS; 48 tests pass (`node --test tests/practice-model.test.js tests/coverage-pricing.test.js tests/package-archive.test.js`); fictional-data browser walkthrough on a local mock API (.claude/preview-server.mjs): referral submit, admin referrals/authorisation meter/alerts, invoice create and PDF render, intake link creation, intake submit, patient-card buttons. Not verified: live Supabase migration, live Stripe card saving/charging, live email delivery, Apps Script deployment.
+
+Deploy steps: (1) run the migration SQL in Supabase; (2) merge to main and push; (3) enable Web Analytics in the Vercel project; (4) admin › Referrals & invoices › Settings: enter invoice bank details and, after deploying the Apps Script, the Drive URL and secret; (5) submit one test referral and one test intake with fictional data, then delete them.
+Independent reviews (Codex adversarial security review at high effort; Claude integration review) found no critical/high issues; all medium findings fixed in commit 9bfdaa0 (referral rate limits, logout clearing, stable fee idempotency, intake policy view, Drive notes per booking).
+- 30 Sep 2026: referral section now has a family/friend form (default) with booking-style triage; the clinician form sits behind a toggle; /#referrals-clinician opens it directly.
+
+## 30 Sep 2026 (evening) — commit 2c2dfe1
+- Booking overlaps: public times need visit + 45 min travel free (`isSlotClash` in index.html mirrors `lib/slots.js`); checkout rejects overlaps/past dates; webhook blocks slots before marking paid, returns 500 on failure, emails a TIME CLASH warning. Remaining: same-second checkout race (upgrade: Postgres function with row locks).
+- Admin login: 5 wrong passwords = 15 min lock (practice_records `counter:login:<hash>`; fails open if DB is down).
+- Patient linking: admin Patients suggests "Same patient?" for different-name bookings (surname/email/phone/address); links saved in `settings:patient-groups`.
+- Google data: JSON-LD Physiotherapy, canonical, og-image, robots.txt, sitemap.xml. Submit sitemap in Google Search Console (owner action).
+- nodemailer 7.0.13. `tests/enquiries*.test.js` need `@electric-sql/pglite` installed locally (pre-existing).
+
+## 1 Oct 2026 — commit 0a89cf9 (audit round)
+- Fixed: Sync bookings stripped the 45-min travel blocks (rebuildCalendarFromPackages now blocks full ranges via occupiedTimes); checkout grid/time validation; CORS; cron secret mandatory; async payment success; null-owned clash rows; aEsc quote escaping; manual "Link to…" button; FAQPage schema; a11y labels; portrait compressed; security + cache headers in vercel.json.
+- Open (owner decisions): hamburger mobile nav (links hidden ≤ mobile); sage label contrast 2.5:1 (brand colour); info@ domain email vs Gmail; testimonials section; per-area landing pages; split admin out of index.html (230 KB shipped to every visitor); same-second checkout race (Postgres function); Search Console sitemap submission.
+
+## 1 Oct 2026 — commits 9c5c741, 9a81374
+- Admin panel split out of index.html (209 KB public page, was 455 KB): assets/admin-panel.html, assets/admin.css, assets/admin.js, plus enquiries.js/practice.js modules load only via loadAdminAssets() when the URL has #admin. Body-map data stayed public. CCP_ADMIN_STATE merges defaults; adminROTA takes the live rota if it arrived first.
+- Area landing pages: tools/build-areas.mjs → areas/<slug>/index.html (17 areas) + sitemap.xml. Re-run after price/coverage changes. Footer area names link to them. /?book=1 opens the booking modal (used by area pages).
+- Hamburger menu built, previewed, rejected by owner (prefers links spread out). Not shipped.
+- Owner keeps infoccphysio@gmail.com (no paid domain email). Search Console: owner to sign in, agent submits sitemap.
+- Search Console: property https://www.communitycarephysio.co.uk/ verified 1 Oct 2026 (infoccphysio account, HTML file google45b979561bfcf582.html — keep it in the repo). sitemap.xml submitted; homepage re-index requested. Small sage labels darkened to --sage-text #5d8470 for contrast.
+- Checkout race closed: migration 20261001120000_slot_overlap_guard.sql (trigger protect_slot_overlap on pending_bookings) applied to production via SQL editor 1 Oct 2026. `npm install` locally now works (devDependency pglite) so tests/enquiries*.test.js and tests/slot-overlap-guard.test.js run.
+- Google Business Profile (verified, store code 04279402386222827819): primary owner zakeryshelley1997@gmail.com; infoccphysio@gmail.com added as Owner 1 Oct 2026. Booking link set to https://www.communitycarephysio.co.uk/?book=1. Duplicate unverified listing (store code 12696220073584696029) removed 1 Oct 2026; one verified profile remains.
+
+## 3 Oct 2026 — commits 5efe019 … ccd1e73 (owner decisions from the 1 Oct grilling, all deployed)
+- Case managers sheet (`#referrers`, `openReferrers()` in index.html; styles in assets/practice.css `.refs-*`): four steps, fees table ("£100 / £130 complex" slash style, not a middle dot), invoicing bullets, Start a referral (jumps to the clinician tab), Referral pack (PDF), Email picker (Mail / Gmail / Outlook / Yahoo — the same `<details class="hero-email">` pattern as the hero), Call. Nav link "Case managers"; area pages carry a "Refer a client" CTA to `/#referrers`.
+- Nav trimmed to seven links (Founder, Legal, Affiliations removed; the last two stay in the footer). Owner likes it as is.
+- Mobile: visible quick-link row inside the sticky nav at ≤660px (`.mnav`: Pricing · Areas · Case managers · FAQs). Replaces the rejected hamburger.
+- Hero: line under the headline "For patients, families, case managers and discharge teams." (`.hero-for`). Headline unchanged by owner choice.
+- Testimonials: `#testimonials` section after Pricing, ships with the `hidden` attribute and three placeholder cards. To publish: remove `hidden`, paste real quotes, keep attribution as "Relationship, Area" (no patient names). No quotes collected yet.
+- Admin: WhatsApp reminder button (`aWaReminderBtn` in assets/admin.js) on single bookings and package sessions dated tomorrow (UK time); opens wa.me with the message prefilled, then shows "✓ WhatsApp reminder sent". Sent flag is localStorage only (one admin device); move it to the booking record if a second device needs it. Email reminder still runs the day before at 08:00 UTC; admin labels now say "(morning)" instead of "(8am)".
+- Referral pack: `assets/referral-pack.pdf` (8 pages A4) built from `tools/referral-pack/index.html` with `node tools/referral-pack/build.mjs` (headless Google Chrome). Attached to the clinician "Referral received" email (`REFERRAL_PACK` in api/practice.js, fetched by URL at send time) and linked from the sheet. Rebuild after any fee or wording change and commit the PDF. Owner confirmed all claims on page 6 except "safeguarding level 3" and "clinical supervision", which were cut. Benchmarked against six UK home-visit/neuro providers (none publish a pack; most quote case-manager work privately).
+- Search Console: second property verification on 3 Oct under zakeryshelley1997@gmail.com (file googlefb2462b780e849f4.html — keep it, alongside google45b979561bfcf582.html for the infoccphysio account). sitemap.xml already Success, 18 pages discovered. No per-page index requests made.
+- Decisions kept: infoccphysio@gmail.com stays (no domain email); no voicemail greeting; no self-serve rescheduling.
+- Verified: 95 tests pass (`node --test tests/*.test.js`); browser walkthrough on .claude/preview-server.mjs (mock booking demo-1 now falls tomorrow so the WhatsApp button renders); live checks of homepage, area page and PDF (HTTP 200, 657 KB). Not verified: a real referral acknowledgement with the attachment (needs a live submission).
