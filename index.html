@@ -2735,10 +2735,10 @@ function bmShow(key){
     </ol>
     <h3>Fees</h3>
     <table class="refs-fees">
-      <tr><td>Initial assessment at home, 60 min</td><td>£100 · £130 complex</td></tr>
+      <tr><td>Initial assessment at home, 60 min</td><td>£100 / £130 complex</td></tr>
       <tr><td>Assessment report</td><td>£50</td></tr>
-      <tr><td>Follow-up session, 45 min</td><td>£75 · £90 complex</td></tr>
-      <tr><td>Extended session, 60 min</td><td>£90 · £105 complex</td></tr>
+      <tr><td>Follow-up session, 45 min</td><td>£75 / £90 complex</td></tr>
+      <tr><td>Extended session, 60 min</td><td>£90 / £105 complex</td></tr>
       <tr><td>Progress or discharge report</td><td>£50</td></tr>
       <tr><td>Travel outside our core area, per visit</td><td>£15 or £35 by postcode</td></tr>
     </table>
@@ -2754,7 +2754,15 @@ function bmShow(key){
   <div class="refs-foot">
     <button type="button" class="refs-btn refs-btn-p" onclick="closeReferrers();location.hash='#referrals-clinician';document.getElementById('rfTabClinician')?.click();document.getElementById('referrals')?.scrollIntoView({behavior:'smooth'})">Start a referral</button>
     <div class="refs-row">
-      <a class="refs-btn" href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20referral">Email the practice</a>
+      <details class="hero-email refs-email">
+        <summary class="refs-btn">Email the practice</summary>
+        <div class="hero-email-menu" role="group" aria-label="Choose an email service">
+          <a href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20referral">Email app</a>
+          <a href="https://mail.google.com/mail/?view=cm&amp;fs=1&amp;to=infoccphysio%40gmail.com&amp;su=Physiotherapy%20referral" target="_blank" rel="noopener">Gmail</a>
+          <a href="https://outlook.office.com/mail/deeplink/compose?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20referral" target="_blank" rel="noopener">Outlook</a>
+          <a href="https://compose.mail.yahoo.com/?to=infoccphysio%40gmail.com&amp;subject=Physiotherapy%20referral" target="_blank" rel="noopener">Yahoo</a>
+        </div>
+      </details>
       <a class="refs-btn" href="tel:+447508401627">Call 07508 401627</a>
     </div>
   </div>

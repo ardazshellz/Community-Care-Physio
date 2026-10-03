@@ -177,5 +177,6 @@ body:has(.refs-ov:not([hidden])) .float-wa,body:has(.refs-ov:not([hidden])) .cha
 .refs-foot{padding:14px 28px calc(18px + env(safe-area-inset-bottom,0px));border-top:1px solid rgba(30,77,59,.12);background:var(--warm)}
 .refs-btn{display:block;text-align:center;width:100%;padding:13px;border-radius:999px;font:500 14px Outfit,sans-serif;border:1px solid var(--forest);background:#fff;color:var(--forest);text-decoration:none;cursor:pointer}
 .refs-btn-p{background:var(--forest);color:#fff}
-.refs-row{display:flex;gap:8px;margin-top:8px}.refs-row .refs-btn{flex:1;padding:10px;font-size:13px}
+.refs-row{display:flex;gap:8px;margin-top:8px;position:relative}.refs-row .refs-btn{flex:1;padding:10px;font-size:13px}
+.refs-email{flex:1;width:auto;animation:none;position:static}.refs-email summary.refs-btn{display:block;width:100%;border-radius:999px;font:500 13px Outfit,sans-serif;padding:10px;transform:none}.refs-email summary::after{margin-left:6px}.refs-email .hero-email-menu{top:auto;bottom:calc(100% + 8px);left:0;right:0;transform:none;justify-content:center;flex-wrap:wrap;white-space:normal}
 @media(max-width:600px){.refs-head{padding:20px 18px}.refs-body{padding:16px 18px}.refs-foot{padding-left:18px;padding-right:18px}}
