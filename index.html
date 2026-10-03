@@ -273,7 +273,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .logo-main{font-family:'Playfair Display',serif;font-size:20px;font-weight:500;color:var(--forest);line-height:1.05}
 .logo-sub{font-size:10px;color:var(--sage);letter-spacing:.14em;text-transform:uppercase;margin-top:1px}
 .nav-links{display:flex;gap:24px;list-style:none}
-.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s;white-space:nowrap}
 .nav-links a:hover{color:var(--forest)}
 .nav-r{display:flex;align-items:center;gap:10px}
 .nav-contact-stack{display:flex;align-items:center;gap:10px}
@@ -905,7 +905,7 @@ textarea{resize:none;height:72px}
     <li><a href="#founder">Founder</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#areas">Areas</a></li>
-    <li><a href="#referrals">Referrers</a></li>
+    <li><a href="#referrers" class="nav-referrers" onclick="openReferrers();return false">Case managers</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#faq">FAQs</a></li>
     <li><a href="#" onclick="openLegal('privacy');return false">Legal</a></li>
@@ -1569,6 +1569,7 @@ textarea{resize:none;height:72px}
         <a href="#pricing">Pricing</a>
         <a href="#areas">Areas</a>
         <a href="#referrals">Referrals</a>
+        <a href="#" onclick="openReferrers();return false">For case managers</a>
         <a href="#contact">Contact</a>
         <a href="https://g.page/r/CTNprE1O874TEBl" target="_blank" rel="noopener">Google reviews</a>
         <a href="#faq">FAQs</a>
@@ -2715,6 +2716,65 @@ function bmShow(key){
 }
 
 </script>
+<!-- REFERRERS SHEET (case managers, care homes, discharge teams) -->
+<div id="refSheetOverlay" class="refs-ov" hidden onclick="if(event.target===this)closeReferrers()">
+<aside class="refs-sheet" role="dialog" aria-modal="true" aria-labelledby="refsTitle" tabindex="-1">
+  <div class="refs-head">
+    <button type="button" class="refs-x" aria-label="Close" onclick="closeReferrers()">×</button>
+    <div class="refs-sl">Case managers · care homes · discharge teams</div>
+    <h2 id="refsTitle">Refer a client</h2>
+    <p>Assessment at home, written report within 5 working days, treatment once you approve funding. HCPC-registered physiotherapy across South West London.</p>
+  </div>
+  <div class="refs-body">
+    <h3>Four steps</h3>
+    <ol class="refs-steps">
+      <li><span>Send the referral form, or email the referral pack. We reply within one working day and arrange the visit with the client or their family.</span></li>
+      <li><span>60-minute initial assessment at home: history, mobility, balance, strength, home environment and goals, with standard outcome measures.</span></li>
+      <li><span>Assessment report to you within 5 working days: findings, recommended number of sessions and total cost.</span></li>
+      <li><span>Treatment starts after you confirm funding. Progress and discharge reports as agreed.</span></li>
+    </ol>
+    <h3>Fees</h3>
+    <table class="refs-fees">
+      <tr><td>Initial assessment at home, 60 min</td><td>£100 · £130 complex</td></tr>
+      <tr><td>Assessment report</td><td>£50</td></tr>
+      <tr><td>Follow-up session, 45 min</td><td>£75 · £90 complex</td></tr>
+      <tr><td>Extended session, 60 min</td><td>£90 · £105 complex</td></tr>
+      <tr><td>Progress or discharge report</td><td>£50</td></tr>
+      <tr><td>Travel outside our core area, per visit</td><td>£15 or £35 by postcode</td></tr>
+    </table>
+    <p class="refs-note">Complex needs: neurological conditions, recent hospital discharge, falls, cognitive impairment or several long-term conditions. Agreed before the first visit, never added afterwards.</p>
+    <h3>Invoicing and paperwork</h3>
+    <ul class="refs-card">
+      <li>Invoiced to your organisation, quoting your case reference and PO number</li>
+      <li>30-day terms, BACS, itemised by visit date</li>
+      <li>HCPC registered PH132358 (<a href="https://www.hcpc-uk.org/check-the-register/" target="_blank" rel="noopener">check the register</a>) · CSP member · professional indemnity and public liability insured · enhanced DBS</li>
+      <li>Certificates and CV sent on request</li>
+    </ul>
+  </div>
+  <div class="refs-foot">
+    <button type="button" class="refs-btn refs-btn-p" onclick="closeReferrers();location.hash='#referrals-clinician';document.getElementById('rfTabClinician')?.click();document.getElementById('referrals')?.scrollIntoView({behavior:'smooth'})">Start a referral</button>
+    <div class="refs-row">
+      <a class="refs-btn" href="mailto:infoccphysio@gmail.com?subject=Physiotherapy%20referral">Email the practice</a>
+      <a class="refs-btn" href="tel:+447508401627">Call 07508 401627</a>
+    </div>
+  </div>
+</aside>
+</div>
+<script>
+let refsLastFocus=null;
+function openReferrers(){
+  const o=document.getElementById('refSheetOverlay'); refsLastFocus=document.activeElement;
+  o.hidden=false; document.body.style.overflow='hidden'; o.querySelector('.refs-body').scrollTop=0; o.querySelector('.refs-sheet').focus({preventScroll:true});
+}
+function closeReferrers(){
+  const o=document.getElementById('refSheetOverlay'); if(o.hidden) return;
+  o.hidden=true; document.body.style.overflow=''; if(refsLastFocus&&refsLastFocus.focus) refsLastFocus.focus();
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeReferrers(); });
+// Deep link for referrer emails and the area pages: /#referrers
+if(location.hash==='#referrers') window.addEventListener('DOMContentLoaded',openReferrers,{once:true});
+</script>
+
 <!-- LEGAL MODAL -->
 <div id="legalModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;overflow-y:auto;padding:20px">
   <div style="background:#fff;border-radius:16px;max-width:700px;margin:0 auto;padding:40px;position:relative;font-family:'Outfit',sans-serif">

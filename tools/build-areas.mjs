@@ -142,7 +142,7 @@ footer a{color:#fff}
     <div class="eyebrow">Accepting new patients · ${esc(districts.join(' · '))}</div>
     <h1>Home visit physiotherapy in <em>${esc(name)}</em></h1>
     <p class="lead">An NHS-trained, HCPC registered physiotherapist comes to you at home in ${esc(local)}. One-to-one care, no waiting room, no GP referral needed.</p>
-    <div class="cta"><a class="btn btn-p" href="/?book=1">Book a home visit</a><a class="btn btn-o" href="https://wa.me/447508401627?text=${encodeURIComponent('Hi, I’d like to book a home physio visit in ' + name)}" rel="noopener" target="_blank">WhatsApp us</a></div>
+    <div class="cta"><a class="btn btn-p" href="/?book=1">Book a home visit</a><a class="btn btn-o" href="https://wa.me/447508401627?text=${encodeURIComponent('Hi, I’d like to book a home physio visit in ' + name)}" rel="noopener" target="_blank">WhatsApp us</a><a class="btn btn-o" href="/#referrers">Refer a client</a></div>
   </header>
 
   <section>
