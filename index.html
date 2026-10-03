@@ -275,6 +275,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 .nav-links{display:flex;gap:24px;list-style:none}
 .nav-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s;white-space:nowrap}
 .nav-links a:hover{color:var(--forest)}
+.mnav{display:none}
 .nav-r{display:flex;align-items:center;gap:10px}
 .nav-contact-stack{display:flex;align-items:center;gap:10px}
 .nav-call,.nav-wa{display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 14px;border-radius:40px;font-size:12px;font-weight:500;text-decoration:none;transition:all .2s;white-space:nowrap}
@@ -313,6 +314,7 @@ nav{position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-co
 @keyframes pa{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.85)}}
 h1{font-family:'Playfair Display',serif;font-size:clamp(36px,4.5vw,58px);font-weight:400;line-height:1.1;color:var(--char);margin-bottom:20px;animation:fadeUp .7s .1s ease both}
 h1 em{color:var(--forest);font-style:italic}
+.hero-for{font-size:14px;font-weight:500;color:var(--forest);margin:-10px 0 16px;animation:fadeUp .7s .15s ease both}
 .hero-desc{font-size:16px;line-height:1.75;color:var(--muted);max-width:460px;margin-bottom:30px;font-weight:300;animation:fadeUp .7s .2s ease both}
 .hero-acts{position:relative;z-index:5;display:flex;gap:12px;align-items:center;flex-wrap:wrap;animation:fadeUp .7s .3s ease both}
 .btn-p{background:var(--forest);color:#fff;padding:13px 26px;border-radius:40px;font-size:14px;font-weight:500;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .2s;font-family:'Outfit',sans-serif;text-decoration:none}
@@ -755,7 +757,9 @@ textarea{resize:none;height:72px}
 
 /* ── RESPONSIVE ── */
 @media(max-width:660px){
-  nav{padding:10px 12px;gap:8px}.nav-links{display:none}
+  nav{padding:10px 12px 0;gap:8px;flex-wrap:wrap}.nav-links{display:none}
+  .mnav{display:flex;flex:1 1 100%;list-style:none;margin:8px -12px 0;padding:0 4px;border-top:1px solid rgba(30,77,59,.1)}
+  .mnav li{flex:1}.mnav a{display:block;text-align:center;padding:9px 2px;font-size:12px;font-weight:500;color:var(--forest);text-decoration:none;white-space:nowrap}
   .logo-wrap{gap:6px;min-width:0;flex:1 1 auto}
   .logo-main{font-size:15px;line-height:1.02;max-width:142px}
   .logo-sub{font-size:8px;letter-spacing:.12em;white-space:nowrap;margin-top:3px}
@@ -921,6 +925,12 @@ textarea{resize:none;height:72px}
     </div>
     <button class="nav-cta" onclick="openM()">Book a visit →</button>
   </div>
+  <ul class="mnav" aria-label="Quick links">
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#areas">Areas</a></li>
+    <li><a href="#referrers" onclick="openReferrers();return false">Case managers</a></li>
+    <li><a href="#faq">FAQs</a></li>
+  </ul>
 </nav>
 
 <!-- 1. HERO — warm -->
@@ -930,6 +940,7 @@ textarea{resize:none;height:72px}
   <div class="hero-l">
     <div class="eyebrow"><span class="pulse"></span>Accepting new patients · SW London</div>
     <h1>Community physio<br><em>delivered to<br>your door</em></h1>
+    <p class="hero-for">For patients, families, case managers and discharge teams.</p>
     <p class="hero-desc">A specialist physiotherapy practice serving South West London. Expert, one-to-one rehabilitation at home — built on NHS clinical standards and a genuine commitment to your recovery.</p>
     <div class="hero-acts">
       <button class="btn-p" onclick="openM()">Book <span class="hero-book-long">a home visit</span> <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 8h10M9 4l4 4-4 4"/></svg></button>
