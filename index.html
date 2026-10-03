@@ -375,6 +375,12 @@ select.mini:focus{border-color:var(--forest)}
 .sec{padding:80px 40px}
 .sl{font-size:11px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--sage-text);margin-bottom:12px}
 .st{font-family:'Playfair Display',serif;font-size:clamp(28px,3.5vw,44px);font-weight:400;color:var(--char);line-height:1.15;margin-bottom:14px}
+.tm-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.tm{margin:0;background:#fff;border:1px solid rgba(30,77,59,.08);border-radius:14px;padding:26px 24px;display:flex;flex-direction:column;gap:16px}
+.tm blockquote{margin:0;font-family:'Playfair Display',serif;font-size:18px;line-height:1.5;color:var(--char)}
+.tm blockquote::before{content:'\201C';color:var(--sage);margin-right:2px}
+.tm figcaption{font-size:13px;color:var(--muted);margin-top:auto}
+@media(max-width:860px){.tm-grid{grid-template-columns:1fr}}
 .ss{font-size:15px;color:var(--muted);line-height:1.6;font-weight:300;margin-bottom:44px;display:block;max-width:100%}
 
 /* ── ABOUT ── */
@@ -1267,6 +1273,19 @@ textarea{resize:none;height:72px}
   <div class="pay-note">
     <div class="pay-note-icon">🔒</div>
     <div class="pay-note-text"><strong>Secure payment via Stripe.</strong> Card details are encrypted and never stored on our servers. All major cards accepted. You'll only be charged once your appointment is confirmed.</div>
+  </div>
+</section>
+
+<!-- 5b. TESTIMONIALS — stone. Hidden until real quotes exist: remove the
+     `hidden` attribute, replace the three placeholder quotes, keep attribution
+     as "Relationship, Area" (no patient names). -->
+<section class="sec" id="testimonials" style="background:var(--stone)" hidden>
+  <div class="sl">What families say</div>
+  <h2 class="st">In their words</h2>
+  <div class="tm-grid">
+    <figure class="tm"><blockquote>Quote goes here.</blockquote><figcaption>Daughter of a patient, Putney</figcaption></figure>
+    <figure class="tm"><blockquote>Quote goes here.</blockquote><figcaption>Son of a patient, Wimbledon</figcaption></figure>
+    <figure class="tm"><blockquote>Quote goes here.</blockquote><figcaption>Case manager, SW London</figcaption></figure>
   </div>
 </section>
 
