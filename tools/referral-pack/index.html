@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Community Care Physio — Referral pack</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Print source for assets/referral-pack.pdf. Build: node tools/referral-pack/build.mjs */
+  :root{--forest:#1e4d3b;--sage:#8aab97;--sage-text:#5f8a70;--cream:#f8f5f0;--stone:#ede9e3;--gold:#c4975a;--char:#2b2b28;--muted:#5d5d57;--line:rgba(30,77,59,.14)}
+  @page{size:A4;margin:0}
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff;color:var(--char);font-family:Outfit,system-ui,sans-serif;font-weight:300;font-size:10.5pt;line-height:1.55;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{width:210mm;height:297mm;padding:18mm 18mm 16mm;position:relative;page-break-after:always;overflow:hidden;background:#fff}
+  .page:last-child{page-break-after:auto}
+  .foot{position:absolute;left:18mm;right:18mm;bottom:9mm;display:flex;justify-content:space-between;font-size:8pt;color:var(--muted);border-top:1px solid var(--line);padding-top:6px;letter-spacing:.02em}
+  h1,h2,h3{font-family:'Playfair Display',Georgia,serif;font-weight:400;color:var(--char);margin:0}
+  h1{font-size:30pt;line-height:1.1}
+  h2{font-size:20pt;line-height:1.15;margin-bottom:4mm}
+  h3{font-size:12.5pt;margin:7mm 0 2mm;color:var(--forest)}
+  h3:first-of-type{margin-top:0}
+  p{margin:0 0 3mm}
+  .sl{font-size:8pt;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--sage-text);margin-bottom:3mm}
+  .lead{font-size:11.5pt;color:var(--muted);max-width:150mm}
+  strong{font-weight:500;color:var(--char)}
+  ul,ol{margin:0 0 3mm;padding-left:5mm}
+  li{margin-bottom:1.2mm}
+  table{width:100%;border-collapse:collapse;font-size:10pt}
+  td,th{padding:2.4mm 2mm;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+  th{font-weight:500;color:var(--forest);font-size:8.5pt;letter-spacing:.08em;text-transform:uppercase}
+  td.r{text-align:right;color:var(--forest);font-weight:500;white-space:nowrap}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:8mm}
+  .card{background:var(--cream);border:1px solid var(--line);border-radius:3mm;padding:5mm 6mm}
+  .card h3{margin-top:0}
+  .pill{display:inline-block;background:var(--forest);color:#fff;border-radius:999px;padding:1mm 3.5mm;font-size:8.5pt;font-weight:500;letter-spacing:.04em}
+  .steps{list-style:none;padding:0;margin:0;counter-reset:s}
+  .steps li{display:grid;grid-template-columns:9mm 1fr;gap:3mm;align-items:start;margin-bottom:4mm;counter-increment:s}
+  .steps li::before{content:counter(s);width:8mm;height:8mm;border-radius:50%;background:var(--forest);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:10pt}
+  .steps b{display:block;font-weight:500;color:var(--forest)}
+  .note{font-size:9pt;color:var(--muted)}
+  .check{list-style:none;padding:0}
+  .check li{padding-left:5mm;position:relative}
+  .check li::before{content:'✓';position:absolute;left:0;color:var(--forest);font-weight:500}
+  /* cover */
+  .cover{background:#fbf9f6}
+  .cover .logo{width:120mm;margin:-6mm 0 22mm -4mm}
+  .cover h1{font-size:34pt;max-width:150mm;margin-bottom:6mm}
+  .cover .lead{font-size:12.5pt;margin-bottom:14mm}
+  .cover .meta{position:absolute;left:18mm;right:18mm;bottom:22mm;display:grid;grid-template-columns:1fr 1fr;gap:6mm;font-size:9.5pt}
+  .cover .meta b{display:block;font-weight:500;color:var(--forest);font-size:8pt;letter-spacing:.12em;text-transform:uppercase;margin-bottom:1mm}
+  .cover .band{position:absolute;left:0;right:0;bottom:0;height:10mm;background:var(--forest)}
+  /* sample report */
+  .report{border:1px solid var(--line);border-radius:3mm;padding:6mm 7mm;background:#fff;position:relative;font-size:9.5pt}
+  .report .stamp{position:absolute;top:5mm;right:6mm;border:1.5px solid var(--gold);color:var(--gold);border-radius:2mm;padding:.5mm 2.5mm;font-size:8pt;font-weight:500;letter-spacing:.14em;text-transform:uppercase;transform:rotate(-4deg)}
+  .report h4{font-family:'Playfair Display',serif;font-weight:400;font-size:13pt;margin:0 0 1mm}
+  .report .kv{display:grid;grid-template-columns:auto 1fr;gap:1mm 4mm;margin:3mm 0;font-size:9pt}
+  .report .kv span:nth-child(odd){color:var(--muted)}
+  .report h5{font-size:8.5pt;letter-spacing:.1em;text-transform:uppercase;color:var(--forest);margin:3mm 0 1mm;font-weight:500}
+  .report table{font-size:8.8pt}.report td,.report th{padding:1.4mm 1.5mm}
+  /* form */
+  .form h3{margin-top:3mm}
+  .frow{display:grid;gap:3mm;margin-bottom:3mm}
+  .f2{grid-template-columns:1fr 1fr}.f3{grid-template-columns:1fr 1fr 1fr}
+  .f{font-size:8pt;color:var(--muted);letter-spacing:.03em}
+  .f i{display:block;height:7mm;border-bottom:1px solid #9a9a93;margin-top:.5mm}
+  .f i.tall{height:13mm;border:1px solid #9a9a93;border-radius:1.5mm}
+  .chk{display:flex;gap:5mm;flex-wrap:wrap;font-size:9pt;margin-top:1mm}
+  .chk span::before{content:'';display:inline-block;width:3.4mm;height:3.4mm;border:1px solid #9a9a93;border-radius:.8mm;margin-right:1.5mm;vertical-align:-.6mm}
+</style>
+</head>
+<body>
+
+<!-- 1. COVER -->
+<section class="page cover">
+  <img class="logo" src="../../assets/email-signature-cream.png" alt="CC Physio — Community Care Physiotherapy, South West London">
+  <div class="sl">Referral pack · case managers, care homes and discharge teams</div>
+  <h1>Home-visit physiotherapy you can refer to with confidence.</h1>
+  <p class="lead">Assessment at home within five working days of funding approval, a written report you can act on, and treatment delivered to NHS clinical standards across South West London.</p>
+  <div class="meta">
+    <div><b>Contact</b>Zakery Shelley, Physiotherapist<br>07508 401627 · infoccphysio@gmail.com<br>communitycarephysio.co.uk/refer</div>
+    <div><b>Registration</b>HCPC PH132358 · CSP member<br>Professional indemnity &amp; public liability insured<br>Enhanced DBS</div>
+  </div>
+  <div class="band"></div>
+</section>
+
+<!-- 2. WHO WE ARE / WHO WE TREAT / AREAS -->
+<section class="page">
+  <div class="sl">About the service</div>
+  <h2>A community physiotherapist, not a clinic</h2>
+  <p class="lead">Community Care Physio is led by an NHS-trained physiotherapist with experience in neurological rehabilitation, elderly care, falls prevention and musculoskeletal conditions. Every appointment is one-to-one, at the client's home or care home, with the same clinician throughout.</p>
+
+  <div class="two" style="margin-top:6mm">
+    <div class="card">
+      <h3>Who we treat</h3>
+      <ul class="check">
+        <li>Neurological conditions: stroke, Parkinson's, MS, acquired brain injury</li>
+        <li>Post-hospital discharge and post-surgical rehabilitation</li>
+        <li>Falls, reduced mobility and deconditioning</li>
+        <li>Frailty, dementia and clients with several long-term conditions</li>
+        <li>Personal-injury and medico-legal rehabilitation under case management</li>
+        <li>Musculoskeletal pain and injury</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What we provide</h3>
+      <ul class="check">
+        <li>Initial assessment at home with objective outcome measures</li>
+        <li>Written assessment report with a costed, goal-based plan</li>
+        <li>Treatment visits, home exercise programme and carer guidance</li>
+        <li>Equipment and environment recommendations with rationale</li>
+        <li>Progress and discharge reports at agreed intervals</li>
+        <li>Liaison with GP, MDT, carers and family</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:8mm">Areas covered</h3>
+  <p>Core area, travel included: <strong>Putney SW15 · Wimbledon SW19 · Tooting SW17 · Southfields and Wandsworth SW18 · Raynes Park SW20 · Colliers Wood · Morden SM4 · Mitcham CR4 · Streatham SW16 · Balham SW12</strong>.</p>
+  <p>Nearby, £15 per visit: Battersea SW11 · Clapham SW4 · Fulham SW6 · New Malden KT3 · Kingston KT1–KT2 · Richmond TW9–TW10.<br>Extended, £35 per visit: other South West London postcodes by arrangement. The travel band is confirmed with the quote, before the first visit.</p>
+
+  <h3>What we are not</h3>
+  <p class="note">We act as treating therapist only and do not provide expert-witness reports. We do not provide 24-hour or emergency care; urgent concerns are directed to the GP or 999. Hydrotherapy and gym-based rehabilitation are not offered.</p>
+
+  <div class="foot"><span>Community Care Physio · Referral pack</span><span>Page 2</span></div>
+</section>
+
+<!-- 3. REFERRAL PROCESS -->
+<section class="page">
+  <div class="sl">How a referral works</div>
+  <h2>Four steps, clear timescales</h2>
+  <ol class="steps" style="margin-top:4mm">
+    <li><div><b>Refer</b>Complete the online form at communitycarephysio.co.uk/refer, or the paper form at the back of this pack. We acknowledge within one working day and confirm whether we can accept the referral. Please do not send clinical documents by open email; we arrange a secure transfer once the referral is accepted.</div></li>
+    <li><div><b>Assess</b>Initial assessment at home within five working days of your go-ahead, with the client and, where helpful, family or carers present. 60 minutes: history, mobility, balance, strength, transfers, home environment and the client's own goals, with standard outcome measures.</div></li>
+    <li><div><b>Report</b>Assessment report to you within five working days of the visit: findings, baseline measures, SMART goals, recommended number and frequency of sessions, equipment needs and a costed plan. Treatment starts only once you confirm funding.</div></li>
+    <li><div><b>Treat and review</b>Treatment visits at the agreed frequency. Progress reports at the intervals you set (typically every 6 sessions or 3 months), and a discharge summary with community and equipment recommendations when goals are met.</div></li>
+  </ol>
+
+  <div class="two" style="margin-top:6mm">
+    <div class="card">
+      <h3>Timescales</h3>
+      <table>
+        <tr><td>Referral acknowledged</td><td class="r">1 working day</td></tr>
+        <tr><td>Initial assessment</td><td class="r">within 5 working days</td></tr>
+        <tr><td>Assessment report</td><td class="r">within 5 working days</td></tr>
+        <tr><td>Progress / discharge report</td><td class="r">within 5 working days</td></tr>
+        <tr><td>Urgent referrals</td><td class="r">by arrangement</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <h3>Before we start, on request</h3>
+      <ul class="check">
+        <li>Written quote for assessment and reporting</li>
+        <li>Clinician CV and HCPC registration check</li>
+        <li>Insurance certificates and DBS reference</li>
+        <li>Free 15-minute phone or video introduction</li>
+        <li>Capacity and consent discussion where relevant</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:7mm">Capacity</h3>
+  <p class="note">This is a deliberately small practice: a limited number of home visits each week so that every client keeps the same clinician. We confirm availability at acknowledgement rather than accept referrals we cannot see within the stated timescale.</p>
+
+  <div class="foot"><span>Community Care Physio · Referral pack</span><span>Page 3</span></div>
+</section>
+
+<!-- 4. ASSESSMENT, OUTCOME MEASURES, REPORTS -->
+<section class="page">
+  <div class="sl">Clinical approach</div>
+  <h2>Assessment, measures and reporting</h2>
+
+  <h3>The initial assessment</h3>
+  <p>Subjective history, medication and precautions, falls history, social situation and current care. Objective assessment of range, strength, tone, balance, gait, transfers and functional tasks in the client's own environment, including stairs, bathroom and outdoor access where relevant. Risk assessment covering falls, moving and handling, and the home environment.</p>
+
+  <div class="two">
+    <div>
+      <h3>Outcome measures</h3>
+      <p>Chosen to suit the client and repeated at each report so progress is measurable:</p>
+      <ul>
+        <li><strong>Berg Balance Scale</strong> and <strong>Timed Up and Go</strong> for balance and falls risk</li>
+        <li><strong>10-metre walk test</strong> and <strong>6-minute walk test</strong> for gait and endurance</li>
+        <li><strong>Elderly Mobility Scale</strong> and <strong>Barthel Index</strong> for function and independence</li>
+        <li><strong>Goal Attainment Scaling</strong> for client-specific goals</li>
+        <li><strong>Numeric pain rating</strong> and <strong>Oxford grading</strong> for strength</li>
+        <li>Condition-specific measures where appropriate (e.g. MDS-UPDRS items for Parkinson's)</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Reports you receive</h3>
+      <table>
+        <tr><th>Report</th><th>Contents</th></tr>
+        <tr><td><strong>Assessment</strong></td><td>Findings, baseline measures, risks, SMART goals, recommended sessions and frequency, equipment, costed plan</td></tr>
+        <tr><td><strong>Progress</strong></td><td>Measures repeated, goals reviewed, plan and cost updated, any change in risk</td></tr>
+        <tr><td><strong>Discharge</strong></td><td>Outcomes against goals, home programme, onward referrals, equipment and community recommendations</td></tr>
+      </table>
+      <p class="note" style="margin-top:3mm">Reports are written in plain English for case managers, funders and families, with clinical detail in appendices. Delivered as PDF by secure email.</p>
+    </div>
+  </div>
+
+  <h3>Treatment</h3>
+  <p>Hands-on treatment, task-specific and strength training, balance and gait re-education, and a home exercise programme with written and photo instructions. Carers and family are shown how to support practice between visits. Sessions are 45 minutes, or 60 minutes where complexity or fatigue management requires it.</p>
+
+  <h3>Working with your team</h3>
+  <ul class="check">
+    <li>Attend MDT meetings in person or by video (billed at the session rate)</li>
+    <li>Liaise with GP, consultants, OT, community teams and care providers with the client's consent</li>
+    <li>Equipment: trial, specification and rationale provided for your approval; no commission from suppliers</li>
+    <li>Familiar with the Rehabilitation Code 2015 and the needs of personal-injury case management</li>
+  </ul>
+
+  <div class="foot"><span>Community Care Physio · Referral pack</span><span>Page 4</span></div>
+</section>
+
+<!-- 5. FEES AND TERMS -->
+<section class="page">
+  <div class="sl">Fees and terms</div>
+  <h2>Clear costs, agreed before the first visit</h2>
+
+  <table style="margin-top:2mm">
+    <tr><th>Service</th><th>Standard</th><th>Complex needs</th></tr>
+    <tr><td>Initial assessment at home, 60 min</td><td class="r">£100</td><td class="r">£130</td></tr>
+    <tr><td>Assessment report</td><td class="r">£50</td><td class="r">£50</td></tr>
+    <tr><td>Follow-up session, 45 min</td><td class="r">£75</td><td class="r">£90</td></tr>
+    <tr><td>Extended session, 60 min</td><td class="r">£90</td><td class="r">£105</td></tr>
+    <tr><td>Progress or discharge report</td><td class="r">£50</td><td class="r">£50</td></tr>
+    <tr><td>MDT meeting, liaison or phone consultation</td><td class="r" colspan="2">session rate, pro rata in 15-minute units</td></tr>
+    <tr><td>Travel outside the core area, per visit</td><td class="r" colspan="2">£15 nearby · £35 extended</td></tr>
+  </table>
+
+  <div class="two" style="margin-top:6mm">
+    <div class="card">
+      <h3>Complex needs</h3>
+      <p>Applies where the client needs more clinical time: neurological conditions, recent hospital discharge, high falls risk, cognitive impairment, several long-term conditions, complex transfers, or where carers and care-home staff need to be involved. <strong>Agreed with you before the first visit, never added afterwards.</strong></p>
+    </div>
+    <div class="card">
+      <h3>Invoicing</h3>
+      <ul class="check">
+        <li>Invoiced to your organisation, quoting your case reference and PO number</li>
+        <li>Itemised by visit date; monthly in arrears or per report, as you prefer</li>
+        <li>30-day terms, BACS; VAT not applicable</li>
+        <li>Numbered invoices sent as PDF to your accounts email</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3 style="margin-top:7mm">Cancellations</h3>
+  <p>Visits cancelled with less than 24 hours' notice, or where the client is not available at the agreed time, are charged at £50. No charge where the cancellation is ours. We will always try to rebook rather than charge.</p>
+
+  <h3>Consent and information sharing</h3>
+  <p>We obtain the client's consent (or follow best-interests principles under the Mental Capacity Act 2005 where capacity is lacking) before assessment and before sharing reports with you, funders or other professionals. Written consent is recorded at the first visit. Photographs or video are taken only with specific consent and used for clinical records and exercise instruction.</p>
+
+  <div class="foot"><span>Community Care Physio · Referral pack</span><span>Page 5</span></div>
+</section>
+
+<!-- 6. GOVERNANCE -->
+<section class="page">
+  <div class="sl">Governance and assurance</div>
+  <h2>What you can rely on</h2>
+
+  <div class="two" style="margin-top:2mm">
+    <div>
+      <h3>Registration and insurance</h3>
+      <ul class="check">
+        <li>HCPC registered physiotherapist, PH132358 (check at hcpc-uk.org)</li>
+        <li>Member of the Chartered Society of Physiotherapy</li>
+        <li>Professional indemnity and public liability insurance in place; certificate on request</li>
+        <li>Enhanced DBS with adults' barred list check; certificate reference on request</li>
+        <li>NHS-trained, currently practising in NHS community services</li>
+      </ul>
+
+      <h3>Safeguarding</h3>
+      <p>Adult safeguarding trained. Concerns are raised with the client's local authority safeguarding team and with you as case manager, in line with the Care Act 2014. Mental capacity is considered at every decision point.</p>
+
+      <h3>Data protection</h3>
+      <p>Clinical records are held in encrypted cloud storage under UK GDPR and the Data Protection Act 2018, retained for 8 years after discharge (or until the 25th birthday for children). Reports are sent by secure email only. Our privacy policy is at communitycarephysio.co.uk/privacy.</p>
+    </div>
+    <div>
+      <h3>Safe home visiting</h3>
+      <ul class="check">
+        <li>Lone-working procedure with check-in and escalation</li>
+        <li>Domiciliary risk assessment at the first visit, reviewed when circumstances change</li>
+        <li>Infection prevention: hand hygiene, PPE where indicated, equipment cleaned between clients</li>
+        <li>Moving and handling to current guidance; equipment used only where safe for client and clinician</li>
+        <li>Incidents recorded and reported to you within one working day</li>
+      </ul>
+
+      <h3>Professional standards</h3>
+      <ul class="check">
+        <li>Practises within HCPC Standards of Proficiency and CSP Code of Members' Professional Values and Behaviour</li>
+        <li>Annual CPD portfolio maintained to HCPC requirements</li>
+        <li>Record keeping to CSP standards; notes available to the client on request</li>
+      </ul>
+
+      <h3>Complaints</h3>
+      <p>Raise any concern with Zakery directly in the first instance; acknowledged within 2 working days and answered in writing within 20. Unresolved concerns may be taken to the HCPC (hcpc-uk.org) or, for data matters, the ICO (ico.org.uk).</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:6mm">
+    <h3>Supporting documents available on request</h3>
+    <p style="margin:0">Clinician CV · HCPC registration confirmation · Insurance certificates · DBS certificate reference · Lone-working and safeguarding policies · Privacy notice · Sample reports (anonymised)</p>
+  </div>
+
+  <div class="foot"><span>Community Care Physio · Referral pack</span><span>Page 6</span></div>
+</section>
+
+<!-- 7. SAMPLE REPORT -->
+<section class="page">
+  <div class="sl">Example</div>
+  <h2>What an assessment report looks like</h2>
+  <p class="note">Abridged and entirely fictional. A full report runs to three or four pages with clinical appendices.</p>
+
+  <div class="report" style="margin-top:4mm">
+    <span class="stamp">Sample</span>
+    <h4>Initial physiotherapy assessment report</h4>
+    <div class="kv">
+      <span>Client</span><span>Mrs M. (82), Wimbledon SW19</span>
+      <span>Referrer</span><span>J. Patel, Case Manager, Example Case Management Ltd · ref ECM-4471</span>
+      <span>Date of assessment</span><span>14 September 2026, at home, daughter present</span>
+      <span>Clinician</span><span>Zakery Shelley, Physiotherapist, HCPC PH132358</span>
+    </div>
+
+    <h5>Background</h5>
+    <p>Discharged from St George's 3 weeks ago after a fall with fractured right wrist (cast removed) and a 6-day admission. Two further falls at home since. Lives alone in a two-storey house; daughter visits daily. Previously independent outdoors with a stick; now not leaving the house and sleeping downstairs. Hypertension, osteoarthritis both knees. Precautions: none for weight-bearing; wrist to be protected from loading for 2 more weeks.</p>
+
+    <h5>Findings</h5>
+    <table>
+      <tr><th>Measure</th><th>Baseline</th><th>Interpretation</th></tr>
+      <tr><td>Berg Balance Scale</td><td>34 / 56</td><td>High falls risk</td></tr>
+      <tr><td>Timed Up and Go</td><td>21 s with stick</td><td>Impaired functional mobility</td></tr>
+      <tr><td>10-metre walk</td><td>0.48 m/s</td><td>Household ambulator; not yet safe outdoors</td></tr>
+      <tr><td>Elderly Mobility Scale</td><td>12 / 20</td><td>Borderline for independent living</td></tr>
+      <tr><td>Stairs</td><td>Unable; fear and reduced quads strength (3+/5 R, 4/5 L)</td><td>Primary barrier to returning upstairs</td></tr>
+    </table>
+    <p style="margin-top:2mm">Home: loose rug in hallway, no rail on right of stairs, bath without board or rail. Mrs M.'s goals: sleep in her own bed upstairs; walk to the corner shop (250 m) with her daughter.</p>
+
+    <h5>Recommendation</h5>
+    <p><strong>8 sessions over 6 weeks</strong> (twice weekly for 2 weeks, then weekly), 45 minutes, complex-needs rate given falls history and recent discharge. Focus: lower-limb strength, balance and gait training, graded stair practice, outdoor mobility, falls education and a daily home programme supervised by her daughter. Equipment: second stair rail and a bath board (specification attached for OT or supplier). Progress report after session 6 with repeated measures.</p>
+    <table style="margin-top:2mm">
+      <tr><td>8 × follow-up sessions, complex</td><td class="r">£720</td></tr>
+      <tr><td>Progress report after session 6; discharge report at completion</td><td class="r">£100</td></tr>
+      <tr><td>Travel</td><td class="r">included (core area)</td></tr>
+      <tr><td><strong>Total for approval</strong></td><td class="r"><strong>£820</strong></td></tr>
+    </table>
+  </div>
+
+  <div class="foot"><span>Community Care Physio · Referral pack</span><span>Page 7</span></div>
+</section>
+
+<!-- 8. REFERRAL FORM -->
+<section class="page form">
+  <div class="sl">Referral form</div>
+  <h2>Refer a client</h2>
+  <p class="note">Faster online: <strong>communitycarephysio.co.uk/refer</strong>. Or complete this page and email it to infoccphysio@gmail.com (no clinical documents by open email; we will arrange secure transfer). Fields marked * are required.</p>
+
+  <h3>Referrer</h3>
+  <div class="frow f2"><div class="f">Full name *<i></i></div><div class="f">Organisation<i></i></div></div>
+  <div class="frow f3"><div class="f">Role<i></i></div><div class="f">Email *<i></i></div><div class="f">Phone<i></i></div></div>
+
+  <h3>Client</h3>
+  <div class="frow f3"><div class="f">Client name *<i></i></div><div class="f">Date of birth<i></i></div><div class="f">Client phone<i></i></div></div>
+  <div class="frow f2"><div class="f">Address<i></i></div><div class="f">Postcode<i></i></div></div>
+  <div class="frow f3"><div class="f">Contact for appointments<i></i></div><div class="f">Contact's phone<i></i></div><div class="f">Relationship to client<i></i></div></div>
+  <div class="chk"><span>Client aware of referral</span><span>Client consents to assessment</span><span>Capacity concerns — please discuss</span></div>
+
+  <h3>Clinical</h3>
+  <div class="frow"><div class="f">Injuries / condition and relevant history *<i class="tall"></i></div></div>
+  <div class="frow"><div class="f">Precautions or risks (weight-bearing, cognition, behaviour, infection, pets, access)<i class="tall" style="height:11mm"></i></div></div>
+
+  <h3>Service and funding</h3>
+  <div class="chk" style="margin-bottom:2mm"><span>Assessment and report only</span><span>Assessment, report and treatment</span><span>Urgent (within 2 working days)</span></div>
+  <div class="frow f3"><div class="f">Case / claim reference<i></i></div><div class="f">PO number<i></i></div><div class="f">Sessions authorised<i></i></div></div>
+  <div class="frow f3"><div class="f">Payer (organisation to invoice)<i></i></div><div class="f">Invoice email<i></i></div><div class="f">Report due by<i></i></div></div>
+  <div class="frow"><div class="f">Invoice address<i></i></div></div>
+  <div class="frow"><div class="f">Anything else<i class="tall" style="height:7mm"></i></div></div>
+
+  <div class="foot"><span>Community Care Physio · 07508 401627 · infoccphysio@gmail.com</span><span>Page 8</span></div>
+</section>
+
+</body>
+</html>

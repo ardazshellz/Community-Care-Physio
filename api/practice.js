@@ -102,7 +102,10 @@ async function bestEffortMail(mail, action, message) {
   try { await mail(message); } catch (error) { logError(action, error); }
 }
 
-const ackBody = (ref) => `Thank you for your referral. Your reference is ${ref}.\n\nWe aim to reply within one working day to confirm whether we can accept it.\n\nPlease do not send clinical documents by open email; once the referral is accepted we'll arrange a secure way to receive discharge summaries and consent forms.`;
+const ackBody = (ref) => `Thank you for your referral. Your reference is ${ref}.\n\nWe aim to reply within one working day to confirm whether we can accept it.\n\nOur referral pack is attached: fees, timescales, outcome measures, governance and a sample report.\n\nPlease do not send clinical documents by open email; once the referral is accepted we'll arrange a secure way to receive discharge summaries and consent forms.`;
+// Static PDF built by tools/referral-pack/build.mjs; fetched from the live site
+// so the serverless bundle does not need to carry it.
+const REFERRAL_PACK = { filename: 'Community-Care-Physio-referral-pack.pdf', href: 'https://www.communitycarephysio.co.uk/assets/referral-pack.pdf', contentType: 'application/pdf' };
 
 function referralSummary(value) {
   const lines = [`New referral ${value.ref}`, `Submitted: ${value.submittedAt}`];
@@ -172,7 +175,8 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
             to: data.referrer.email,
             subject: `Referral received — ${ref} — Community Care Physio`,
             text: `${ackBody(ref)}\n\n${SIGNATURE_TEXT}`,
-            html: wrapHtml(textToHtml(ackBody(ref)))
+            html: wrapHtml(textToHtml(ackBody(ref))),
+            attachments: [REFERRAL_PACK]
           })
         ]);
         return res.status(200).json({ ok: true, ref });
