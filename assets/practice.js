@@ -23,7 +23,16 @@ const PRESETS = [
 ];
 const REF_STATUS = ['new', 'accepted', 'active', 'declined', 'closed'];
 
-const state = { tab: 'referrals', referrals: [], invoices: [], intakes: [], cards: [], settings: {}, open: null, loaded: false };
+const state = { tab: 'referrals', referrals: [], invoices: [], intakes: [], cards: [], outcomes: [], settings: {}, open: null, loaded: false, patient: '' };
+
+// Outcomes register: mirrors OUTCOME_MEASURES in lib/practice-model.js (names, max, direction).
+const MEASURES = {
+  tug: ['Timed Up and Go', 's', null, true], tenmwt: ['10-metre walk', 'm/s', null, false], tinetti: ['Tinetti (POMA)', '', 28, false],
+  berg: ['Berg Balance', '', 56, false], ems: ['Elderly Mobility Scale', '', 20, false], edmonton: ['Edmonton Frail Scale', '', 17, true],
+  sixcit: ['6CIT', '', 28, true], news2: ['NEWS2', '', 20, true], barthel: ['Barthel Index', '', 20, false], pain: ['Pain (0–10)', '', 10, true], gas: ['GAS', '', 2, false]
+};
+const TIMEPOINTS = ['initial', 'review', 'discharge', 'other'];
+const nameKey = (n) => String(n || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
 
 async function api(action, extra = {}) {
   const t = token();
@@ -40,10 +49,10 @@ function status(msg, bad = false) { const el = $('prStatus'); if (el) { el.textC
 async function load(quiet = false) {
   const session = token();
   try {
-    const [ref, inv, intake, card, settings] = await Promise.all(['referral', 'invoice', 'intake', 'card', 'settings'].map((kind) => api('list', { kind }).then((d) => (Array.isArray(d) ? d : []))));
+    const [ref, inv, intake, card, settings, outcomes] = await Promise.all(['referral', 'invoice', 'intake', 'card', 'settings', 'outcome'].map((kind) => api('list', { kind }).then((d) => (Array.isArray(d) ? d : []))));
     if (!session || token() !== session) return; // signed out while loading
     const editing = quiet && (state.open || state.draft || document.getElementById('prPanel')?.contains(document.activeElement));
-    Object.assign(state, { cards: card, loaded: true });
+    Object.assign(state, { cards: card, outcomes, loaded: true });
     state.settings = Object.fromEntries(settings.map((r) => [r.key, r.value]));
     if (!editing) { Object.assign(state, { referrals: ref, invoices: inv, intakes: intake }); if (!quiet || isVisible()) render(); }
     navBadge();
@@ -95,7 +104,7 @@ function navBadge() {
 function render() {
   const root = $('prPanel');
   if (!root) return;
-  const tabs = [['referrals', 'Referrals'], ['invoices', 'Invoices'], ['intake', 'Intake & consent'], ['settings', 'Settings']];
+  const tabs = [['referrals', 'Referrals'], ['invoices', 'Invoices'], ['intake', 'Intake & consent'], ['outcomes', 'Outcomes'], ['settings', 'Settings']];
   const alerts = allAlerts();
   root.innerHTML = `<div class="eq-top"><h2>Referrals &amp; invoices</h2><button class="eq-btn" data-pr="reload">↻ Reload</button></div>
     <p class="eq-muted">Case-manager and insurer referrals, authorised sessions, report deadlines, invoices, intake forms and saved-card fees.</p>
@@ -103,7 +112,7 @@ function render() {
     <div class="pr-tabs">${tabs.map(([k, l]) => `<button class="eq-btn" data-pr="tab" data-k="${k}" aria-pressed="${state.tab === k}">${l}</button>`).join('')}</div>
     <div id="prStatus" class="eq-status" role="status"></div>
     <div id="prBody"></div>`;
-  ({ referrals: renderReferrals, invoices: renderInvoices, intake: renderIntake, settings: renderSettingsTab })[state.tab]();
+  ({ referrals: renderReferrals, invoices: renderInvoices, intake: renderIntake, outcomes: renderOutcomes, settings: renderSettingsTab })[state.tab]();
 }
 
 function renderReferrals() {
@@ -304,6 +313,118 @@ function renderSettingsTab() {
 async function run(fn) { try { await fn(); } catch (e) { status(e.message, true); } }
 function upsert(listName, rec) { const l = state[listName]; const i = l.findIndex((x) => x.key === rec.key); if (i < 0) l.unshift(rec); else l[i] = rec; }
 
+// ── Outcomes register ──
+function patientNames() {
+  const seen = new Map();
+  const add = (n) => { const k = nameKey(n); if (k && !seen.has(k)) seen.set(k, String(n).trim()); };
+  bookings().forEach((b) => add(b.name));
+  state.referrals.forEach((r) => add(r.value?.client?.name));
+  state.outcomes.forEach((o) => add(o.value.name));
+  return [...seen.values()].sort((a, b) => a.localeCompare(b));
+}
+function outcomesFor(name) { const k = nameKey(name); return state.outcomes.filter((o) => o.value.patientKey === k).sort((a, b) => a.value.date.localeCompare(b.value.date) || a.value.createdAt.localeCompare(b.value.createdAt)); }
+function fmtScore(o) { const [, unit, max] = MEASURES[o.value.measure] || ['', '', null]; return max != null ? `${o.value.numeric}/${max}` : `${o.value.numeric}${unit ? ' ' + unit : ''}`; }
+function changeFor(first, last) {
+  if (!first || !last || first.key === last.key) return null;
+  const [, , , lowerBetter] = MEASURES[first.value.measure] || [];
+  const diff = last.value.numeric - first.value.numeric;
+  const improved = lowerBetter ? diff < 0 : diff > 0;
+  return { diff, improved, same: diff === 0 };
+}
+
+function renderOutcomes() {
+  const body = $('prBody');
+  const names = patientNames();
+  const rows = outcomesFor(state.patient);
+  const byMeasure = {};
+  rows.forEach((o) => { (byMeasure[o.value.measure] ||= []).push(o); });
+  const measureOpts = Object.entries(MEASURES).map(([k, [n]]) => `<option value="${k}">${esc(n)}</option>`).join('');
+  body.innerHTML = `
+    <p class="eq-muted">Dated outcome scores per patient: initial, review and discharge. Community Care Physio patients only; NHS patients belong in the Trust's records.</p>
+    <div class="eq-row" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+      <label class="eq-field" style="flex:1;min-width:220px">Patient<input id="ocPatient" list="ocNames" value="${esc(state.patient)}" placeholder="Start typing a name" autocomplete="off"><datalist id="ocNames">${names.map((n) => `<option value="${esc(n)}">`).join('')}</datalist></label>
+      <button class="eq-btn primary" data-pr="oc-pick">Show</button>
+      <button class="eq-btn" data-pr="oc-audit">Audit summary</button>
+      <button class="eq-btn" data-pr="oc-csv">Audit CSV</button>
+    </div>
+    ${state.patient ? `
+    <div class="eq-actions" style="margin-top:10px">
+      <button class="eq-btn primary" data-pr="oc-measure">📏 Score on the measures page</button>
+      <button class="eq-btn" data-pr="oc-report">📝 Write a report</button>
+      <button class="eq-btn" data-pr="oc-print">🖨 Patient summary</button>
+    </div>
+    <h3 style="margin:14px 0 6px">${esc(state.patient)}</h3>
+    ${rows.length ? `<div class="eq-table-wrap"><table class="eq-table"><thead><tr><th>Measure</th><th>Entries (date · timepoint)</th><th>Change</th></tr></thead><tbody>
+      ${Object.entries(byMeasure).map(([m, list]) => { const ch = changeFor(list[0], list[list.length - 1]); return `<tr><td><strong>${esc(MEASURES[m]?.[0] || m)}</strong></td>
+        <td>${list.map((o) => `<span class="oc-chip" title="${esc(o.value.interp || '')}">${esc(fmtScore(o))} <small>${ukDate(o.value.date)} · ${esc(o.value.timepoint)}</small> <button class="oc-x" data-pr="oc-del" data-key="${esc(o.key)}" title="Delete">×</button></span>`).join(' ')}</td>
+        <td>${ch ? `<span style="color:${ch.same ? 'var(--muted)' : ch.improved ? '#15803d' : '#b91c1c'}">${ch.same ? 'no change' : (ch.diff > 0 ? '+' : '') + Number(ch.diff.toFixed(2)) + (ch.improved ? ' improved' : ' worse')}</span>` : '—'}</td></tr>`; }).join('')}
+    </tbody></table></div>` : '<p class="eq-muted">No entries yet for this patient.</p>'}
+    <h4 style="margin:16px 0 6px">Add an entry by hand</h4>
+    <div class="eq-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;align-items:end">
+      <label class="eq-field">Measure<select id="ocMeasure">${measureOpts}</select></label>
+      <label class="eq-field">Score<input id="ocScore" type="number" step="0.1" inputmode="decimal"></label>
+      <label class="eq-field">Date<input id="ocDate" type="date" value="${today()}"></label>
+      <label class="eq-field">Timepoint<select id="ocTp">${TIMEPOINTS.map((t) => `<option>${t}</option>`).join('')}</select></label>
+      <label class="eq-field" style="grid-column:1/-1">Note<input id="ocNote" placeholder="Aid used, context, anything a reader needs"></label>
+      <button class="eq-btn primary" data-pr="oc-add">Save entry</button>
+    </div>` : ''}
+    <div id="ocAudit"></div>`;
+}
+
+function auditRows() {
+  const groups = {};
+  state.outcomes.forEach((o) => { (groups[o.value.patientKey + '|' + o.value.measure] ||= []).push(o); });
+  return Object.values(groups).map((list) => {
+    list.sort((a, b) => a.value.date.localeCompare(b.value.date));
+    const first = list[0], last = list[list.length - 1], ch = changeFor(first, last);
+    const initials = first.value.name.split(/\s+/).map((w) => w[0]?.toUpperCase() || '').join('');
+    return { initials, name: first.value.name, measure: MEASURES[first.value.measure]?.[0] || first.value.measure, key: first.value.measure, n: list.length, firstDate: first.value.date, lastDate: last.value.date, first: first.value.numeric, last: last.value.numeric, diff: ch ? ch.diff : null, improved: ch ? ch.improved : null, same: ch ? ch.same : null };
+  }).sort((a, b) => a.measure.localeCompare(b.measure) || a.name.localeCompare(b.name));
+}
+function auditSummary(rows) {
+  const per = {};
+  rows.filter((r) => r.diff != null).forEach((r) => { const p = (per[r.measure] ||= { n: 0, improved: 0, same: 0, diffs: [] }); p.n++; if (r.improved) p.improved++; if (r.same) p.same++; p.diffs.push(r.diff); });
+  const median = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? (s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2) : 0; };
+  return Object.entries(per).map(([m, p]) => ({ measure: m, n: p.n, improved: p.improved, pct: Math.round(100 * p.improved / p.n), median: Number(median(p.diffs).toFixed(2)) }));
+}
+function renderAudit() {
+  const rows = auditRows(), sum = auditSummary(rows);
+  $('ocAudit').innerHTML = `<h3 style="margin:18px 0 6px">Audit summary</h3>
+    <p class="eq-muted">Patients with at least two entries per measure. Initials only; keep the CSV for your own records, send the summary table to auditors.</p>
+    <div class="eq-table-wrap"><table class="eq-table"><thead><tr><th>Measure</th><th>Patients</th><th>Improved</th><th>Median change</th></tr></thead><tbody>
+    ${sum.length ? sum.map((r) => `<tr><td>${esc(r.measure)}</td><td>${r.n}</td><td>${r.improved} (${r.pct}%)</td><td>${r.median > 0 ? '+' : ''}${r.median}</td></tr>`).join('') : '<tr><td colspan="4" class="eq-muted">Nothing to summarise yet.</td></tr>'}
+    </tbody></table></div>
+    <div class="eq-table-wrap" style="margin-top:10px"><table class="eq-table"><thead><tr><th>Patient</th><th>Measure</th><th>Baseline</th><th>Latest</th><th>Change</th><th>Entries</th></tr></thead><tbody>
+    ${rows.map((r) => `<tr><td>${esc(r.initials)}</td><td>${esc(r.measure)}</td><td>${r.first} <small>${ukDate(r.firstDate)}</small></td><td>${r.last} <small>${ukDate(r.lastDate)}</small></td><td>${r.diff == null ? '—' : (r.diff > 0 ? '+' : '') + Number(r.diff.toFixed(2)) + (r.same ? '' : r.improved ? ' ✓' : ' ✗')}</td><td>${r.n}</td></tr>`).join('')}
+    </tbody></table></div>`;
+}
+function auditCsv() {
+  const rows = auditRows();
+  const lines = [['initials', 'measure', 'entries', 'baseline_date', 'baseline', 'latest_date', 'latest', 'change', 'improved'].join(',')]
+    .concat(rows.map((r) => [r.initials, r.measure, r.n, r.firstDate, r.first, r.lastDate, r.last, r.diff ?? '', r.improved == null ? '' : r.improved ? 'yes' : r.same ? 'same' : 'no'].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')));
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `ccp-outcomes-audit-${today()}.csv`; a.click(); URL.revokeObjectURL(a.href);
+}
+function printPatientSummary() {
+  const rows = outcomesFor(state.patient); if (!rows.length) { status('No entries to print.', true); return; }
+  const byMeasure = {}; rows.forEach((o) => { (byMeasure[o.value.measure] ||= []).push(o); });
+  const w = window.open('', '_blank');
+  w.document.write(`<!doctype html><title>Outcomes summary</title><meta charset="utf-8"><style>body{font:11pt/1.5 Outfit,Arial,sans-serif;color:#2b2b28;padding:18mm}h1{font:400 20pt Georgia,serif;margin:0 0 2mm}h2{font:400 14pt Georgia,serif;margin:0 0 6mm;color:#1e4d3b}table{border-collapse:collapse;width:100%;font-size:10pt}td,th{border-bottom:1px solid #ddd;padding:5px 6px;text-align:left;vertical-align:top}th{color:#1e4d3b;font-size:8.5pt;letter-spacing:.08em;text-transform:uppercase}small{color:#666}.foot{margin-top:10mm;font-size:9pt;color:#666}</style>
+    <h1>Community Care Physio</h1><h2>Outcome measures: ${esc(state.patient)}</h2>
+    <table><thead><tr><th>Measure</th><th>Entries</th><th>Change</th></tr></thead><tbody>
+    ${Object.entries(byMeasure).map(([m, list]) => { const ch = changeFor(list[0], list[list.length - 1]); return `<tr><td>${esc(MEASURES[m]?.[0] || m)}</td><td>${list.map((o) => `${esc(fmtScore(o))} <small>(${ukDate(o.value.date)}, ${esc(o.value.timepoint)}${o.value.note ? ': ' + esc(o.value.note) : ''})</small>`).join('<br>')}</td><td>${ch ? (ch.same ? 'no change' : (ch.diff > 0 ? '+' : '') + Number(ch.diff.toFixed(2)) + (ch.improved ? ', improved' : ', worse')) : '—'}</td></tr>`; }).join('')}
+    </tbody></table>
+    <p class="foot">Zakery Shelley, Physiotherapist, HCPC PH132358 · Community Care Physio · printed ${ukDate(today())}. Scores recorded at the client's home using standard published measures; interpretation bands per the Rehabilitation Measures Database.</p>`);
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 400);
+}
+// Hand the patient to /measures/ and /report/ without putting a name in the URL.
+// ponytail: localStorage on this device only, cleared at sign-out; move to a server-side
+// handoff token if the pages ever run on a different device from the admin.
+function handoff(path) {
+  try { localStorage.setItem('ccp_ctx', JSON.stringify({ name: state.patient, token: token(), expires: Date.now() + 8 * 3600e3 })); } catch (e) {}
+  window.open(path, '_blank', 'noopener');
+}
+
 document.addEventListener('click', (ev) => {
   const copy = ev.target.closest('#prPanel [data-copy]');
   if (copy) { navigator.clipboard.writeText(copy.dataset.copy).then(() => { copy.textContent = '✓ Copied'; }); return; }
@@ -312,6 +433,22 @@ document.addEventListener('click', (ev) => {
   const a = btn.dataset.pr;
   if (a === 'tab') { state.tab = btn.dataset.k; state.open = null; state.draft = null; render(); return; }
   if (a === 'reload') { run(load); return; }
+  if (a === 'oc-pick') { state.patient = ($('ocPatient')?.value || '').trim(); render(); return; }
+  if (a === 'oc-measure') { handoff('/measures/'); return; }
+  if (a === 'oc-report') { handoff('/report/'); return; }
+  if (a === 'oc-print') { printPatientSummary(); return; }
+  if (a === 'oc-audit') { renderAudit(); return; }
+  if (a === 'oc-csv') { auditCsv(); return; }
+  if (a === 'oc-add') return run(async () => {
+    const value = { name: state.patient, measure: $('ocMeasure').value, numeric: Number($('ocScore').value), date: $('ocDate').value, timepoint: $('ocTp').value, note: $('ocNote').value.trim() };
+    if (!Number.isFinite(value.numeric) || $('ocScore').value === '') throw new Error('Enter a score.');
+    const [, unit, max] = MEASURES[value.measure]; value.score = max != null ? `${value.numeric}/${max}` : `${value.numeric}${unit ? ' ' + unit : ''}`;
+    const rec = await api('outcome-save', { value }); upsert('outcomes', rec); render(); status('✓ Entry saved.');
+  });
+  if (a === 'oc-del') return run(async () => {
+    const o = state.outcomes.find((x) => x.key === btn.dataset.key); if (!o || !confirm(`Delete ${MEASURES[o.value.measure]?.[0] || o.value.measure} ${fmtScore(o)} from ${ukDate(o.value.date)}?`)) return;
+    await api('delete', { key: o.key }); state.outcomes = state.outcomes.filter((x) => x.key !== o.key); render();
+  });
   if (a === 'open') { state.open = btn.dataset.key; render(); return; }
   if (a === 'new-ref') {
     const key = 'referral:' + crypto.randomUUID();
@@ -439,7 +576,8 @@ function cardBadge(bookingId) { const c = state.cards.find((x) => x.key === 'car
 
 // Sign-out / expiry: drop health data, bank details and the Drive secret from memory and the page.
 function clear() {
-  Object.assign(state, { tab: 'referrals', referrals: [], invoices: [], intakes: [], cards: [], settings: {}, open: null, draft: null, loaded: false, lastGroups: undefined });
+  try { localStorage.removeItem('ccp_ctx'); } catch (e) {}
+  Object.assign(state, { tab: 'referrals', referrals: [], invoices: [], intakes: [], cards: [], outcomes: [], settings: {}, open: null, draft: null, loaded: false, lastGroups: undefined, patient: '' });
   const p = $('prPanel'); if (p) p.innerHTML = '';
   document.querySelector('.pr-navcount')?.remove();
 }

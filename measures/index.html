@@ -56,14 +56,19 @@
 <body>
 <header>
   <h1>Outcome measures</h1>
-  <p>Score at the visit, copy the line into the report. Nothing leaves this phone or laptop.</p>
+  <p id="who">Open this from the admin Outcomes tab to save scores against a patient. Without that, scores stay on this device only.</p>
 </header>
 <main>
   <nav class="tabs" id="tabs"></nav>
   <div id="tools"></div>
 
   <div id="saved">
-    <h2 style="font:400 17px 'Playfair Display',serif;margin:0 0 8px">Saved for the report</h2>
+    <div id="ctxBar" hidden style="display:flex;gap:8px;flex-wrap:wrap;align-items:end;margin-bottom:12px">
+      <label style="font-size:12px;color:var(--muted)">Timepoint<br><select id="ctxTp" style="font:400 14px Outfit,sans-serif;padding:7px 9px;border:1px solid #9a9a93;border-radius:8px"><option>initial</option><option>review</option><option>discharge</option><option>other</option></select></label>
+      <label style="font-size:12px;color:var(--muted)">Date<br><input type="date" id="ctxDate" style="font:400 14px Outfit,sans-serif;padding:6px 9px;border:1px solid #9a9a93;border-radius:8px"></label>
+      <button class="btn o" onclick="endCtx()">Finish with this patient</button>
+    </div>
+    <h2 style="font:400 17px 'Playfair Display',serif;margin:0 0 8px" id="savedTitle">Saved for the report</h2>
     <ul id="savedList"><li class="muted">Nothing saved yet.</li></ul>
     <div class="row">
       <button class="btn" onclick="copyAll()">Copy all</button>
@@ -291,6 +296,28 @@ function save(k){
   if(k==='gas'){ const gs=goals.filter(g=>g.goal.trim()); if(!gs.length) return; o.gas={name:d.name, goals:gs, line:gs.map(g=>`${g.goal} — expected (0): ${g.levels[2]||'—'}; baseline ${g.baseline||'—'}${g.score!==''?', review '+g.score:''}`).join('\n')}; }
   else { if(!last[k]) return; o[k]={name:d.name, score:document.getElementById('s_'+k).textContent, interp:last[k].interp, line:last[k].line}; }
   o._date=new Date().toISOString().slice(0,10); store(o);
+  if(ctx && k!=='gas') saveToRegister(k, o[k]);
+}
+// ---------- patient context from the admin (localStorage ccp_ctx) ----------
+let ctx=null;
+try{ const c=JSON.parse(localStorage.getItem('ccp_ctx')||'null'); if(c && c.expires>Date.now() && c.name && c.token) ctx=c; }catch(e){}
+if(ctx){
+  document.getElementById('who').textContent='Scoring for '+ctx.name+'. Saved scores go to the Outcomes register.';
+  document.getElementById('ctxBar').hidden=false;
+  document.getElementById('ctxDate').value=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/London'});
+  document.getElementById('savedTitle').textContent='Saved for '+ctx.name;
+}
+function endCtx(){ try{localStorage.removeItem('ccp_ctx')}catch(e){}; location.reload(); }
+const NUMERIC={ tug:v=>parseFloat(v), tenmwt:v=>parseFloat(v), news2:v=>parseFloat(String(v).replace(/[^0-9.]/g,'')) };
+async function saveToRegister(k, entry){
+  const numeric = NUMERIC[k] ? NUMERIC[k](entry.score) : parseFloat(String(entry.score).split('/')[0]);
+  const value={ name:ctx.name, measure:k, numeric, score:entry.score, interp:entry.interp||'', date:document.getElementById('ctxDate').value, timepoint:document.getElementById('ctxTp').value, note:'' };
+  try{
+    const r=await fetch('/api/practice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'outcome-save',token:ctx.token,value})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(r.status===401?'Admin session expired. Sign in again and reopen from the Outcomes tab.':(d.error||'Save failed'));
+    const li=document.createElement('li'); li.style.color='#15803d'; li.textContent='✓ '+I[k].name+' saved to the register ('+value.timepoint+', '+value.date+')'; document.getElementById('savedList').prepend(li);
+  }catch(e){ alert(e.message); }
 }
 function renderSaved(){
   const o=load(); const ul=document.getElementById('savedList');

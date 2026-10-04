@@ -545,3 +545,16 @@ test('family referrals are triaged on the server like online bookings', () => {
   assert.equal(cleanReferral(referral()).triage, undefined);
   assert.throws(() => cleanReferral({ ...referral(), client: { name: 'X', email: 'not-an-email' } }), /client email/);
 });
+
+test('outcome entries validate measure, range, date and timepoint', async () => {
+  const { cleanOutcome, patientKeyFromName } = await import('../lib/practice-model.js');
+  const ok = cleanOutcome({ name: 'Taylor Test', measure: 'tinetti', numeric: 17, date: '2026-10-04', timepoint: 'initial' });
+  assert.equal(ok.patientKey, 'taylor test');
+  assert.equal(ok.score, '17');
+  assert.equal(patientKeyFromName('  Taylor   TEST '), 'taylor test');
+  assert.throws(() => cleanOutcome({ name: 'T', measure: 'tinetti', numeric: 29, date: '2026-10-04' }), /between 0 and 28/);
+  assert.throws(() => cleanOutcome({ name: 'T', measure: 'nope', numeric: 1, date: '2026-10-04' }), /valid measure/);
+  assert.throws(() => cleanOutcome({ name: 'T', measure: 'tug', numeric: -1, date: '2026-10-04' }), /cannot be negative/);
+  assert.throws(() => cleanOutcome({ name: 'T', measure: 'tug', numeric: 12, date: '04/10/2026' }), /YYYY-MM-DD/);
+  assert.throws(() => cleanOutcome({ name: '', measure: 'tug', numeric: 12, date: '2026-10-04' }), /patient name/);
+});

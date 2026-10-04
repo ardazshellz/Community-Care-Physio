@@ -69,7 +69,8 @@
   <p class="hint">Fill in, check the preview, then Print and choose Save as PDF. Password-protect with tools/protect-pdf.py before emailing.</p>
   <div class="row">
     <button class="btn" onclick="window.print()">Print / Save as PDF</button>
-    <button class="btn o" onclick="pullMeasures()">Insert saved measures</button>
+    <button class="btn o" onclick="pullRegister()">Insert from register</button>
+    <button class="btn o" onclick="pullMeasures()">Insert device scores</button>
     <button class="btn o" onclick="clearDraft()">Clear draft</button>
   </div>
 
@@ -145,6 +146,21 @@ function addC(c){ d.costs.push(c||{n:'',p:''}); renderC(); persist(); render(); 
 function renderM(){ document.getElementById('measures').innerHTML=d.measures.map((m,i)=>`<div class="mrow"><input placeholder="Measure" value="${esc(m.n)}" oninput="d.measures[${i}].n=this.value;persist();render()"><input placeholder="Baseline" value="${esc(m.b)}" oninput="d.measures[${i}].b=this.value;persist();render()"><input placeholder="Interpretation" value="${esc(m.i)}" oninput="d.measures[${i}].i=this.value;persist();render()"><button onclick="d.measures.splice(${i},1);renderM();persist();render()">×</button></div>`).join(''); }
 function renderC(){ document.getElementById('costs').innerHTML=d.costs.map((c,i)=>`<div class="crow"><input placeholder="Item, e.g. 8 × follow-up sessions, complex" value="${esc(c.n)}" oninput="d.costs[${i}].n=this.value;persist();render()"><input placeholder="£" value="${esc(c.p)}" oninput="d.costs[${i}].p=this.value;persist();render()"><button onclick="d.costs.splice(${i},1);renderC();persist();render()">×</button></div>`).join(''); }
 
+let ctx=null; try{ const c=JSON.parse(localStorage.getItem('ccp_ctx')||'null'); if(c && c.expires>Date.now() && c.name && c.token) ctx=c; }catch(e){}
+if(ctx && !d.client){ d.client=ctx.name; const e=document.querySelector('[data-k=client]'); if(e) e.value=ctx.name; persist(); }
+const MNAMES={tug:'Timed Up and Go',tenmwt:'10-metre walk',tinetti:'Tinetti (POMA)',berg:'Berg Balance Scale',ems:'Elderly Mobility Scale',edmonton:'Edmonton Frail Scale',sixcit:'6CIT',news2:'NEWS2',barthel:'Barthel Index',pain:'Pain (0–10)',gas:'GAS'};
+async function pullRegister(){
+  if(!ctx){ alert('Open this page from the admin Outcomes tab to pull a patient\'s register entries.'); return; }
+  const r=await fetch('/api/practice',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'list',kind:'outcome',token:ctx.token})});
+  const all=await r.json().catch(()=>[]); if(!r.ok||!Array.isArray(all)){ alert('Could not load the register (sign in again?).'); return; }
+  const key=ctx.name.toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  const mine=all.filter(o=>o.value.patientKey===key).sort((a,b)=>a.value.date.localeCompare(b.value.date));
+  if(!mine.length){ alert('No register entries for '+ctx.name+' yet.'); return; }
+  const by={}; mine.forEach(o=>{ (by[o.value.measure] ||= []).push(o); });
+  d.measures=Object.entries(by).map(([m,list])=>{ const f=list[0], l=list[list.length-1]; const b=f.value.score+' ('+f.value.timepoint+', '+f.value.date+')'; const i=(l!==f?('Latest '+l.value.score+' ('+l.value.timepoint+', '+l.value.date+'). '):'')+(l.value.interp||''); return {n:MNAMES[m]||m, b, i}; });
+  const n2=by.news2?.slice(-1)[0]; if(n2) { d.obs='Observations: NEWS2 '+n2.value.numeric+' ('+n2.value.date+'). '+(n2.value.interp||''); document.querySelector('[data-k=obs]').value=d.obs; }
+  renderM(); persist(); render();
+}
 function pullMeasures(){
   let m={}; try{ m=JSON.parse(localStorage.getItem('ccp_measures')||'{}'); }catch(e){}
   const ks=Object.keys(m).filter(k=>k!=='_date'&&k!=='gas');

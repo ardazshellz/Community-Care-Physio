@@ -180,3 +180,6 @@ body:has(.refs-ov:not([hidden])) .float-wa,body:has(.refs-ov:not([hidden])) .cha
 .refs-row{display:flex;gap:8px;margin-top:8px;position:relative}.refs-row .refs-btn{flex:1;padding:10px;font-size:13px}
 .refs-email{flex:1;width:auto;animation:none;position:static}.refs-email summary.refs-btn{display:block;width:100%;border-radius:999px;font:500 13px Outfit,sans-serif;padding:10px;transform:none}.refs-email summary::after{margin-left:6px}.refs-email .hero-email-menu{top:auto;bottom:calc(100% + 8px);left:0;right:0;transform:none;justify-content:center;flex-wrap:wrap;white-space:normal}
 @media(max-width:600px){.refs-head{padding:20px 18px}.refs-body{padding:16px 18px}.refs-foot{padding-left:18px;padding-right:18px}}
+/* Outcomes register */
+.eq-table-wrap{overflow-x:auto}.eq-table{width:100%;border-collapse:collapse;font-size:12.5px}.eq-table th,.eq-table td{padding:8px 8px;border-bottom:1px solid rgba(30,77,59,.1);text-align:left;vertical-align:top}.eq-table th{font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--forest)}
+.oc-chip{display:inline-block;background:var(--warm);border:1px solid rgba(30,77,59,.12);border-radius:8px;padding:3px 8px;margin:2px 4px 2px 0;font-size:12px}.oc-chip small{color:var(--muted)}.oc-x{border:0;background:none;color:#b91c1c;cursor:pointer;padding:0 2px;font-size:13px}

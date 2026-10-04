@@ -1,6 +1,6 @@
 import { randomUUID, randomInt } from 'node:crypto';
 import { verifyAdminToken } from '../lib/adminAuth.js';
-import { cleanReferral, cleanIntake, cleanInvoice, formatInvoiceNumber } from '../lib/practice-model.js';
+import { cleanReferral, cleanIntake, cleanInvoice, cleanOutcome, formatInvoiceNumber } from '../lib/practice-model.js';
 import { FROM_EMAIL, SIGNATURE_TEXT, sendMail, textToHtml, wrapHtml } from '../lib/mailer.js';
 
 const PUBLIC_ACTIONS = ['referral', 'intake-get', 'intake-submit'];
@@ -202,7 +202,7 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
       }
 
       if (action === 'list') {
-        if (!['referral', 'invoice', 'intake', 'card', 'settings'].includes(body.kind)) invalid('Invalid record kind.');
+        if (!['referral', 'invoice', 'intake', 'card', 'settings', 'outcome'].includes(body.kind)) invalid('Invalid record kind.');
         const records = [];
         // Supabase caps each response; fetch every page for the admin list.
         for (let offset = 0; ; offset += 500) {
@@ -228,6 +228,18 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
         return res.status(200).json(await write(database, key, kind, value));
       }
 
+      if (action === 'outcome-save') {
+        const value = clean(cleanOutcome, body.value);
+        if (typeof body.key === 'string' && body.key) {
+          const key = recordKey(body.key, 'outcome');
+          const existing = await load(database, key);
+          const saved = await replace(database, existing, { ...value, createdAt: existing.value.createdAt });
+          if (!saved) throw new RequestError(409, 'This entry changed. Reload before saving.');
+          return res.status(200).json(saved);
+        }
+        return res.status(200).json(await write(database, `outcome:${randomUUID()}`, 'outcome', { ...value, createdAt: new Date().toISOString() }, 'insert'));
+      }
+
       if (action === 'invoice-create') {
         const value = clean(cleanInvoice, body.value);
         const n = result(await database.rpc('next_invoice_number'));
@@ -250,7 +262,7 @@ export function createPracticeHandler({ db, stripe, mail = sendMail, verifyToken
       }
 
       if (action === 'delete') {
-        const kind = typeof body.key === 'string' && body.key.startsWith('referral:') ? 'referral' : 'invoice';
+        const kind = typeof body.key === 'string' && body.key.startsWith('referral:') ? 'referral' : typeof body.key === 'string' && body.key.startsWith('outcome:') ? 'outcome' : 'invoice';
         const key = recordKey(body.key, kind);
         const existing = await load(database, key);
         if (kind === 'invoice' && existing.value.status !== 'draft') invalid(NO_DELETE);
