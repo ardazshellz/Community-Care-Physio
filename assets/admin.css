@@ -8,7 +8,7 @@
 .logout-btn:hover{background:rgba(255,255,255,.25)}
 .admin-body{max-width:1240px;margin:0 auto;padding:24px;display:flex;gap:22px;align-items:flex-start}
 .admin-nav{flex:0 0 188px;position:sticky;top:78px;display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid rgba(30,77,59,.08);border-radius:14px;padding:10px;box-shadow:0 4px 20px rgba(30,77,59,.05)}
-.admin-nav-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:9px;font-size:13px;color:var(--char);cursor:pointer;font-family:'Outfit',sans-serif;transition:background .15s;white-space:nowrap}
+.admin-nav-item{display:flex;text-decoration:none;box-sizing:border-box;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;padding:10px 12px;border-radius:9px;font-size:13px;color:var(--char);cursor:pointer;font-family:'Outfit',sans-serif;transition:background .15s;white-space:nowrap}
 .admin-nav-item:hover{background:var(--fp)}
 .admin-nav-item.active{background:var(--forest);color:#fff}
 .admin-mobile-nav-toggle{display:none;width:100%;align-items:center;justify-content:space-between;gap:12px;background:var(--forest);color:#fff;border:none;border-radius:11px;padding:13px 15px;font-size:14px;font-weight:500;cursor:pointer;font-family:'Outfit',sans-serif;text-align:left}
