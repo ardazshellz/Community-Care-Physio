@@ -47,7 +47,11 @@ async function loadMap(){
     container.replaceChildren(svg);show(selected);
   }catch(error){container.textContent='The map could not load. Please refresh the page to try again, or contact us on WhatsApp to check your area.';}
 }
-loadMap();
+// Load the 85 KB district outline only when the map is about to be seen.
+if('IntersectionObserver' in window && container){
+  const io=new IntersectionObserver((entries)=>{ if(entries.some(e=>e.isIntersecting)){ io.disconnect(); loadMap(); } },{rootMargin:'600px'});
+  io.observe(container);
+} else loadMap();
 
 checkForm.addEventListener('submit',e=>{
   e.preventDefault();

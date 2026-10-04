@@ -250,8 +250,10 @@
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="image" href="/hero-clean.jpg" fetchpriority="high">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="/hero-clean.webp" fetchpriority="high">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet"></noscript>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -292,7 +294,7 @@ nav{position:relative;z-index:100;display:flex;align-items:center;justify-conten
 .hero{min-height:92vh;display:grid;grid-template-columns:1.1fr 0.9fr;align-items:center;padding:60px 40px;gap:60px;position:relative;overflow:hidden;background:var(--warm)}
 .hero::after{content:'';position:absolute;right:-200px;top:-200px;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(30,77,59,.06) 0%,transparent 65%);pointer-events:none;z-index:1}
 /* Premium hero — a softly faded home-visit photograph that becomes part of the cream */
-.hero-photo{position:absolute;inset:0;z-index:0;pointer-events:none;background:url('hero-clean.jpg') no-repeat;
+.hero-photo{position:absolute;inset:0;z-index:0;pointer-events:none;background:url('hero-clean.webp') no-repeat;
   /* Keep the photograph large and knee-focused, but move the whole composition LEFT. */
   background-size:cover;
   background-position:58% 42%;
@@ -1134,7 +1136,7 @@ textarea{resize:none;height:72px}
 <section class="sec" id="founder" style="background:var(--warm)">
   <div class="founder-grid">
     <div class="about-portrait">
-      <img src="/about-zakery.jpg" width="665" height="1000" loading="lazy" decoding="async" alt="Zakery, founder and lead clinician at Community Care Physio">
+      <img src="/about-zakery.webp" width="665" height="1000" loading="lazy" decoding="async" alt="Zakery, founder and lead clinician at Community Care Physio">
       <div class="about-portrait-ph" style="display:none">
         <div class="about-ph-mark">CCP</div>
         <div class="about-ph-text">Portrait coming soon</div>
@@ -1167,7 +1169,7 @@ textarea{resize:none;height:72px}
   // Portrait loader: try a few likely filenames/extensions so the photo shows
   // whatever it was uploaded as, then fall back to the "coming soon" placeholder.
   var pic=sec.querySelector('.about-portrait img'); if(!pic) return;
-  var tries=['/about-zakery.jpg','/about-zak.jpg','/about-zakery.jpeg','/about-zak.jpeg','/about-zakery.png','/about-zak.png'];
+  var tries=['/about-zakery.webp','/about-zakery.jpg','/about-zak.jpg','/about-zakery.jpeg','/about-zak.jpeg','/about-zakery.png','/about-zak.png'];
   var i=0;
   pic.addEventListener('error',function(){
     i++;
@@ -2879,7 +2881,7 @@ if(location.hash==='#referrers') window.addEventListener('DOMContentLoaded',open
     <h2 style="font-family:'Playfair Display',serif;color:#1e4d3b;margin:0 0 6px;font-size:24px">Our professional network</h2>
     <p style="font-size:13px;color:#586860;line-height:1.65;margin:0 0 24px">Community Care Physio maintains trusted links with independent physiotherapists working in other areas, so patients can always be pointed to the most suitable service for their needs and location.</p>
     <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap;border:1px solid #e8f2ee;border-radius:14px;padding:20px;background:#fbfaf7">
-      <img src="/jason-well-led.jpg" alt="Jason, founder of Well-Led Physio" style="width:120px;height:140px;object-fit:cover;border-radius:12px;flex-shrink:0">
+      <img src="/jason-well-led.webp" loading="lazy" decoding="async" width="860" height="1080" alt="Jason, founder of Well-Led Physio" style="width:120px;height:140px;object-fit:cover;border-radius:12px;flex-shrink:0">
       <div style="flex:1;min-width:220px">
         <h3 style="font-family:'Playfair Display',serif;color:#1e4d3b;margin:0 0 8px;font-size:19px">Well-Led Physio</h3>
         <p style="font-size:12.5px;color:#586860;line-height:1.65;margin:0 0 12px">Well-Led Physio, an independent practice led by Jason, specialises in care-home physiotherapy and falls-prevention support across North and North-East London, and offers "Rehabilitation Ready" respite packages with planned, weekly intensive therapy throughout a resident's stay.</p>
