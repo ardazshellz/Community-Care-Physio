@@ -21,60 +21,72 @@ Send from infoccphysio@gmail.com with `assets/referral-pack.pdf` attached. One o
 
 ## A. Case management companies
 
-**Subject:** Home-visit physiotherapy, South West London — treating therapist available
+**Subject:** Home visit physiotherapy in South West London
 
-Hello [name / team],
+Hello,
 
-I'm Zakery Shelley, an HCPC-registered physiotherapist (PH132358) providing home-visit assessment and rehabilitation across South West London — Putney, Wimbledon, Wandsworth, Kingston, Richmond and surrounding postcodes.
+My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) providing home visit assessment and rehabilitation across South West London, covering Putney, Wimbledon, Wandsworth, Kingston, Richmond and the surrounding postcodes.
 
-I work alongside an NHS community post, so my case-managed caseload is deliberately small and every client keeps the same clinician. Focus areas: neurological rehabilitation, falls and frailty, post-discharge and post-surgical recovery, including clients with cognitive impairment or several long-term conditions.
+I keep my caseload deliberately small so that every client keeps the same clinician from assessment to discharge. My background is NHS community rehabilitation, and my main areas are neurological rehabilitation, falls and frailty, and recovery after hospital discharge or surgery, including clients with cognitive impairment or several long term conditions.
 
-What you get: initial assessment within ten working days of go-ahead, a written report with baseline measures (TUG, Tinetti, Edmonton, GAS), SMART goals and a costed plan within five working days, treatment only once you approve funding, and progress or discharge reports at the intervals you set. All liaison in writing; reports as password-protected PDFs; invoices to your organisation on 30-day terms.
+For case managers I offer an initial assessment at home within ten working days of your go ahead, followed by a written report within five working days of the visit with baseline measures, goals and a costed plan for your approval. Treatment only starts once funding is confirmed, with progress and discharge reports at the points you set. All liaison is in writing, reports are sent as password protected PDFs, and invoices go to your organisation on 30 day terms.
 
-The referral pack is attached with fees, timescales, outcome measures and a sample report. If it would help to have me on your treating-therapist list for South West London, I'd be glad to send a CV, HCPC confirmation and insurance certificates.
+I have attached my referral pack, which sets out fees, timescales, outcome measures and a sample report. If it would be useful to have me on your list of treating therapists for South West London, I would be happy to send my CV, HCPC confirmation and insurance certificates.
 
 Kind regards,
+
 Zakery Shelley
-Physiotherapist, Community Care Physio
-07508 401627 · infoccphysio@gmail.com · communitycarephysio.co.uk/refer
+Physiotherapist
+Community Care Physio
+T: 07508 401627
+E: infoccphysio@gmail.com
+W: www.communitycarephysio.co.uk
 
 ---
 
-## B. Personal-injury firms — rehabilitation coordinators
+## B. Personal injury firms, rehabilitation teams
 
-**Subject:** Home-visit physiotherapist for South West London clients — Rehabilitation Code
+**Subject:** Treating physiotherapist for home visits in South West London
 
-Hello [name / rehabilitation team],
+Hello,
 
-I'm Zakery Shelley, an HCPC-registered physiotherapist (PH132358) providing home-visit rehabilitation across South West London. I'm writing in case your rehabilitation coordinators or instructed case managers need a treating physiotherapist for clients in SW postcodes, Kingston or Richmond.
+My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) providing home visit rehabilitation across South West London. I am writing in case your rehabilitation coordinators, or the case managers you instruct, need a treating physiotherapist for clients in the SW postcodes, Kingston or Richmond.
 
-I act as treating therapist only, within the Rehabilitation Code 2015, and do not provide expert-witness reports. Caseload is small by design (I also hold an NHS community post), so clients keep one clinician throughout. Focus: neurological and orthopaedic rehabilitation at home, falls, and clients with complex needs.
+I work as a treating therapist only, in line with the Rehabilitation Code 2015, and do not provide expert witness reports. I keep my caseload deliberately small so that each client keeps one clinician throughout. My background is NHS community rehabilitation, and my main areas are neurological and orthopaedic rehabilitation at home, falls, and clients with complex needs.
 
-Reports are written to stand on their own: baseline measures, goals, a costed plan for approval, then progress and discharge reports at agreed points. All liaison in writing; password-protected PDFs; invoicing to the instructing organisation on 30-day terms.
+The assessment report stands on its own, with baseline measures, goals and a costed plan for approval, followed by progress and discharge reports at agreed points. All liaison is in writing, reports are sent as password protected PDFs, and invoices go to the instructing organisation on 30 day terms.
 
-Referral pack attached (fees, timescales, sample report). Happy to send a CV and certificates if you keep a panel.
+I have attached my referral pack with fees, timescales and a sample report. I would be glad to send a CV and certificates if you keep a panel of treating therapists.
 
 Kind regards,
+
 Zakery Shelley
-Physiotherapist, Community Care Physio
-07508 401627 · infoccphysio@gmail.com · communitycarephysio.co.uk/refer
+Physiotherapist
+Community Care Physio
+T: 07508 401627
+E: infoccphysio@gmail.com
+W: www.communitycarephysio.co.uk
 
 ---
 
-## C. Follow-up to the Friday caller (rehab network)
+## C. Follow up to the Friday caller (rehab network)
 
-**Subject:** Following your call on Friday — home-visit physio, South West London
+**Subject:** Following your call on Friday
 
-Hello [name],
+Hello,
 
-Thank you for calling on Friday about the client in [area]. I couldn't take that case as a female clinician was needed, but I'd like to be on your list for home-visit physiotherapy across South West London for future cases.
+Thank you for calling on Friday about the client in [area]. I could not take that case as a female clinician was needed, but I would like to be on your list for home visit physiotherapy across South West London for future cases.
 
-HCPC PH132358, enhanced DBS, professional indemnity and public liability insurance in place. Neuro, orthopaedic, falls and post-discharge rehabilitation at home; same clinician throughout. Referral pack attached with fees and timescales; CV and certificates on request.
+I am HCPC registered (PH132358) with an enhanced DBS and professional indemnity and public liability insurance in place. I provide neurological, orthopaedic, falls and post discharge rehabilitation at home, with the same clinician throughout. My referral pack is attached with fees and timescales, and I can send a CV and certificates on request.
 
 Kind regards,
+
 Zakery Shelley
-Physiotherapist, Community Care Physio
-07508 401627 · infoccphysio@gmail.com
+Physiotherapist
+Community Care Physio
+T: 07508 401627
+E: infoccphysio@gmail.com
+W: www.communitycarephysio.co.uk
 
 ---
 
