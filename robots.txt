@@ -2,5 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /api/
+Disallow: /measures/
+Disallow: /report/
 
 Sitemap: https://www.communitycarephysio.co.uk/sitemap.xml

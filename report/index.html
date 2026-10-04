@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Assessment report · Community Care Physio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Clinician tool. Fill the left column, the right column is the printable report in the referral-pack
+     style (page 7). Print → Save as PDF, then: python3 tools/protect-pdf.py "file.pdf" "password".
+     Draft text is kept in this browser (localStorage) until cleared; nothing is sent anywhere. */
+  :root{--forest:#1e4d3b;--sage:#8aab97;--sage-text:#5f8a70;--cream:#f8f5f0;--stone:#ede9e3;--gold:#c4975a;--char:#2b2b28;--muted:#5d5d57;--line:rgba(30,77,59,.14)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cream);color:var(--char);font:300 14px/1.5 Outfit,system-ui,sans-serif}
+  .app{display:grid;grid-template-columns:380px 1fr;min-height:100vh}
+  .form{background:#fff;border-right:1px solid var(--line);padding:16px;overflow:auto;max-height:100vh;position:sticky;top:0}
+  .form h1{font:400 20px 'Playfair Display',serif;margin:0 0 4px}
+  .form p.hint{font-size:12px;color:var(--muted);margin:0 0 12px}
+  .f{display:block;margin-bottom:10px;font-size:12px;color:var(--muted)}
+  .f input,.f textarea,.f select{display:block;width:100%;margin-top:3px;font:300 14px Outfit,sans-serif;padding:7px 9px;border:1px solid #c9c9c3;border-radius:7px;color:var(--char)}
+  .f textarea{min-height:70px;resize:vertical}
+  .f.sm{display:inline-block;width:48%}
+  .row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
+  .btn{background:var(--forest);color:#fff;border:0;border-radius:999px;padding:8px 13px;font:500 13px Outfit,sans-serif;cursor:pointer}
+  .btn.o{background:#fff;color:var(--forest);border:1px solid var(--forest)}
+  .mrow{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:4px;margin-bottom:4px}
+  .mrow input{font:300 13px Outfit,sans-serif;padding:5px 7px;border:1px solid #c9c9c3;border-radius:6px;width:100%}
+  .mrow button{border:0;background:none;color:var(--muted);cursor:pointer}
+  .crow{display:grid;grid-template-columns:1fr 90px auto;gap:4px;margin-bottom:4px}
+  .crow input{font:300 13px Outfit,sans-serif;padding:5px 7px;border:1px solid #c9c9c3;border-radius:6px;width:100%}
+  .crow button{border:0;background:none;color:var(--muted);cursor:pointer}
+  h4{font:500 12px Outfit,sans-serif;letter-spacing:.08em;text-transform:uppercase;color:var(--forest);margin:14px 0 6px}
+
+  /* ---- printable report ---- */
+  .sheet{padding:24px}
+  .page{background:#fff;width:210mm;min-height:297mm;margin:0 auto;padding:16mm 18mm;box-shadow:0 10px 30px rgba(30,77,59,.12);font-size:10pt;line-height:1.5;color:var(--char)}
+  .page .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--line);padding-bottom:4mm;margin-bottom:5mm}
+  .page .brand{font:400 13pt 'Playfair Display',serif}
+  .page .brand small{display:block;font:300 8pt Outfit,sans-serif;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+  .page .brand img{display:block;height:14mm;margin-bottom:2mm}
+  .page .meta{font-size:8.5pt;color:var(--muted);text-align:right}
+  .page h2{font:400 17pt 'Playfair Display',serif;margin:0 0 2mm}
+  .page .kv{display:grid;grid-template-columns:auto 1fr;gap:1mm 5mm;margin:3mm 0 4mm;font-size:9.5pt}
+  .page .kv span:nth-child(odd){color:var(--muted)}
+  .page h5{font-size:8.5pt;letter-spacing:.1em;text-transform:uppercase;color:var(--forest);margin:4mm 0 1.5mm;font-weight:500}
+  .page p{margin:0 0 2mm;white-space:pre-wrap}
+  .page table{width:100%;border-collapse:collapse;font-size:9.2pt}
+  .page td,.page th{padding:1.6mm 1.8mm;border-bottom:1px solid var(--line);vertical-align:top;text-align:left}
+  .page th{font-weight:500;color:var(--forest);font-size:8pt;letter-spacing:.08em;text-transform:uppercase}
+  .page td.r{text-align:right;color:var(--forest);font-weight:500;white-space:nowrap}
+  .page .sign{margin-top:8mm;font-size:9pt}
+  .page .sign b{font-weight:500;display:block}
+  .page .foot{margin-top:6mm;padding-top:3mm;border-top:1px solid var(--line);font-size:8pt;color:var(--muted)}
+  .empty{color:#8a8a84;font-style:italic}
+  @media(max-width:860px){.app{grid-template-columns:1fr}.form{position:static;max-height:none;border-right:0;border-bottom:1px solid var(--line)}.sheet{padding:12px}.page{width:100%;min-height:0;padding:16px}}
+  @media print{
+    @page{size:A4;margin:14mm 16mm}
+    body{background:#fff}.app{display:block}.form{display:none}.sheet{padding:0}
+    .page{box-shadow:none;width:auto;min-height:0;padding:0;margin:0}
+    .empty{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="form">
+  <h1>Assessment report</h1>
+  <p class="hint">Fill in, check the preview, then Print and choose Save as PDF. Password-protect with tools/protect-pdf.py before emailing.</p>
+  <div class="row">
+    <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+    <button class="btn o" onclick="pullMeasures()">Insert saved measures</button>
+    <button class="btn o" onclick="clearDraft()">Clear draft</button>
+  </div>
+
+  <label class="f">Report type<select id="type" data-k="type"><option>Initial physiotherapy assessment report</option><option>Physiotherapy progress report</option><option>Physiotherapy discharge report</option></select></label>
+  <label class="f sm">Client (initials, age)<input data-k="client" placeholder="Mrs M. (82)"></label>
+  <label class="f sm">Area / postcode district<input data-k="area" placeholder="Wimbledon SW19"></label>
+  <label class="f">Referrer and reference<input data-k="referrer" placeholder="J. Patel, Case Manager, Example Case Management Ltd · ref ECM-4471"></label>
+  <label class="f sm">Date of assessment<input type="date" data-k="date"></label>
+  <label class="f sm">Present<input data-k="present" placeholder="at home, daughter present"></label>
+  <label class="f">Reason for referral<textarea data-k="reason" placeholder="What the referrer asked for"></textarea></label>
+  <label class="f">Background and history<textarea data-k="background" placeholder="Discharge, falls, home set-up, previous level, comorbidities, precautions"></textarea></label>
+  <label class="f">Observations<input data-k="obs" placeholder="NEWS2 0 (RR 16, HR 78, BP 148/86, SpO₂ 96%, afebrile)"></label>
+
+  <h4>Findings (measures)</h4>
+  <div id="measures"></div>
+  <div class="row"><button class="btn o" onclick="addM()">Add row</button></div>
+  <label class="f">Other findings and home environment<textarea data-k="findings" placeholder="Strength, ROM, transfers, stairs, hazards, equipment in place"></textarea></label>
+
+  <h4>Goals</h4>
+  <label class="f">Client's goals (GAS, one per line)<textarea data-k="goals" placeholder="Walk to the corner shop (250 m) with daughter — expected (0): 250 m with stick, one rest"></textarea></label>
+
+  <h4>Recommendation</h4>
+  <label class="f">Plan<textarea data-k="plan" placeholder="Sessions, frequency, focus, equipment, who supports practice, review point"></textarea></label>
+  <label class="f">Risks and precautions<textarea data-k="risks" placeholder="Falls risk, red flags, what would stop treatment"></textarea></label>
+
+  <h4>Costs for approval</h4>
+  <div id="costs"></div>
+  <div class="row"><button class="btn o" onclick="addC()">Add line</button></div>
+  <label class="f">Travel band<select data-k="travel"><option>included (core area)</option><option>£15 per visit (nearby)</option><option>£35 per visit (extended)</option></select></label>
+</aside>
+
+<main class="sheet">
+<article class="page" id="page">
+  <div class="head">
+    <div class="brand"><img src="/assets/email-signature-cream.png" alt="Community Care Physio"></div>
+    <div class="meta">Zakery Shelley, Physiotherapist<br>HCPC PH132358<br>07508 401627 · infoccphysio@gmail.com<br>Confidential: for the referrer and client only</div>
+  </div>
+  <h2 id="o_type">Initial physiotherapy assessment report</h2>
+  <div class="kv">
+    <span>Client</span><span><span id="o_client" class="empty">client</span>, <span id="o_area" class="empty">area</span></span>
+    <span>Referrer</span><span id="o_referrer" class="empty">referrer and reference</span>
+    <span>Date of assessment</span><span><span id="o_date" class="empty">date</span>, <span id="o_present" class="empty">who was present</span></span>
+    <span>Clinician</span><span>Zakery Shelley, Physiotherapist, HCPC PH132358</span>
+  </div>
+  <h5>Reason for referral</h5><p id="o_reason" class="empty">…</p>
+  <h5>Background</h5><p id="o_background" class="empty">…</p>
+  <p><span id="o_obs" class="empty">Observations …</span></p>
+  <h5>Findings</h5>
+  <table><thead><tr><th>Measure</th><th>Baseline</th><th>Interpretation</th></tr></thead><tbody id="o_measures"></tbody></table>
+  <p id="o_findings" class="empty" style="margin-top:2mm">…</p>
+  <h5>Goals (Goal Attainment Scaling)</h5><p id="o_goals" class="empty">…</p>
+  <h5>Recommendation</h5><p id="o_plan" class="empty">…</p>
+  <h5>Risks and precautions</h5><p id="o_risks" class="empty">…</p>
+  <h5>Costs for approval</h5>
+  <table><tbody id="o_costs"></tbody></table>
+  <div class="sign"><b>Zakery Shelley</b>Physiotherapist, HCPC PH132358 · Community Care Physio<br>Report date: <span id="o_today"></span></div>
+  <div class="foot">Treating-therapist report, not an expert-witness report. Written with the client's consent for the referrer named above. Fees and terms as per the quote and terms of engagement.</div>
+</article>
+</main>
+</div>
+
+<script>
+const KEY='ccp_report_draft';
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+let d={measures:[],costs:[]};
+try{ d=Object.assign(d,JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){}
+
+document.querySelectorAll('[data-k]').forEach(el=>{ if(d[el.dataset.k]!=null) el.value=d[el.dataset.k]; el.addEventListener('input',()=>{ d[el.dataset.k]=el.value; persist(); render(); }); });
+function persist(){ try{ localStorage.setItem(KEY,JSON.stringify(d)); }catch(e){} }
+
+function addM(m){ d.measures.push(m||{n:'',b:'',i:''}); renderM(); persist(); render(); }
+function addC(c){ d.costs.push(c||{n:'',p:''}); renderC(); persist(); render(); }
+function renderM(){ document.getElementById('measures').innerHTML=d.measures.map((m,i)=>`<div class="mrow"><input placeholder="Measure" value="${esc(m.n)}" oninput="d.measures[${i}].n=this.value;persist();render()"><input placeholder="Baseline" value="${esc(m.b)}" oninput="d.measures[${i}].b=this.value;persist();render()"><input placeholder="Interpretation" value="${esc(m.i)}" oninput="d.measures[${i}].i=this.value;persist();render()"><button onclick="d.measures.splice(${i},1);renderM();persist();render()">×</button></div>`).join(''); }
+function renderC(){ document.getElementById('costs').innerHTML=d.costs.map((c,i)=>`<div class="crow"><input placeholder="Item, e.g. 8 × follow-up sessions, complex" value="${esc(c.n)}" oninput="d.costs[${i}].n=this.value;persist();render()"><input placeholder="£" value="${esc(c.p)}" oninput="d.costs[${i}].p=this.value;persist();render()"><button onclick="d.costs.splice(${i},1);renderC();persist();render()">×</button></div>`).join(''); }
+
+function pullMeasures(){
+  let m={}; try{ m=JSON.parse(localStorage.getItem('ccp_measures')||'{}'); }catch(e){}
+  const ks=Object.keys(m).filter(k=>k!=='_date'&&k!=='gas');
+  if(!ks.length && !m.gas){ alert('No saved measures found. Score them at /measures/ and press Save for report.'); return; }
+  for(const k of ks){ if(k==='news2') continue; d.measures.push({n:m[k].name, b:m[k].score||'', i:m[k].interp||''}); }
+  if(m.gas) d.goals=(d.goals?d.goals+'\n':'')+m.gas.line;
+  if(m.news2) { d.obs=m.news2.line; document.querySelector('[data-k=obs]').value=d.obs; }
+  document.querySelector('[data-k=goals]').value=d.goals||'';
+  renderM(); persist(); render();
+}
+
+function render(){
+  const set=(id,v,ph)=>{ const el=document.getElementById(id); if(v){ el.textContent=v; el.classList.remove('empty'); } else { el.textContent=ph; el.classList.add('empty'); } };
+  set('o_type',d.type,'Initial physiotherapy assessment report'); set('o_client',d.client,'client'); set('o_area',d.area,'area'); set('o_referrer',d.referrer,'referrer and reference');
+  set('o_date',d.date?new Date(d.date+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}):'', 'date'); set('o_present',d.present,'who was present');
+  set('o_reason',d.reason,'…'); set('o_background',d.background,'…'); set('o_obs',d.obs,'Observations …'); set('o_findings',d.findings,'…'); set('o_goals',d.goals,'…'); set('o_plan',d.plan,'…'); set('o_risks',d.risks,'…');
+  document.getElementById('o_measures').innerHTML=d.measures.filter(m=>m.n).map(m=>`<tr><td>${esc(m.n)}</td><td>${esc(m.b)}</td><td>${esc(m.i)}</td></tr>`).join('')||'<tr><td colspan="3" class="empty">no measures yet</td></tr>';
+  const rows=d.costs.filter(c=>c.n); let total=0;
+  document.getElementById('o_costs').innerHTML=rows.map(c=>{ const n=parseFloat(String(c.p).replace(/[^0-9.]/g,''))||0; total+=n; return `<tr><td>${esc(c.n)}</td><td class="r">${n?'£'+n.toLocaleString('en-GB'):esc(c.p)}</td></tr>`; }).join('')
+    +`<tr><td>Travel</td><td class="r">${esc(d.travel||'included (core area)')}</td></tr>`
+    +(rows.length?`<tr><td><strong>Total for approval</strong></td><td class="r"><strong>£${total.toLocaleString('en-GB')}</strong></td></tr>`:'');
+  document.getElementById('o_today').textContent=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+}
+function clearDraft(){ if(confirm('Clear the whole draft from this device?')){ try{localStorage.removeItem(KEY)}catch(e){}; location.reload(); } }
+renderM(); renderC(); render();
+</script>
+</body>
+</html>

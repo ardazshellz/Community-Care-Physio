@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Outcome measures · Community Care Physio</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* Clinician tool. Scores stay in this browser (localStorage) until cleared; nothing is sent anywhere.
+     Cut-offs cite the Shirley Ryan AbilityLab Rehabilitation Measures Database (sralab.org) and the
+     original validation papers; check them against the client's population before quoting. */
+  :root{--forest:#1e4d3b;--sage:#8aab97;--sage-text:#5f8a70;--cream:#f8f5f0;--stone:#ede9e3;--gold:#c4975a;--char:#2b2b28;--muted:#5d5d57;--line:rgba(30,77,59,.14);--red:#b91c1c;--amber:#b45309;--green:#15803d}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cream);color:var(--char);font:300 15px/1.5 Outfit,system-ui,sans-serif}
+  header{background:var(--forest);color:#fff;padding:18px 20px}
+  header h1{font:400 22px 'Playfair Display',serif;margin:0}
+  header p{margin:4px 0 0;font-size:13px;opacity:.85}
+  main{max-width:900px;margin:0 auto;padding:16px 16px 80px}
+  nav.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+  nav.tabs button{border:1px solid var(--line);background:#fff;color:var(--forest);padding:8px 12px;border-radius:999px;font:500 13px Outfit,sans-serif;cursor:pointer}
+  nav.tabs button[aria-selected=true]{background:var(--forest);color:#fff;border-color:var(--forest)}
+  section.tool{display:none;background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px}
+  section.tool.active{display:block}
+  h2{font:400 20px 'Playfair Display',serif;margin:0 0 4px;color:var(--char)}
+  .about{font-size:13px;color:var(--muted);margin:0 0 14px}
+  .item{padding:10px 0;border-top:1px solid var(--line)}
+  .item .q{font-weight:500;margin-bottom:6px}
+  .opts{display:flex;flex-wrap:wrap;gap:6px}
+  .opts label{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:13px;cursor:pointer;background:var(--cream)}
+  .opts input{margin-right:6px}
+  .opts label:has(input:checked){background:var(--forest);color:#fff;border-color:var(--forest)}
+  .num{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+  .num input,.num select{font:400 15px Outfit,sans-serif;padding:8px 10px;border:1px solid #9a9a93;border-radius:8px;width:150px}
+  .result{position:sticky;bottom:0;background:#fff;border-top:2px solid var(--forest);margin:16px -18px -18px;padding:14px 18px;border-radius:0 0 14px 14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .score{font:500 22px Outfit,sans-serif;color:var(--forest)}
+  .interp{flex:1;min-width:200px;font-size:14px}
+  .interp b{font-weight:500}
+  .interp.red b{color:var(--red)}.interp.amber b{color:var(--amber)}.interp.green b{color:var(--green)}
+  .btn{background:var(--forest);color:#fff;border:0;border-radius:999px;padding:9px 14px;font:500 13px Outfit,sans-serif;cursor:pointer}
+  .btn.o{background:#fff;color:var(--forest);border:1px solid var(--forest)}
+  .src{font-size:12px;color:var(--muted);margin-top:10px}
+  #saved{margin-top:18px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 18px}
+  #saved h3{font:400 17px 'Playfair Display',serif;margin:0 0 8px}
+  #saved ul{margin:0;padding-left:18px;font-size:14px}
+  #saved li{margin-bottom:4px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  textarea.gas{width:100%;font:300 14px Outfit,sans-serif;padding:8px;border:1px solid #9a9a93;border-radius:8px;min-height:44px}
+  .gasgoal{border-top:1px solid var(--line);padding:10px 0}
+  .gasgoal input[type=text]{width:100%;font:400 15px Outfit,sans-serif;padding:8px 10px;border:1px solid #9a9a93;border-radius:8px;margin-bottom:6px}
+  .gaslv{display:grid;grid-template-columns:36px 1fr;gap:6px;align-items:center;margin-bottom:4px;font-size:13px}
+  .gaslv input{font:300 13px Outfit,sans-serif;padding:6px 8px;border:1px solid #c9c9c3;border-radius:6px}
+  @media(max-width:520px){.num{grid-template-columns:1fr}.num input,.num select{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Outcome measures</h1>
+  <p>Score at the visit, copy the line into the report. Nothing leaves this phone or laptop.</p>
+</header>
+<main>
+  <nav class="tabs" id="tabs"></nav>
+  <div id="tools"></div>
+
+  <div id="saved">
+    <h3>Saved for the report</h3>
+    <ul id="savedList"><li class="muted">Nothing saved yet.</li></ul>
+    <div class="row">
+      <button class="btn" onclick="copyAll()">Copy all</button>
+      <a class="btn o" href="/report/">Open report template</a>
+      <button class="btn o" onclick="clearAll()">Clear</button>
+    </div>
+  </div>
+</main>
+
+<script>
+// ---------- instrument definitions ----------
+// Each item: [question, [option labels...]] where the option index is its score unless `scores` is given.
+const I = {};
+
+I.tug = {
+  name:'Timed Up and Go', short:'TUG', kind:'number', unit:'seconds', step:0.1,
+  interp(v){ if(v>=13.5) return ['red','≥13.5 s: increased falls risk in community-dwelling older adults (Shumway-Cook 2000; STEADI uses ≥12 s)'];
+             if(v>=12) return ['amber','12–13.4 s: at or above the STEADI 12 s threshold; borderline'];
+             return ['green','<12 s: within normal range for community mobility']; },
+  src:'Shumway-Cook, Brauer & Woollacott 2000 (cut-off 13.5 s, sens 87%, spec 87%); CDC STEADI ≥12 s. sralab.org/rehabilitation-measures/timed-and-go'
+};
+
+I.tenmwt = {
+  name:'10-metre walk test', short:'10MWT', kind:'number', unit:'seconds for the middle 6 m (or 10 m)', step:0.1,
+  extra:'<div class="num"><label>Distance timed</label><select id="x_dist"><option value="6">6 m (acceleration zone excluded)</option><option value="10">10 m</option></select></div>',
+  calc(v){ const d=Number(document.getElementById('x_dist').value); return d/v; },
+  fmt(v,s){ return s.toFixed(2)+' m/s ('+v+' s over '+document.getElementById('x_dist').value+' m)'; },
+  interp(v,s){ if(s<0.4) return ['red','<0.4 m/s: household ambulator']; if(s<0.8) return ['amber','0.4–0.8 m/s: limited community ambulator']; return ['green','>0.8 m/s: community ambulator']; },
+  src:'Perry et al 1995 (stroke); Fritz & Lusardi 2009 "white paper" thresholds for older adults. sralab.org/rehabilitation-measures/10-meter-walk-test'
+};
+
+I.tinetti = {
+  name:'Tinetti (POMA)', short:'Tinetti', max:28,
+  groups:[['Balance (16)',[
+    ['Sitting balance',['Leans or slides in chair','Steady, safe']],
+    ['Arises',['Unable without help','Able, uses arms','Able without arms']],
+    ['Attempts to arise',['Unable without help','Able, more than one attempt','Able in one attempt']],
+    ['Immediate standing balance (first 5 s)',['Unsteady (sways, moves feet, trunk sway)','Steady with aid or holds object','Steady without support']],
+    ['Standing balance',['Unsteady','Steady with wide stance or support','Narrow stance without support']],
+    ['Nudged (feet together, 3 light pushes on sternum)',['Begins to fall','Staggers, grabs, catches self','Steady']],
+    ['Eyes closed (feet together)',['Unsteady','Steady']],
+    ['Turning 360°: steps',['Discontinuous steps','Continuous steps']],
+    ['Turning 360°: steadiness',['Unsteady (grabs, staggers)','Steady']],
+    ['Sitting down',['Unsafe (misjudges distance, falls into chair)','Uses arms or not a smooth motion','Safe, smooth motion']]]],
+  ['Gait (12)',[
+    ['Initiation of gait',['Hesitancy or multiple attempts','No hesitancy']],
+    ['Right foot swing passes left stance foot',['No','Yes']],
+    ['Right foot clears the floor',['No','Yes']],
+    ['Left foot swing passes right stance foot',['No','Yes']],
+    ['Left foot clears the floor',['No','Yes']],
+    ['Step symmetry',['Unequal','Equal']],
+    ['Step continuity',['Stopping or discontinuity','Continuous']],
+    ['Path (over 3 m)',['Marked deviation','Mild deviation or uses aid','Straight without aid']],
+    ['Trunk',['Marked sway or uses aid','No sway but flexes knees/back or spreads arms','No sway, no flexion, no arms, no aid']],
+    ['Walking stance',['Heels apart','Heels almost touching']]]]],
+  interp(t){ if(t<19) return ['red','<19: high falls risk']; if(t<=24) return ['amber','19–24: moderate falls risk']; return ['green','25–28: low falls risk']; },
+  src:'Tinetti 1986. Risk bands per sralab.org/rehabilitation-measures/tinetti-performance-oriented-mobility-assessment'
+};
+
+I.berg = {
+  name:'Berg Balance Scale', short:'Berg', max:56,
+  items:['Sitting to standing','Standing unsupported','Sitting unsupported','Standing to sitting','Transfers','Standing with eyes closed','Standing with feet together','Reaching forward with outstretched arm','Retrieving object from floor','Turning to look behind','Turning 360°','Placing alternate foot on stool','Standing with one foot in front','Standing on one leg'],
+  scale:['0','1','2','3','4'],
+  interp(t){ if(t<=20) return ['red','0–20: high falls risk, wheelchair level']; if(t<=40) return ['amber','21–40: medium falls risk, walking with assistance']; if(t<45) return ['amber','41–44: below the 45 cut-off for falls risk']; return ['green','45–56: low falls risk']; },
+  src:'Berg 1992; cut-off 45 (Berg 1992), 0–20/21–40/41–56 bands. Score each item 0 (unable) to 4 (independent) per the published criteria. sralab.org/rehabilitation-measures/berg-balance-scale'
+};
+
+I.ems = {
+  name:'Elderly Mobility Scale', short:'EMS', max:20,
+  items:[
+    ['Lying to sitting',['Needs help of 2+','Needs help of 1','Independent']],
+    ['Sitting to lying',['Needs help of 2+','Needs help of 1','Independent']],
+    ['Sitting to standing',['Needs help of 2+','Needs help of 1','Independent in over 3 s','Independent in under 3 s']],
+    ['Standing',['Stands only with support','Stands without support, needs support to reach','Stands without support, reaches but no functional reach','Stands without support, functional reach']],
+    ['Gait',['Needs physical help or constant supervision','Mobile with frame but erratic/unsafe turns','Independent with frame, or mobile with stick/no aid but unsafe','Independent, safe, with or without aid']],
+    ['Timed walk, 6 m',['Unable','Over 30 s','16–30 s','Under 15 s']],
+    ['Functional reach',['Under 10 cm or unable','10–20 cm','Over 20 cm'],[0,2,4]]],
+  interp(t){ if(t<10) return ['red','0–9: dependent in mobility and ADLs']; if(t<=13) return ['amber','10–13: borderline; help with some mobility tasks']; return ['green','14–20: independent in basic ADLs']; },
+  src:'Smith 1994. Functional reach is scored 0/2/4 on the original scale; this page uses 0/2/4. sralab.org/rehabilitation-measures/elderly-mobility-scale'
+};
+
+I.edmonton = {
+  name:'Edmonton Frail Scale', short:'Edmonton', max:17,
+  items:[
+    ['Cognition: clock drawing',['No errors','Minor spacing errors','Other errors']],
+    ['General health: hospital admissions in past year',['0','1–2','2 or more']],
+    ['General health: self-rated',['Excellent / very good / good','Fair','Poor']],
+    ['Functional independence: ADLs needing help (meals, shopping, transport, phone, housekeeping, laundry, medication, money)',['0–1','2–4','5–8']],
+    ['Social support: someone to help when needed',['Always','Sometimes','Never']],
+    ['Medication: 5 or more prescribed',['No','Yes']],
+    ['Medication: sometimes forgets',['No','Yes']],
+    ['Nutrition: recent weight loss, clothes looser',['No','Yes']],
+    ['Mood: often feels sad or depressed',['No','Yes']],
+    ['Continence: problem losing control of urine',['No','Yes']],
+    ['Functional performance: TUG',['0–10 s','11–20 s','Over 20 s, unwilling or needs help']]],
+  interp(t){ if(t<=5) return ['green','0–5: not frail']; if(t<=7) return ['amber','6–7: vulnerable']; if(t<=9) return ['amber','8–9: mild frailty']; if(t<=11) return ['red','10–11: moderate frailty']; return ['red','12–17: severe frailty']; },
+  src:'Rolfson et al 2006. Bands: 0–5 not frail, 6–7 vulnerable, 8–9 mild, 10–11 moderate, 12–17 severe. sralab.org/rehabilitation-measures/edmonton-frail-scale'
+};
+
+I.sixcit = {
+  name:'6CIT', short:'6CIT', max:28, higherWorse:true,
+  items:[
+    ['What year is it?',['Correct','Incorrect'],[0,4]],
+    ['What month is it?',['Correct','Incorrect'],[0,3]],
+    ['Address phrase to remember (5 parts, e.g. John Smith, 42 West Street, Bedford): errors on recall',['0','1','2','3','4','5'],[0,2,4,6,8,10]],
+    ['About what time is it (within one hour)?',['Correct','Incorrect'],[0,3]],
+    ['Count backwards from 20 to 1',['Correct','1 error','2 or more errors'],[0,2,4]],
+    ['Months of the year in reverse',['Correct','1 error','2 or more errors'],[0,2,4]]],
+  interp(t){ if(t<=7) return ['green','0–7: normal']; if(t<=9) return ['amber','8–9: mild impairment, consider GP review']; return ['red','10–28: significant impairment, refer to GP; a screen, not a diagnosis']; },
+  src:'Brooke & Bullock 1999 (6CIT). Screening tool only; concerns go to the GP.'
+};
+
+I.news2 = {
+  name:'NEWS2', short:'NEWS2', kind:'news',
+  src:'Royal College of Physicians NEWS2 (2017). Scale 2 SpO₂ only for confirmed hypercapnic respiratory failure with a prescribed target of 88–92%.'
+};
+
+I.gas = { name:'Goal Attainment Scaling', short:'GAS', kind:'gas', src:'Kiresuk & Sherman 1968; Turner-Stokes 2009 (GAS in rehabilitation). Expected level = 0.' };
+
+// ---------- rendering ----------
+const order=['tug','tenmwt','tinetti','berg','ems','edmonton','sixcit','news2','gas'];
+const tabs=document.getElementById('tabs'), tools=document.getElementById('tools');
+for(const k of order){
+  const d=I[k];
+  const b=document.createElement('button'); b.textContent=d.short; b.setAttribute('role','tab'); b.onclick=()=>show(k); b.dataset.k=k; tabs.appendChild(b);
+  const s=document.createElement('section'); s.className='tool'; s.id='t_'+k; s.innerHTML=render(k,d); tools.appendChild(s);
+}
+function show(k){ document.querySelectorAll('.tool').forEach(s=>s.classList.toggle('active',s.id==='t_'+k)); document.querySelectorAll('nav.tabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.k===k)); }
+show('tug');
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function render(k,d){
+  let h=`<h2>${esc(d.name)}</h2>`;
+  if(d.kind==='number'){
+    h+=`<p class="about">Enter the time. ${k==='tug'?'Rise from a standard chair, walk 3 m, turn, return and sit; usual aid allowed.':'Time the middle 6 m of a 10 m walkway at comfortable speed, or the full 10 m.'}</p>`;
+    h+=d.extra||'';
+    h+=`<div class="num"><label for="n_${k}">${esc(d.unit)}</label><input type="number" id="n_${k}" step="${d.step}" min="0" inputmode="decimal" oninput="calc('${k}')"></div>`;
+  } else if(d.kind==='news'){
+    h+=`<p class="about">Enter the observations. Any single parameter scoring 3 is flagged.</p>
+    <div class="num"><label>Respiration rate (per min)</label><input type="number" id="nw_rr" oninput="calc('news2')"></div>
+    <div class="num"><label>SpO₂ (%)</label><input type="number" id="nw_spo2" oninput="calc('news2')"></div>
+    <div class="num"><label>SpO₂ scale</label><select id="nw_scale" onchange="calc('news2')"><option value="1">Scale 1 (standard)</option><option value="2">Scale 2 (hypercapnic, target 88–92%)</option></select></div>
+    <div class="num"><label>Supplemental oxygen</label><select id="nw_o2" onchange="calc('news2')"><option value="0">Air</option><option value="2">Oxygen</option></select></div>
+    <div class="num"><label>Systolic BP (mmHg)</label><input type="number" id="nw_sbp" oninput="calc('news2')"></div>
+    <div class="num"><label>Pulse (per min)</label><input type="number" id="nw_hr" oninput="calc('news2')"></div>
+    <div class="num"><label>Consciousness</label><select id="nw_acvpu" onchange="calc('news2')"><option value="0">Alert</option><option value="3">New confusion, Voice, Pain or Unresponsive</option></select></div>
+    <div class="num"><label>Temperature (°C)</label><input type="number" id="nw_temp" step="0.1" oninput="calc('news2')"></div>`;
+  } else if(d.kind==='gas'){
+    h+=`<p class="about">Two or three goals in the client's words. Set the expected level (0) honestly, then fill the other levels. Score at each review. See docs/clinical/GAS-worksheet.md for worked examples.</p><div id="gasList"></div>
+    <div class="row"><button class="btn o" onclick="addGoal()">Add goal</button></div>`;
+  } else {
+    const groups=d.groups||[['',(d.items||[]).map(it=>Array.isArray(it)?it:[it,d.scale])]];
+    let n=0;
+    for(const [gname,items] of groups){
+      if(gname) h+=`<p class="about" style="margin-top:12px"><b>${esc(gname)}</b></p>`;
+      for(const it of items){
+        const [q,opts,scores]=it; const idx=n++;
+        h+=`<div class="item"><div class="q">${esc(q)}</div><div class="opts">`+opts.map((o,i)=>`<label><input type="radio" name="${k}_${idx}" value="${scores?scores[i]:i}" onchange="calc('${k}')">${esc(o)}${d.scale?'':' ('+(scores?scores[i]:i)+')'}</label>`).join('')+`</div></div>`;
+      }
+    }
+  }
+  h+=`<div class="result"><span class="score" id="s_${k}">–</span><span class="interp" id="i_${k}"></span><button class="btn" onclick="save('${k}')">Save for report</button></div>`;
+  h+=`<p class="src">Source: ${esc(d.src)}</p>`;
+  return h;
+}
+
+// ---------- scoring ----------
+const last={};
+function calc(k){
+  const d=I[k]; let score, text, band;
+  if(d.kind==='number'){
+    const v=parseFloat(document.getElementById('n_'+k).value); if(!(v>0)) return setResult(k,'–','','');
+    const s=d.calc?d.calc(v):v; [band,text]=d.interp(v,s); score=d.fmt?d.fmt(v,s):v+' s';
+    last[k]={line:`${d.name}: ${score}. ${text}`, interp:text};
+  } else if(d.kind==='news'){
+    const g=id=>parseFloat(document.getElementById(id).value);
+    const rr=g('nw_rr'),sp=g('nw_spo2'),sbp=g('nw_sbp'),hr=g('nw_hr'),t=g('nw_temp');
+    const scale=document.getElementById('nw_scale').value, o2=Number(document.getElementById('nw_o2').value), ac=Number(document.getElementById('nw_acvpu').value);
+    if([rr,sp,sbp,hr,t].some(x=>isNaN(x))) return setResult(k,'–','Enter all observations','');
+    const pRR=rr<=8?3:rr<=11?1:rr<=20?0:rr<=24?2:3;
+    let pSp; if(scale==='1'){pSp=sp<=91?3:sp<=93?2:sp<=95?1:0;} else {pSp=sp<=83?3:sp<=85?2:sp<=87?1:(sp<=92||o2===0)?0:sp<=94?1:sp<=96?2:3;}
+    const pBP=sbp<=90?3:sbp<=100?2:sbp<=110?1:sbp<=219?0:3;
+    const pHR=hr<=40?3:hr<=50?1:hr<=90?0:hr<=110?1:hr<=130?2:3;
+    const pT=t<=35?3:t<=36?1:t<=38?0:t<=39?1:2;
+    const parts=[pRR,pSp,o2,pBP,pHR,ac,pT]; const total=parts.reduce((a,b)=>a+b,0); const any3=parts.some(p=>p===3);
+    if(total>=7) [band,text]=['red','7 or more: high clinical risk, urgent or emergency response'];
+    else if(total>=5) [band,text]=['red','5–6: medium risk, urgent GP or 111 review'];
+    else if(any3) [band,text]=['amber','Single parameter scoring 3: low to medium risk, same-day GP review'];
+    else if(total>=1) [band,text]=['amber','1–4: low risk, note and monitor'];
+    else [band,text]=['green','0: within normal range'];
+    score='NEWS2 '+total;
+    last[k]={line:`Observations: NEWS2 ${total} (RR ${rr}, HR ${hr}, BP ${sbp} systolic, SpO₂ ${sp}%${o2?' on oxygen':''}, temp ${t}°C${ac?', not alert':''}).`, interp:text};
+  } else {
+    const inputs=document.querySelectorAll(`#t_${k} input[type=radio]:checked`);
+    const n=document.querySelectorAll(`#t_${k} .item`).length;
+    if(inputs.length<n) return setResult(k,`${inputs.length}/${n} answered`,'','');
+    const total=[...inputs].reduce((a,i)=>a+Number(i.value),0);
+    [band,text]=d.interp(total); score=`${total} / ${d.max}`;
+    last[k]={line:`${d.name}: ${total}/${d.max}. ${text}`, interp:text};
+  }
+  setResult(k,score,text,band);
+}
+function setResult(k,s,t,b){ document.getElementById('s_'+k).textContent=s; const i=document.getElementById('i_'+k); i.className='interp '+(b||''); i.innerHTML=t?('<b>'+esc(t.split(':')[0])+':</b>'+esc(t.split(':').slice(1).join(':'))):''; }
+
+// ---------- GAS ----------
+let goals=[];
+function addGoal(g){ goals.push(g||{goal:'',levels:['','','','',''],baseline:'',score:''}); renderGoals(); }
+function renderGoals(){
+  const el=document.getElementById('gasList'); if(!el) return;
+  el.innerHTML=goals.map((g,i)=>`<div class="gasgoal"><input type="text" placeholder="Goal in the client's words" value="${esc(g.goal)}" oninput="goals[${i}].goal=this.value">
+    ${['−2 much less','−1 somewhat less','0 expected','+1 somewhat better','+2 much better'].map((l,j)=>`<div class="gaslv"><span>${l.split(' ')[0]}</span><input placeholder="${l.slice(3)}" value="${esc(g.levels[j])}" oninput="goals[${i}].levels[${j}]=this.value"></div>`).join('')}
+    <div class="row"><label style="font-size:13px">Baseline score <select onchange="goals[${i}].baseline=this.value"><option value="">–</option>${[-2,-1,0,1,2].map(v=>`<option ${String(v)===g.baseline?'selected':''}>${v}</option>`).join('')}</select></label>
+    <label style="font-size:13px">Review score <select onchange="goals[${i}].score=this.value"><option value="">–</option>${[-2,-1,0,1,2].map(v=>`<option ${String(v)===g.score?'selected':''}>${v}</option>`).join('')}</select></label>
+    <button class="btn o" onclick="goals.splice(${i},1);renderGoals()">Remove</button></div></div>`).join('') || '<p class="about">No goals yet.</p>';
+}
+addGoal();
+
+// ---------- save / copy ----------
+const KEY='ccp_measures';
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch(e){ return {}; } }
+function store(o){ try{ localStorage.setItem(KEY,JSON.stringify(o)); }catch(e){} renderSaved(); }
+function save(k){
+  const o=load(); const d=I[k];
+  if(k==='gas'){ const gs=goals.filter(g=>g.goal.trim()); if(!gs.length) return; o.gas={name:d.name, goals:gs, line:gs.map(g=>`${g.goal} — expected (0): ${g.levels[2]||'—'}; baseline ${g.baseline||'—'}${g.score!==''?', review '+g.score:''}`).join('\n')}; }
+  else { if(!last[k]) return; o[k]={name:d.name, score:document.getElementById('s_'+k).textContent, interp:last[k].interp, line:last[k].line}; }
+  o._date=new Date().toISOString().slice(0,10); store(o);
+}
+function renderSaved(){
+  const o=load(); const ul=document.getElementById('savedList');
+  const ks=Object.keys(o).filter(k=>k!=='_date');
+  ul.innerHTML=ks.length?ks.map(k=>`<li>${esc(o[k].line).replace(/\n/g,'<br>')}</li>`).join(''):'<li>Nothing saved yet.</li>';
+}
+function copyAll(){ const o=load(); const t=Object.keys(o).filter(k=>k!=='_date').map(k=>o[k].line).join('\n'); navigator.clipboard?.writeText(t); alert('Copied '+Object.keys(o).filter(k=>k!=='_date').length+' lines.'); }
+function clearAll(){ if(confirm('Clear all saved scores from this device?')){ try{localStorage.removeItem(KEY)}catch(e){}; renderSaved(); } }
+renderSaved();
+</script>
+</body>
+</html>
