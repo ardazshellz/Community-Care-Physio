@@ -195,6 +195,6 @@ for (const area of AREAS) {
   mkdirSync(`areas/${area[0]}`, { recursive: true });
   writeFileSync(`areas/${area[0]}/index.html`, page(area, AREAS));
 }
-const urls = ['/', ...AREAS.map((a) => `/areas/${a[0]}/`)];
+const urls = ['/', '/case-managers/', ...AREAS.map((a) => `/areas/${a[0]}/`)];
 writeFileSync('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${SITE}${u}</loc><lastmod>${today}</lastmod></url>`).join('\n')}\n</urlset>\n`);
 console.log(`built ${AREAS.length} area pages + sitemap`);
