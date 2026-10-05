@@ -1224,10 +1224,27 @@ function aReschedFillTimes(){
     return `<option value="${tm}"${taken?' disabled':''}>${fmt12(tm)}${taken?' — booked':''}</option>`;
   }).join('');
 }
+// Single (non-package) booking: the server moves the booking and its blocked slots.
+async function aDoRescheduleSingle(id,date,time){
+  const b=adminBookings.find(x=>x.id===id); if(!b) return;
+  let res,data={};
+  try{
+    res=await fetch('/api/update-booking',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({token:adminSessionToken,action:'reschedule',bookingId:id,booking:{bookedDate:date,bookedTime:time}})});
+    data=await res.json().catch(()=>({}));
+  }catch(e){}
+  if(!res||!res.ok){ alert(data.error||'Could not reschedule. Nothing was changed.'); return; }
+  b.bookedDate=date; b.bookedTime=time; b.preferredTime=time;
+  const el=document.getElementById('reschedOverlay'); if(el) el.remove();
+  try{ await fetchBookedSlots(); }catch(e){}
+  renderAdminBookings();
+  refreshCalendars();
+}
 async function aDoReschedule(id, i){
   const date=document.getElementById('reschedDate').value;
   const time=document.getElementById('reschedTime').value;
   if(!date||!time){ alert('Pick a date and time first.'); return; }
+  if(i<0) return aDoRescheduleSingle(id,date,time);
   const b=(typeof MANUAL_BOOKINGS!=='undefined'?MANUAL_BOOKINGS:[]).find(x=>x.id===id) || adminBookings.find(x=>x.id===id);
   if(!b) return;
   const sessions=aPkgSessions(b);
@@ -1522,6 +1539,7 @@ function renderAdminBookings(){
             <button class="bi-btn" style="background:#e0f2fe;color:#0369a1" onclick="aMarkPaid(${idx})">${paid?'↩ Mark as unpaid':'✓ Mark as paid'}</button>
             ${b.status!=='completed'?`<button class="bi-btn confirm" onclick="aCompleteBooking(${idx})">✓ Complete</button>`:`<span style="font-size:11px;color:#0369a1;font-weight:500">✓ Completed</span>`}
             ${overdue?`<button class="bi-btn" style="background:#fef3c7;color:#b45309" onclick="aReleaseBooking(${idx})" title="Mark expired and free the slot">⏱ Release slots</button>`:''}
+            ${b.status!=='completed'&&aIsServerBooking(b.id)?`<button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aOpenReschedule('${b.id}',-1)" title="Move to a new date and time. Sends nothing to the patient.">↻ Reschedule</button>`:''}
             <button class="bi-btn" style="background:#fef3c7;color:#b45309" onclick="aCancelBooking(${idx})" title="Cancel — checks the 24h window, drafts the email, frees the slot">⊘ Cancel / release slot</button>
             <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${b.id}')">⭐ Review email</button>
             ${aWaReminderBtn(b,b.bookedDate,b.bookedTime,b.id)}

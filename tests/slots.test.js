@@ -35,3 +35,10 @@ test('a 45-minute visit at 18:00 permits 19:30, but a 60-minute visit does not',
   assert.equal(overlaps(occupiedSlots('18:00', 60), '20:00', 60), false);
   assert.equal(overlaps([], '18:00', 60), false);
 });
+
+test('shiftSlots moves a booking block to a new start and keeps its shape', async () => {
+  const { shiftSlots } = await import('../lib/slots.js');
+  assert.deepEqual(shiftSlots(['16:00','16:30','17:00','17:30'], '16:00', '16:00'), ['16:00','16:30','17:00','17:30']);
+  assert.deepEqual(shiftSlots(['16:00','16:30','17:00','17:30'], '16:00', '09:30'), ['09:30','10:00','10:30','11:00']);
+  assert.deepEqual(shiftSlots(['22:30','23:00','23:30'], '22:30', '23:00'), ['23:00','23:30']);
+});

@@ -6,7 +6,7 @@
 import { supabase } from '../lib/supabase.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
 import { reconcilePackageCompletion } from '../lib/package-completion.js';
-import { durationMins, occupiedSlots } from '../lib/slots.js';
+import { durationMins, occupiedSlots, shiftSlots } from '../lib/slots.js';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', 'https://communitycarephysio.co.uk');
@@ -135,6 +135,39 @@ export default async function handler(req, res) {
         .from('bookings')
         .update(update)
         .eq('id', bookingId);
+      if (error) throw error;
+    } else if (action === 'reschedule') {
+      // Move a single (non-package) booking to a new date and time and carry its
+      // blocked slots with it. Sends nothing to the patient.
+      const date = String(booking?.bookedDate || ''), time = String(booking?.bookedTime || '');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):(00|30)$/.test(time)) {
+        return res.status(400).json({ error: 'Date (YYYY-MM-DD) and a half-hour time (HH:MM) are required' });
+      }
+      const { data: current, error: readError } = await supabase.from('bookings')
+        .select('appointment,booked_date,booked_time').eq('id', bookingId).single();
+      if (readError) throw readError;
+      const { data: own, error: ownError } = await supabase.from('blocked_slots')
+        .select('slot_time').eq('booking_id', bookingId);
+      if (ownError) throw ownError;
+      const slots = own?.length && current.booked_time
+        ? shiftSlots(own.map(r => String(r.slot_time).slice(0, 5)), String(current.booked_time).slice(0, 5), time)
+        : occupiedSlots(time, durationMins(current.appointment));
+      const { data: taken, error: takenError } = await supabase.from('blocked_slots')
+        .select('slot_time,booking_id').eq('booking_date', date);
+      if (takenError) throw takenError;
+      if ((taken || []).some(r => r.booking_id !== bookingId && slots.includes(String(r.slot_time).slice(0, 5)))) {
+        return res.status(409).json({ error: 'That time overlaps another booking or blocked slot' });
+      }
+      // ponytail: three writes, not one transaction. One admin user; move to a
+      // Postgres function if bookings are ever rescheduled concurrently.
+      const { error: freeError } = await supabase.from('blocked_slots').delete().eq('booking_id', bookingId);
+      if (freeError) throw freeError;
+      const { error: slotError } = await supabase.from('blocked_slots').upsert(
+        slots.map(slot_time => ({ booking_date: date, slot_time, booking_id: bookingId })),
+        { onConflict: 'booking_date,slot_time', ignoreDuplicates: true });
+      if (slotError) throw slotError;
+      const { error } = await supabase.from('bookings')
+        .update({ booked_date: date, booked_time: time, preferred_time: time }).eq('id', bookingId);
       if (error) throw error;
     } else if (action === 'delete' || action === 'purge') {
       // A purge is intentionally permanent and is used for genuine test/refunded
