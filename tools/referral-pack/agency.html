@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Community Care Physio — Home visit physiotherapy for home care clients</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* Print source for assets/home-care-agencies.pdf. Build: node tools/referral-pack/build.mjs
+     One page for home care agency offices and care teams. Private clients, so website prices. */
+  :root{--forest:#1e4d3b;--sage:#8aab97;--sage-text:#5f8a70;--cream:#f8f5f0;--char:#2b2b28;--muted:#5d5d57;--line:rgba(30,77,59,.14)}
+  @page{size:A4;margin:0}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#fff;color:var(--char);font-family:Outfit,system-ui,sans-serif;font-weight:300;font-size:9.6pt;line-height:1.42;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{width:210mm;height:297mm;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .top{background:#fbf9f6;padding:5mm 17mm 6mm;border-bottom:1px solid var(--line)}
+  .top img{width:60mm;display:block;margin:-2mm 0 1mm -5mm}
+  .sl{font-size:8pt;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--sage-text);margin-bottom:2mm}
+  h1{font-family:'Playfair Display',Georgia,serif;font-weight:400;font-size:24pt;line-height:1.12;margin:0 0 2.5mm;color:var(--forest)}
+  .lead{font-size:10.6pt;color:var(--muted);margin:0;max-width:160mm}
+  .body{padding:6mm 17mm 0;flex:1}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:9mm}
+  h2{font-family:'Playfair Display',Georgia,serif;font-weight:400;font-size:13.5pt;color:var(--forest);margin:0 0 2mm}
+  ul{margin:0;padding:0;list-style:none}
+  li{padding-left:5.5mm;position:relative;margin-bottom:1.2mm}
+  li::before{content:"";position:absolute;left:0;top:.62em;width:2.2mm;height:2.2mm;border-radius:50%;background:var(--sage)}
+  ol{margin:0;padding:0;list-style:none;counter-reset:c}
+  ol li{counter-increment:c;padding-left:8mm;margin-bottom:1.4mm}
+  ol li::before{content:counter(c);background:none;top:0;width:auto;height:auto;font-family:'Playfair Display',Georgia,serif;font-size:13pt;line-height:1.2;color:var(--forest)}
+  b,strong{font-weight:500;color:var(--forest)}
+  .band{margin-top:5mm;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:4.5mm 0;display:grid;grid-template-columns:1.25fr 1fr;gap:9mm}
+  table{width:100%;border-collapse:collapse}
+  td{padding:1.3mm 0;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.r{text-align:right;white-space:nowrap;font-weight:500;color:var(--forest)}
+  .note{font-size:9pt;color:var(--muted);margin:2mm 0 0}
+  .who{margin-top:4.5mm;display:grid;grid-template-columns:1fr 1fr;gap:9mm}
+  .who p{margin:0}
+  .foot{background:var(--forest);color:var(--cream);padding:6mm 17mm;display:flex;justify-content:space-between;align-items:flex-end;gap:8mm}
+  .foot .big{font-family:'Playfair Display',Georgia,serif;font-size:15pt;line-height:1.25}
+  .foot .small{font-size:9.4pt;opacity:.85;text-align:right;line-height:1.55}
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="top">
+    <img src="../../assets/email-signature-cream.png" alt="CC Physio — Community Care Physiotherapy, South West London">
+    <div class="sl">For home care agencies and care teams</div>
+    <h1>Home visit physiotherapy<br>for the people you care for</h1>
+    <p class="lead">When a client is slowing down, has had a fall or has come home from hospital weaker, families often ask their care team who can help. This page is for your office to keep and share.</p>
+  </div>
+
+  <div class="body">
+    <div class="cols">
+      <div>
+        <h2>When to think of us</h2>
+        <ul>
+          <li>A fall, a near miss, or new unsteadiness</li>
+          <li>Home from hospital and not back to their usual level</li>
+          <li>Struggling with stairs, transfers, or getting out of a chair</li>
+          <li>Stroke, Parkinson's, MS or another neurological condition</li>
+          <li>Recovering after a hip, knee or other operation</li>
+          <li>Walking less, going out less, losing confidence</li>
+        </ul>
+      </div>
+      <div>
+        <h2>What the family receives</h2>
+        <ul>
+          <li>A <b>falls and mobility assessment at home</b>, within ten working days of the enquiry</li>
+          <li>A <b>written summary</b> they can share with the GP</li>
+          <li>A <b>simple home programme</b>, with the regular carer shown how to support it safely, if the family wishes</li>
+          <li>The <b>same physiotherapist</b> at every visit</li>
+          <li>Visits in the late afternoon, evening and at weekends, when relatives can be there</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="band">
+      <div>
+        <h2>How it works</h2>
+        <ol>
+          <li>The family calls, messages or books online. No GP referral is needed.</li>
+          <li>We agree a time and confirm the price before the visit.</li>
+          <li>First visit: a 60 minute assessment at home, with treatment started the same day.</li>
+          <li>Follow-up visits only if they are needed and wanted.</li>
+        </ol>
+      </div>
+      <div>
+        <h2>Prices</h2>
+        <table>
+          <tr><td>Initial assessment, 60 min</td><td class="r">£100</td></tr>
+          <tr><td>Follow-up session, 45 min</td><td class="r">£75</td></tr>
+          <tr><td>Extended session, 60 min</td><td class="r">£90</td></tr>
+        </table>
+        <p class="note">Complex needs may add £30 to the assessment and £15 to a session, always agreed first. Travel is included across the SW postcodes, Morden, Mitcham, New Malden, north Kingston and Richmond.</p>
+      </div>
+    </div>
+
+    <div class="who">
+      <div>
+        <h2>Who we are</h2>
+        <p>Community Care Physio is run by Zakery Shelley, an HCPC registered physiotherapist with an NHS community rehabilitation background. The work is mostly with older adults: falls and frailty, neurological conditions, and recovery after hospital or surgery.</p>
+      </div>
+      <div>
+        <h2>For your records</h2>
+        <ul>
+          <li>HCPC registered, PH132358, and CSP member</li>
+          <li>Professional indemnity and public liability insurance</li>
+          <li>Enhanced DBS. Certificates sent on request</li>
+          <li>Families book and pay directly. No cost to the agency and no referral fees either way</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="big">Call or WhatsApp 07508 401627<br>communitycarephysio.co.uk</div>
+    <div class="small">infoccphysio@gmail.com<br>Book online at communitycarephysio.co.uk/?book=1<br>Home visits across South West London</div>
+  </div>
+</section>
+</body>
+</html>

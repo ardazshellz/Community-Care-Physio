@@ -1,4 +1,4 @@
-// Prints the referral pack and the terms of engagement to assets/*.pdf with the
+// Prints the referral pack, the terms of engagement and the home care agency one-pager to assets/*.pdf with the
 // installed Google Chrome. Run after editing fees or wording:
 //   node tools/referral-pack/build.mjs
 import { execFileSync } from 'node:child_process';
@@ -7,7 +7,7 @@ import path from 'node:path';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const jobs = [['index.html', 'referral-pack.pdf'], ['terms.html', 'terms-of-engagement.pdf']];
+const jobs = [['index.html', 'referral-pack.pdf'], ['terms.html', 'terms-of-engagement.pdf'], ['agency.html', 'home-care-agencies.pdf']];
 
 for (const [html, pdf] of jobs) {
   const src = path.join(here, html);

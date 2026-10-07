@@ -84,8 +84,8 @@ If the manager is warm: "Would it be useful if I dropped in for ten minutes one 
 
 **After each call:** fill one row in the contact log in `pipeline-targets.md` (date, agency, who, outcome, next step).
 
-## Open points for the owner
+## Owner decisions (5 Oct 2026)
 
-1. The line about late afternoon, evening and weekend visits. Declined for the website hero. Kept here because an agency will otherwise assume daytime visits. Say if it should come out.
-2. The "one page summary" is offered in D1, D2 and D3 but does not exist yet. Build it before the first send, or change the offer to a link to the website.
-3. "Drop in after four" is optional. Remove if in person visits to agency offices are not wanted.
+1. Late afternoon, evening and weekend line: keep.
+2. One page summary: built. `assets/home-care-agencies.pdf`, source `tools/referral-pack/agency.html`, built by `node tools/referral-pack/build.mjs`. Attach it when a manager asks for it. Rebuild after any price change.
+3. "Drop in after four" offer: keep.
