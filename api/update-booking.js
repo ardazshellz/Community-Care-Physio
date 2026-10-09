@@ -74,6 +74,13 @@ export default async function handler(req, res) {
         .update({ confirmed: true })
         .eq('id', bookingId);
       if (error) throw error;
+    } else if (action === 'complete') {
+      // Single (non-package) booking seen: keep it as a completed record.
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'completed', confirmed: true })
+        .eq('id', bookingId);
+      if (error) throw error;
     } else if (action === 'markPaid') {
       const { data: booking } = await supabase
         .from('bookings').select('paid').eq('id', bookingId).single();

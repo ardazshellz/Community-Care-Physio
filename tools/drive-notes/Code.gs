@@ -4,7 +4,8 @@
  * Deployed as a web app in the clinic's own Google account. The admin page POSTs
  * (patient, programme, session, date, time, secret); this finds or creates
  *   Drive › CC Physio – Patient notes › <Patient> — <Programme> › <date time — session>
- * as a Google Doc with a SOAP template, then sends the browser to it.
+ * as a Google Doc with a SOAP template, then sends the browser to the patient's
+ * folder so every note for that patient is in one place.
  *
  * Setup: see README.md. Set the script property SECRET to the same value as in
  * the admin page (Referrals & invoices › Settings › Google Drive notes).
@@ -36,10 +37,10 @@ function doPost(e) {
   const patientFolder = patientFolder_(root, String(p.bookingId || ''), patient + ' — ' + programme);
   const title = when_(p.date, p.time) + ' — ' + session;
 
-  const file = firstLive_(patientFolder.getFilesByName(title)) || createNote_(patientFolder, title, patient, programme, session, when_(p.date, p.time));
-  const url = file.getUrl();
+  firstLive_(patientFolder.getFilesByName(title)) || createNote_(patientFolder, title, patient, programme, session, when_(p.date, p.time));
+  const url = patientFolder.getUrl();
   return HtmlService.createHtmlOutput(
-    '<p style="font-family:Arial">Opening note… <a href="' + url + '" target="_top">Open the note</a></p>' +
+    '<p style="font-family:Arial">Opening notes folder… <a href="' + url + '" target="_top">Open the folder</a></p>' +
     '<script>window.top.location.href=' + JSON.stringify(url) + ';</script>'
   ).setTitle('Opening note');
 }

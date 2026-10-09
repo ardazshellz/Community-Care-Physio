@@ -659,7 +659,7 @@ function aIsOverdue(b){
 async function aCompleteBooking(i){
   const b = adminBookings[i]; if(!b) return;
   if(!confirm('Mark this appointment as completed?')) return;
-  try{ await fetch('/api/update-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:adminSessionToken,action:'confirm',bookingId:b.id})}); }catch(e){}
+  try{ await fetch('/api/update-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:adminSessionToken,action:'complete',bookingId:b.id})}); }catch(e){}
   adminBookings[i].status='completed';
   renderAdminBookings();
 }

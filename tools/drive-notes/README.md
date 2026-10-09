@@ -1,6 +1,6 @@
 # Google Drive session notes — one-time setup (about 5 minutes)
 
-The 📝 Notes button on each patient and session in the admin page creates (or reopens) a Google Doc:
+The 📝 Notes button on each patient and session in the admin page creates the session's Google Doc if it does not exist, then opens the patient's folder so all their notes sit together:
 
 `My Drive › CC Physio – Patient notes › <Patient> — <Programme> › <Wed 30 Sep 2026, 2.00pm — Follow-up 1>`
 
