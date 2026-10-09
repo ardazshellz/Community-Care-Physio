@@ -81,6 +81,12 @@ export default async function handler(req, res) {
         .update({ status: 'completed', confirmed: true })
         .eq('id', bookingId);
       if (error) throw error;
+    } else if (action === 'reopen') {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', bookingId);
+      if (error) throw error;
     } else if (action === 'markPaid') {
       const { data: booking } = await supabase
         .from('bookings').select('paid').eq('id', bookingId).single();

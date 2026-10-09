@@ -1711,7 +1711,7 @@ function aArchivedReminderSummary(s){
 // collapsible section. The record itself is untouched in the database.
 function renderArchivedPackages(){
   const el=document.getElementById('aArchivedList'); if(!el) return;
-  const archived=adminBookings.filter(b=>aIsPackage(b) && aPkgIsArchived(b));
+  const archived=adminBookings.filter(b=>aIsPackage(b) ? aPkgIsArchived(b) : ['completed','dna'].includes(String(b.status||'').toLowerCase()));
   const badge=document.getElementById('aArchivedBadge');
   if(badge) badge.textContent = archived.length ? '· '+archived.length : '';
   if(!archived.length){
@@ -1720,6 +1720,7 @@ function renderArchivedPackages(){
   }
 
   el.innerHTML=archived.map(b=>{
+    if(!aIsPackage(b)) return aArchivedSingleCard(b);
     const sessions=aPkgSessions(b);
     const done=sessions.filter(s=>s.status==='completed').length;
     const info=aPatientInfo(b);
@@ -1792,6 +1793,45 @@ function renderArchivedPackages(){
       </div>
     </div>`;
   }).join('');
+}
+// Completed single bookings (an initial assessment seen once, say) keep their
+// record, notes and intake reachable here instead of vanishing from Patients.
+function aArchivedSingleCard(b){
+  const idx=adminBookings.indexOf(b);
+  const st=String(b.status||'').toLowerCase()==='dna'?'Did not attend':'Completed';
+  return `<div class="booking-item patient-card is-collapsed archived-patient-card" data-booking-id="${aEsc(b.id||'')}">
+      <div class="patient-card-summary">
+        <div class="patient-summary-main">
+          <div class="patient-summary-name">${aEsc(b.name)||'Unknown patient'}</div>
+          <div class="patient-summary-type">${aEsc(b.appointment)||'Appointment'} · <span style="font-weight:600;color:#0369a1">${st}</span> · £${b.price||'?'}</div>
+        </div>
+        <div class="patient-summary-metric"><div class="patient-summary-label">Appointment</div><div class="patient-summary-value">${aFmtDay(b.bookedDate,b.bookedTime)}</div></div>
+        <div class="patient-summary-metric"><div class="patient-summary-label">Paid</div><div class="patient-summary-value">${b.paid===false?'Outstanding':'Yes'}</div></div>
+        <button class="patient-card-toggle" onclick="togglePatientCard(this)" aria-expanded="false">View details</button>
+      </div>
+      <div class="patient-card-details">
+        <div style="background:#fff;border:1px solid rgba(30,77,59,.08);border-radius:9px;padding:10px 12px;margin:0 0 10px;font-size:11.5px;color:var(--char);line-height:1.9">
+          ${b.phone?`<span style="margin-right:16px">📞 ${aEsc(b.phone)}</span>`:''}
+          ${b.email?`<span>✉️ ${aEsc(b.email)}</span>`:''}
+          ${b.address?`<div>📍 ${aEsc(b.address)}${b.postcode?', '+aEsc(b.postcode):''}</div>`:''}
+          ${b.reason?`<div>📋 ${aEsc(b.reason)}</div>`:''}
+        </div>
+        ${aHouseholdNoteHtml(b)}
+        <div class="bi-actions" style="margin-top:12px">
+          <button class="bi-btn" style="background:#e0f2fe;color:#0369a1" onclick="aMarkPaid(${idx})">${b.paid===false?'✓ Mark as paid':'↩ Mark as unpaid'}</button>
+          <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${b.id}')">⭐ Review email</button>
+          <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${b.id}')">📋 Intake form</button>
+          <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.notesFor('${b.id}',null)">📝 Notes</button>
+          <button class="bi-btn" style="background:#e0f2fe;color:#0369a1" onclick="aReopenBooking(${idx})">↩ Restore to Active</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function aReopenBooking(i){
+  const b=adminBookings[i]; if(!b) return;
+  try{ await fetch('/api/update-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:adminSessionToken,action:'reopen',bookingId:b.id})}); }catch(e){}
+  b.status='confirmed';
+  renderAdminBookings();
 }
 function clientFilterRange(){
   const f=document.getElementById('aClientFrom');
