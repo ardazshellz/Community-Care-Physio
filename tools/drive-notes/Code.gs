@@ -4,8 +4,8 @@
  * Deployed as a web app in the clinic's own Google account. The admin page POSTs
  * (patient, programme, session, date, time, secret); this finds or creates
  *   Drive › CC Physio – Patient notes › <Patient> — <Programme> › <date time — session>
- * as a Google Doc with a SOAP template, then sends the browser to the patient's
- * folder so every note for that patient is in one place.
+ * as a Google Doc with a SOAP template and returns the patient's folder URL, which
+ * the admin page opens so every note for that patient is in one place.
  *
  * Setup: see README.md. Set the script property SECRET to the same value as in
  * the admin page (Referrals & invoices › Settings › Google Drive notes).
@@ -25,11 +25,11 @@ function createSecret() {
 function doPost(e) {
   const p = (e && e.parameter) || {};
   const secret = PropertiesService.getScriptProperties().getProperty('SECRET');
-  if (!secret || p.secret !== secret) return page_('Not authorised. Check the shared secret in the admin Settings matches the script property SECRET.');
+  if (!secret || p.secret !== secret) return json_({ error: 'Not authorised. Check the shared secret in the admin Settings matches the script property SECRET.' });
 
   const clean = (s, max) => String(s || '').replace(/[\\/:*?"<>|\r\n]+/g, ' ').trim().slice(0, max || 120);
   const patient = clean(p.patient);
-  if (!patient) return page_('Missing patient name.');
+  if (!patient) return json_({ error: 'Missing patient name.' });
   const programme = clean(p.programme) || 'Physiotherapy';
   const session = clean(p.session) || 'Session';
 
@@ -38,11 +38,13 @@ function doPost(e) {
   const title = when_(p.date, p.time) + ' — ' + session;
 
   firstLive_(patientFolder.getFilesByName(title)) || createNote_(patientFolder, title, patient, programme, session, when_(p.date, p.time));
-  const url = patientFolder.getUrl();
-  return HtmlService.createHtmlOutput(
-    '<p style="font-family:Arial">Opening notes folder… <a href="' + url + '" target="_top">Open the folder</a></p>' +
-    '<script>window.top.location.href=' + JSON.stringify(url) + ';</script>'
-  ).setTitle('Opening note');
+  // JSON back to the admin page, which opens the folder itself. (A page returned
+  // from here runs in Google's sandbox and cannot redirect the tab on its own.)
+  return json_({ url: patientFolder.getUrl() });
+}
+
+function json_(obj) {
+  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 
 function doGet() { return page_('This link works from the Community Care Physio admin page only.'); }

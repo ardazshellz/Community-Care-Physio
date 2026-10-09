@@ -558,12 +558,19 @@ async function notesFor(bookingId, sessionIndex) {
   const b = bookings().find((x) => String(x.id) === String(bookingId)); if (!b) return;
   let label = b.appointment || 'Appointment', date = b.bookedDate, time = b.bookedTime;
   if (sessionIndex != null && typeof aPkgSessions === 'function') { const s = aPkgSessions(b)[sessionIndex]; if (s) { label = s.label; date = s.date; time = s.time; } }
-  // POST (not GET) so patient names stay out of URLs and browser history.
-  const form = document.createElement('form');
-  Object.assign(form, { method: 'POST', action: d.scriptUrl, target: '_blank' });
-  Object.entries({ secret: d.secret, patient: b.name, programme: b.appointment || '', session: label, date: date || '', time: time || '', bookingId: String(b.id) })
-    .forEach(([k, v]) => { const i = document.createElement('input'); Object.assign(i, { type: 'hidden', name: k, value: v }); form.appendChild(i); });
-  document.body.appendChild(form); form.submit(); form.remove();
+  // Open the tab inside the click (popup blockers), then point it at the folder
+  // once the script answers. POST so patient names stay out of URLs and history.
+  const w = window.open('', '_blank');
+  const body = new URLSearchParams({ secret: d.secret, patient: b.name, programme: b.appointment || '', session: label, date: date || '', time: time || '', bookingId: String(b.id) });
+  try {
+    const r = await fetch(d.scriptUrl, { method: 'POST', body, redirect: 'follow' });
+    const j = await r.json();
+    if (!j.url) throw new Error(j.error || 'No folder returned');
+    if (w) w.location = j.url; else window.open(j.url, '_blank');
+  } catch (e) {
+    if (w) w.close();
+    alert('Could not open the notes folder: ' + e.message);
+  }
 }
 async function intakeFor(bookingId) {
   state.tab = 'intake'; state.open = null; state.draft = null;
