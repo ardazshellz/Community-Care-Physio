@@ -175,6 +175,8 @@ export default async function handler(req, res) {
       }, ...(travel.total ? [{price_data:{currency:'gbp',product_data:{name:'Travel fee',description:'Travel per home visit · '+bd.postcode.toUpperCase()},unit_amount:travel.fee*100},quantity:travel.visits}] : [])],
       mode: 'payment',
       expires_at: checkoutExpiresAt,
+      // Stripe keeps a resume link for 30 days; the webhook emails it when the session expires unpaid.
+      after_expiration: { recovery: { enabled: true } },
       customer_email: bd.email || undefined,
       customer_creation: 'always',
       payment_intent_data: { setup_future_usage: 'off_session' },

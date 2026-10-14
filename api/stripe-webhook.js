@@ -5,18 +5,23 @@
 import Stripe from 'stripe';
 import { supabase } from '../lib/supabase.js';
 import { durationMins, occupiedSlots } from '../lib/slots.js';
-import { abandonedAlert } from '../lib/abandoned.js';
+import { abandonedAlert, recoveryEmail } from '../lib/abandoned.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // Checkout expired unpaid: mark the booking abandoned and alert the clinician once.
-async function markAbandoned(bookingId) {
+async function markAbandoned(bookingId, recoveryUrl) {
   const { data: row } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
   if (!row || row.paid || row.confirmed || row.status) return;
   const { error } = await supabase.from('bookings').update({ status: 'abandoned' }).eq('id', bookingId).is('status', null);
   if (error) throw error;
   const transporter = await gmailTransport();
   await transporter.sendMail({ from: '"CCP Bookings" <infoccphysio@gmail.com>', to: 'infoccphysio@gmail.com', ...abandonedAlert(row) });
+  // Ask the person to finish the booking, with Stripe's resume link (same details prefilled).
+  if (row.email && recoveryUrl) {
+    try { await transporter.sendMail({ from: '"Community Care Physio" <infoccphysio@gmail.com>', to: row.email, replyTo: 'infoccphysio@gmail.com', ...recoveryEmail(row, recoveryUrl) }); }
+    catch (err) { console.error('stripe-webhook', { action: 'recovery-email', code: err?.code || 'unknown' }); }
+  }
 }
 
 // One place that loads nodemailer (the tests swap this exact import for a fake).
@@ -114,7 +119,7 @@ export default async function handler(req, res) {
   }
 
   if (event.type === 'checkout.session.expired' && event.data.object.metadata?.booking_id) {
-    try { await markAbandoned(event.data.object.metadata.booking_id); }
+    try { await markAbandoned(event.data.object.metadata.booking_id, event.data.object.after_expiration?.recovery?.url || ''); }
     catch (err) { console.error('stripe-webhook', { action: 'abandoned', code: err?.code || 'unknown' }); return res.status(500).json({ error: 'Abandoned booking alert failed; retry required' }); }
     return res.status(200).json({ received: true });
   }

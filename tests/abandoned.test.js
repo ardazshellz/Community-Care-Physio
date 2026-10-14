@@ -25,3 +25,14 @@ test('alert is high priority and carries the contact details', () => {
   for (const s of ['07000 000000', 'a@b.c', 'Full Programme', '£615', '18:30', 'Bed bound stroke']) assert.ok(m.text.includes(s), s);
   assert.ok(!m.html.includes('<script'));
 });
+
+test('recovery email carries the resume link and no discount', async () => {
+  const { recoveryEmail } = await import('../lib/abandoned.js');
+  const m = recoveryEmail({ ...base, email: 'a@b.c', appointment: 'Full Programme', booked_date: '2026-10-20', booked_time: '18:30' }, 'https://checkout.stripe.com/c/pay/recover_123');
+  assert.match(m.subject, /finish your booking/);
+  assert.ok(m.text.includes('https://checkout.stripe.com/c/pay/recover_123'));
+  assert.ok(m.text.includes('Hi A,'));
+  assert.match(m.text, /Full Programme on Tue,? 20 Oct 2026 at 18:30/);
+  assert.ok(!/discount|%/.test(m.text));
+  assert.ok(!/;|–|—/.test(m.text));
+});
