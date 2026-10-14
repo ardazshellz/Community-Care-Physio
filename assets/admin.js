@@ -606,6 +606,29 @@ function renderDashboard(){
     ${box(m.newPatients,'New patients','','newPatients')}
     ${box(m.totalBookings,'Total bookings')}
   </div>`;
+  // Abandoned checkouts: started on the website, never paid. Leads to chase.
+  const followUp=bookings.filter(b=>b&&!b.activeOnly&&b.paid===false&&b.confirmed===false&&(b.status==='abandoned'||(!b.status&&b.createdAt&&Date.now()-new Date(b.createdAt)>45*60*1000)));
+  if(followUp.length){
+    html+=`<div class="dash-sub" style="font-weight:600;color:#b45309;font-size:13px;margin-top:6px">⚠️ Follow up · ${followUp.length} unpaid booking${followUp.length>1?'s':''} started on the website</div>`;
+    html+=followUp.map(b=>{
+      const idx=adminBookings.indexOf(b);
+      const when=b.bookedDate?`${new Date(b.bookedDate+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}${b.bookedTime?' · '+fmt12(b.bookedTime):''}`:'no date chosen';
+      const started=b.createdAt?new Date(b.createdAt).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+      const first=(b.name||'').split(' ')[0]||'there';
+      const body=`Hi ${first},\n\nI noticed a booking was started on the Community Care Physio website for ${b.appointment||'a home visit'} but not completed. If you would still like a visit, reply to this email or call or WhatsApp me on 07508 401627 and I will arrange a time that suits.\n\n${typeof EMAIL_SIGNATURE!=='undefined'?EMAIL_SIGNATURE:''}`;
+      const mail=b.email&&typeof gmailComposeUrl==='function'?gmailComposeUrl(b.email,'Your Community Care Physio booking',body):'';
+      return `<div style="border:1px solid #fcd34d;background:#fffbeb;border-radius:10px;padding:10px 12px;margin:6px 0;font-size:12.5px;line-height:1.6">
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><strong>${aEsc(b.name||'—')}</strong><span style="color:var(--muted)">started ${aEsc(started)}</span></div>
+        <div>${aEsc(b.appointment||'')}${b.price?` · £${aEsc(String(b.price))}`:''} · wanted ${aEsc(when)}${b.bookingFor?` · for ${aEsc(b.bookingFor)}`:''}</div>
+        <div>${b.phone?`📞 ${aEsc(b.phone)}`:''}${b.email?` · ✉️ ${aEsc(b.email)}`:''}${b.postcode?` · ${aEsc(b.postcode)}`:''}</div>
+        ${b.reason?`<div style="color:var(--muted)">${aEsc(String(b.reason).split('\n')[0]).slice(0,160)}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
+          ${mail?`<a class="recent-chase-btn" href="${mail}" target="_blank" rel="noopener" style="padding:5px 10px;border-radius:7px;background:var(--forest);color:#fff;text-decoration:none;font-size:12px">✉️ Chase by email</a>`:''}
+          ${b.phone?`<a href="https://wa.me/${aEsc(String(b.phone).replace(/\D/g,'').replace(/^0/,'44'))}" target="_blank" rel="noopener" style="padding:5px 10px;border-radius:7px;background:#25d366;color:#fff;text-decoration:none;font-size:12px">💬 WhatsApp</a>`:''}
+          <button type="button" onclick="aPurgeBooking(${idx})" style="padding:5px 10px;border-radius:7px;border:1px solid rgba(30,77,59,.2);background:#fff;font-size:12px;cursor:pointer">Done, remove</button>
+        </div></div>`;
+    }).join('');
+  }
   html+=`<div class="dash-sub" style="font-weight:600;color:var(--char);font-size:13px;margin-top:6px">Today's appointments</div>`;
   html+=m.todayAppts.length
     ?m.todayAppts.map(a=>`<div style="display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid rgba(30,77,59,.06);font-size:13px"><span>${fmt12(a.time)} · ${aEsc(a.name||'')}</span><span style="color:var(--muted)">${aEsc(a.label)}</span></div>`).join('')

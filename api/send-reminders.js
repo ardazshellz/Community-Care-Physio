@@ -22,6 +22,7 @@
 import { supabase } from '../lib/supabase.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
 import nodemailer from 'nodemailer';
+import { ABANDON_AFTER_MS, abandonedAlert } from '../lib/abandoned.js';
 
 const FROM_EMAIL = 'infoccphysio@gmail.com';
 const ADMIN_EMAIL = 'infoccphysio@gmail.com';
@@ -235,10 +236,25 @@ async function handleCron(req, res) {
     }
   } catch (e) { console.error('send-reminders: today digest failed', e && e.message); }
 
+  // Safety net for the Stripe "checkout.session.expired" webhook: any public booking
+  // still unpaid and unmarked after the hold lapsed becomes an abandoned lead.
+  let abandoned = 0;
+  try {
+    const cutoff = new Date(Date.now() - ABANDON_AFTER_MS).toISOString();
+    const { data: stale } = await supabase.from('bookings').select('*')
+      .eq('paid', false).eq('confirmed', false).is('status', null).neq('booking_for', 'enquiry').lt('created_at', cutoff);
+    for (const row of stale || []) {
+      const { error } = await supabase.from('bookings').update({ status: 'abandoned' }).eq('id', row.id).is('status', null);
+      if (error) continue;
+      await makeTransport().sendMail({ from: `Community Care Physio <${FROM_EMAIL}>`, to: ADMIN_EMAIL, ...abandonedAlert(row) });
+      abandoned++;
+    }
+  } catch (e) { console.error('send-reminders: abandoned sweep failed', e && e.message); }
+
   return res.status(200).json({
     ok: true, today, tomorrow,
     patientsSent, tomorrowCount: tomorrowDigest.length, todayCount: todayDigest.length,
-    missingEmail: noEmail.length, errors: errors.length
+    missingEmail: noEmail.length, errors: errors.length, abandoned
   });
 }
 

@@ -5,8 +5,31 @@
 import Stripe from 'stripe';
 import { supabase } from '../lib/supabase.js';
 import { durationMins, occupiedSlots } from '../lib/slots.js';
+import { abandonedAlert } from '../lib/abandoned.js';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+// Checkout expired unpaid: mark the booking abandoned and alert the clinician once.
+async function markAbandoned(bookingId) {
+  const { data: row } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
+  if (!row || row.paid || row.confirmed || row.status) return;
+  const { error } = await supabase.from('bookings').update({ status: 'abandoned' }).eq('id', bookingId).is('status', null);
+  if (error) throw error;
+  const transporter = await gmailTransport();
+  await transporter.sendMail({ from: '"CCP Bookings" <infoccphysio@gmail.com>', to: 'infoccphysio@gmail.com', ...abandonedAlert(row) });
+}
+
+// One place that loads nodemailer (the tests swap this exact import for a fake).
+async function gmailTransport() {
+  const nodemailer = await import('nodemailer');
+  return nodemailer.default.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'infoccphysio@gmail.com',
+      pass: process.env.GMAIL_APP_PASSWORD
+    }
+  });
+}
 
 export const config = { api: { bodyParser: false } };
 
@@ -90,6 +113,12 @@ export default async function handler(req, res) {
     }
   }
 
+  if (event.type === 'checkout.session.expired' && event.data.object.metadata?.booking_id) {
+    try { await markAbandoned(event.data.object.metadata.booking_id); }
+    catch (err) { console.error('stripe-webhook', { action: 'abandoned', code: err?.code || 'unknown' }); return res.status(500).json({ error: 'Abandoned booking alert failed; retry required' }); }
+    return res.status(200).json({ received: true });
+  }
+
   if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
     const session = event.data.object;
     if (session.payment_status !== 'paid') return res.status(200).json({ received: true });
@@ -171,14 +200,7 @@ export default async function handler(req, res) {
 
       // Send via Gmail SMTP
       try {
-        const nodemailer = await import('nodemailer');
-        const transporter = nodemailer.default.createTransport({
-          service: 'gmail',
-          auth: {
-            user: 'infoccphysio@gmail.com',
-            pass: process.env.GMAIL_APP_PASSWORD
-          }
-        });
+        const transporter = await gmailTransport();
 
         // Email to Zakery (clinician)
         await transporter.sendMail({
