@@ -150,7 +150,16 @@ function referralEditor(r) {
         ${field('funding.payerName', 'Payer', f.payerName)}
         ${field('funding.invoiceEmail', 'Invoice email', f.invoiceEmail, 'email')}
         ${field('funding.invoiceAddress', 'Invoice address', f.invoiceAddress, 'text', true)}
-      </div></section>
+      </div>
+      <h4 style="margin:14px 0 6px">Book an authorised session</h4>
+      <p class="eq-muted">Creates a confirmed, invoiced booking for this client (no payment link, no email). Price is per visit including travel.</p>
+      <div class="eq-grid">
+        <label class="eq-field">Date<input id="prBookDate" type="date" min="${today()}"></label>
+        <label class="eq-field">Time<select id="prBookTime">${Array.from({ length: 25 }, (_, i) => { const m = 8 * 60 + i * 30, t = `${String(Math.floor(m / 60)).padStart(2, '0')}:${m % 60 ? '30' : '00'}`; return `<option ${t === '16:00' ? 'selected' : ''}>${t}</option>`; }).join('')}</select></label>
+        <label class="eq-field">Length<select id="prBookLen"><option value="Extended Session">60 min</option><option value="Standard Session">45 min</option></select></label>
+        <label class="eq-field">Price £ (incl. travel)<input id="prBookPrice" type="number" min="0" step="1" value="${v.triage?.complex ? 140 : 125}"></label>
+      </div>
+      <div class="eq-actions"><button class="eq-btn" data-pr="book-session">＋ Book session</button></div></section>
     <section class="eq-section"><h3>Reports due</h3>
       <table class="pr-lines"><thead><tr><th>Report</th><th>Due</th><th></th></tr></thead><tbody>${reports || '<tr><td colspan="3" class="eq-muted">No reports tracked yet.</td></tr>'}</tbody></table>
       <div class="eq-actions"><button class="eq-btn" data-pr="add-report" data-label="Initial assessment report">＋ Initial report (5 working days)</button><button class="eq-btn" data-pr="add-report" data-label="Progress report">＋ Progress report</button><button class="eq-btn" data-pr="add-report" data-label="Discharge report">＋ Discharge report</button></div></section>
@@ -463,6 +472,22 @@ document.addEventListener('click', (ev) => {
     (ref.value.reports = ref.value.reports || []).push({ label: btn.dataset.label, due, done: false });
     render(); return;
   }
+  if (a === 'book-session' && ref) return run(async () => {
+    const v = readReferral(ref), c = v.client || {}, f = v.funding || {};
+    const bookedDate = $('prBookDate').value, bookedTime = $('prBookTime').value, price = Number($('prBookPrice').value);
+    if (!c.name) throw new Error('Enter the client name first.');
+    if (!bookedDate) throw new Error('Pick a date.');
+    const booking = {
+      name: c.name, email: c.email || '', phone: c.contactPhone || c.phone || '', address: c.address || '', postcode: c.postcode || '',
+      appointment: $('prBookLen').value, bookedDate, bookedTime, price, complexityFee: 0, patientType: 'existing', bookingFor: 'referral',
+      reason: `${v.referrer?.organisation || v.referrer?.name || 'Referral'} ${v.ref || ''}${f.caseRef ? `, case ref ${f.caseRef}` : ''}. Authorised session, invoice ${f.payerName || 'the referrer'}, not the client.${c.contactName ? ` Appointments via ${c.contactName}.` : ''}`
+    };
+    const r = await fetch('/api/update-booking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token(), action: 'create', booking }) });
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Could not book the session.');
+    if (typeof syncFromSupabase === 'function') syncFromSupabase();
+    status(`✓ Session booked for ${ukDate(bookedDate)} at ${bookedTime}. It shows under Bookings and Patients.`);
+  });
   if (a === 'save-ref' && ref) run(async () => { const d = await api('save', { key: ref.key, value: readReferral(ref) }); upsert('referrals', d); render(); navBadge(); status('Referral saved.'); });
   if (a === 'del-ref' && ref) run(async () => { if (!confirm('Delete this referral? This cannot be undone.')) return; await api('delete', { key: ref.key }).catch((e) => { if (!/not found/i.test(e.message)) throw e; }); state.referrals = state.referrals.filter((r) => r.key !== ref.key); state.open = null; render(); navBadge(); status('Referral deleted.'); });
   if (a === 'invoice-from-ref' && ref) { ref.value = readReferral(ref); state.draft = blankInvoice(ref.value); state.draft.referralKey = ref.key; state.tab = 'invoices'; state.open = null; render(); status('Invoice pre-filled from the referral. Add lines, then create it.'); return; }
