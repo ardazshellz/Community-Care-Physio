@@ -1496,6 +1496,79 @@ async function aPkgCancel(i){
   refreshCalendars();
 }
 
+// ── Episodes: a patient's single bookings grouped into one card ──
+// Case-managed and repeat patients get one booking per visit. Grouped by
+// patientKey (email, else phone, else name) so the Patients view reads like a
+// package: completed count, next visit, one row per session.
+function aEpisodeSingle(b){
+  const st=String(b.status||'').toLowerCase();
+  return b&&b.id&&!aIsPackage(b)&&!cbDismissed.includes(b.id)&&!['cancelled','expired','abandoned'].includes(st)&&!(b.paid===false&&b.confirmed===false);
+}
+function aEpisodes(){
+  const map=new Map();
+  adminBookings.filter(aEpisodeSingle).forEach(b=>{const k=patientKey(b); if(!map.has(k)) map.set(k,[]); map.get(k).push(b);});
+  map.forEach(list=>list.sort((x,y)=>((x.bookedDate||'')+(x.bookedTime||'')).localeCompare((y.bookedDate||'')+(y.bookedTime||''))));
+  return map;
+}
+function aEpisodeCard(members){
+  const latest=members[members.length-1];
+  const nowKey=aDateKey(new Date());
+  const isDone=b=>['completed','dna'].includes(String(b.status||'').toLowerCase());
+  const done=members.filter(isDone).length, total=members.length, remaining=total-done;
+  const next=members.find(b=>!isDone(b)&&b.bookedDate&&b.bookedDate>=nowKey)||members.find(b=>!isDone(b))||null;
+  const st=aStatus(next||latest);
+  const prices=[...new Set(members.map(b=>b.price).filter(Boolean))];
+  const types=[...new Set(members.map(b=>aApptType(b.appointment).label))];
+  const rows=members.map(b=>{
+    const idx=adminBookings.indexOf(b);
+    const done=b.status==='completed', dna=b.status==='dna';
+    const m=aSessMeta(done?'completed':dna?'dna':'scheduled');
+    const overdue=aIsOverdue(b);
+    const actions=`<button class="bi-btn" style="background:${done?'#dcfce7':'#f0fdf4'};color:#16a34a;padding:4px 8px;font-size:10.5px;${done?'font-weight:600;border:1px solid #86efac':''}" title="${done?'Undo, mark as not completed':'Mark this visit completed'}" onclick="${done?`aReopenBooking(${idx})`:`aCompleteBooking(${idx})`}">${done?'↩ Not completed':'✓ Completed'}</button>
+      ${!done&&aIsServerBooking(b.id)?`<button class="bi-btn" style="background:#eef2ff;color:#4338ca;padding:4px 8px;font-size:10.5px" onclick="aOpenReschedule('${b.id}',-1)" title="Move to a new date and time. Sends nothing to the patient.">↻ Reschedule</button>`:''}
+      <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b;padding:4px 8px;font-size:10.5px" title="Open or create this visit's note in Google Drive" onclick="window.CCPPractice&&CCPPractice.notesFor('${b.id}',null)">📝 Notes</button>
+      ${aWaReminderBtn(b,b.bookedDate,b.bookedTime,b.id)}
+      ${!done?`<button class="bi-btn" style="background:#fef2f2;color:#dc2626;padding:4px 8px;font-size:10.5px" title="Cancel and free the slot" onclick="aCancelBooking(${idx})">✕ Cancel</button>`:''}
+      ${b.paid===false?`<button class="bi-btn" style="background:#e0f2fe;color:#0369a1;padding:4px 8px;font-size:10.5px" onclick="aMarkPaid(${idx})">✓ Mark as paid</button>`:''}`;
+    return `<div style="padding:8px 9px;border-radius:7px;background:#fff;border:1px solid rgba(30,77,59,.08);margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="color:${m.c};font-weight:700;width:16px;text-align:center">${m.i}</span>
+        <span style="flex:1;font-size:12px;color:var(--char)">${aEsc(b.appointment||'Visit')}<span style="color:var(--muted)"> · ${aFmtDay(b.bookedDate,b.bookedTime)}${b.price?' · £'+aEsc(String(b.price)):''}</span></span>
+        <span style="font-size:10px;color:${overdue?'#b45309':m.c};text-transform:capitalize">${overdue?'payment overdue':aEsc(String(b.status||'confirmed'))}</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:24px">${actions}</div>
+    </div>`;
+  }).join('');
+  return `<div class="booking-item bpkg patient-card is-collapsed" data-patient-key="${aEsc(patientKey(latest))}" data-booking-id="${aEsc(latest.id||'')}">
+    <div class="patient-card-summary">
+      <div class="patient-summary-main">
+        <div class="patient-summary-name">${aEsc(latest.name)||'Unknown patient'}</div>
+        <div class="patient-summary-type">${aEsc(types.join(' / '))} × ${total} · <span style="font-weight:600;color:${st.color}">${st.label}</span>${prices.length===1?` · £${aEsc(String(prices[0]))} each`:''}</div>
+      </div>
+      <div class="patient-summary-metric"><div class="patient-summary-label">Completed</div><div class="patient-summary-value">${done} of ${total}</div></div>
+      <div class="patient-summary-metric"><div class="patient-summary-label">Remaining</div><div class="patient-summary-value">${remaining} session${remaining===1?'':'s'}</div></div>
+      <div class="patient-summary-metric"><div class="patient-summary-label">Next appointment</div><div class="patient-summary-value">${next?aFmtDay(next.bookedDate,next.bookedTime):'Not booked yet'}</div></div>
+      <button class="patient-card-toggle" onclick="togglePatientCard(this)" aria-expanded="false">View details</button>
+    </div>
+    <div class="patient-card-details">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px;padding:10px;background:#fff;border-radius:8px;border:1px solid rgba(30,77,59,.06)">
+        <div style="font-size:11px;color:var(--muted)">📞 <strong style="color:var(--char)">${aEsc(latest.phone)||'—'}</strong></div>
+        <div style="font-size:11px;color:var(--muted)">✉️ <strong style="color:var(--char)">${aEsc(latest.email)||'—'}</strong></div>
+        <div style="font-size:11px;color:var(--muted);grid-column:1/-1">📍 <strong style="color:var(--char)">${aEsc(latest.address)||'—'}, ${aEsc(latest.postcode)||''}</strong></div>
+        ${latest.reason?`<div style="font-size:11px;color:var(--muted);grid-column:1/-1">📋 <strong style="color:var(--char)">Reason:</strong> ${aEsc(latest.reason)}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin:6px 0 4px">Sessions</div>
+      ${rows}
+      <div class="bi-actions" style="margin-top:8px">
+        <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${latest.id}')">⭐ Review email</button>
+        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${latest.id}')">📋 Intake form</button>
+        <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${latest.id}',${aEscJs(latest.name)})">💳 Charge fee</button>
+        <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" title="File this patient with another patient's records" onclick="aLinkChooser(this,'${latest.id}')">🔗 Link to…</button>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderAdminBookings(){
   renderClientList();
   renderArchivedPackages();
@@ -1583,8 +1656,16 @@ function renderAdminBookings(){
   // Archived (finished) blocks still belong in a linked patient's history.
   const pool=recent.concat(adminBookings.filter(b=>!recent.includes(b)&&b.id&&!cbDismissed.includes(b.id)&&((aIsPackage(b)&&aPkgIsArchived(b))||aPatientGroup(b))));
   const drawn=new Set();
+  // Several single bookings for one patient (same email, phone or name) draw as
+  // one episode card with a session list, like a package, instead of a card each.
+  const episodes=aEpisodes();
+  const drawnEp=new Set();
   el.innerHTML=aLinkSuggestionsHtml(pool,recent)+recent.map(b=>{
     const g=aPatientGroup(b);
+    if(!g&&!aIsPackage(b)){
+      const k=patientKey(b), fam=episodes.get(k);
+      if(fam&&fam.length>1){ if(drawnEp.has(k)) return ''; drawnEp.add(k); return aEpisodeCard(fam); }
+    }
     if(!g) return cardFor(b);
     if(drawn.has(g.id)) return '';
     drawn.add(g.id);
@@ -1742,8 +1823,15 @@ function renderArchivedPackages(){
     return;
   }
 
+  const episodes=aEpisodes(), drawnEp=new Set();
   el.innerHTML=archived.map(b=>{
-    if(!aIsPackage(b)) return aArchivedSingleCard(b);
+    if(!aIsPackage(b)){
+      const k=patientKey(b), fam=episodes.get(k)||[];
+      // Still has visits to come: the finished ones sit in the live episode card.
+      if(fam.some(x=>!['completed','dna'].includes(String(x.status||'').toLowerCase()))) return '';
+      if(fam.length>1){ if(drawnEp.has(k)) return ''; drawnEp.add(k); return aEpisodeCard(fam); }
+      return aArchivedSingleCard(b);
+    }
     const sessions=aPkgSessions(b);
     const done=sessions.filter(s=>s.status==='completed').length;
     const info=aPatientInfo(b);
