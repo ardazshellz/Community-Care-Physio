@@ -102,4 +102,4 @@ W: www.communitycarephysio.co.uk
 | 20 Oct 2026 08:30 (scheduled 19 Oct) | Anglia Case Management | admin@angliacasemanagement.co.uk | A | |
 | 20 Oct 2026 08:30 (scheduled 19 Oct) | Stewarts | injury@stewartslaw.com | B (plain "Hello,") | |
 
-All seven carry the final `assets/referral-pack.pdf` (19 Oct evening build: team voice, complex needs assessment report £75, voice audit wording) and the Gmail signature. Attachments were swapped on every scheduled message after the final rebuild (each cancelled, re-attached and rescheduled for 08:30). Scheduled through Gmail Schedule send in the infoccphysio account; cancel from the Scheduled folder before 08:30 if needed.
+All seven carry the final `assets/referral-pack.pdf` (19 Oct final build, commit fa5d702: team voice, complex needs reports £75 for assessment, progress and discharge, voice audit wording) and the Gmail signature. Attachments were swapped on every scheduled message after the final rebuild (each cancelled, re-attached and rescheduled for 08:30). Scheduled through Gmail Schedule send in the infoccphysio account; cancel from the Scheduled folder before 08:30 if needed.
