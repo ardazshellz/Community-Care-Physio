@@ -1,6 +1,6 @@
 # Outreach emails — case managers and PI rehab teams
 
-Send from infoccphysio@gmail.com with `assets/referral-pack.pdf` attached. One organisation per email, named person where the research found one. Subject lines are deliberately plain; case managers skim.
+Send from infoccphysio@gmail.com with `assets/referral-pack.pdf` attached. Voice (owner, 19 Oct 2026): established practice with a team behind it, never "small caseload" or solo novice framing. One organisation per email, named person where the research found one. Subject lines are deliberately plain; case managers skim.
 
 ## Targets (researched 4 Oct 2026)
 
@@ -25,13 +25,13 @@ Send from infoccphysio@gmail.com with `assets/referral-pack.pdf` attached. One o
 
 Hello,
 
-My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) providing home visit assessment and rehabilitation across South West London, covering Putney, Wimbledon, Wandsworth, Kingston, Richmond and the surrounding postcodes.
+My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) and the lead clinician at Community Care Physio, which provides home visit assessment and rehabilitation across South West London, covering Putney, Wimbledon, Wandsworth, Kingston, Richmond and the surrounding postcodes.
 
-I keep my caseload deliberately small so that every client keeps the same clinician from assessment to discharge. My background is NHS community rehabilitation, and my main areas are neurological rehabilitation, falls and frailty, and recovery after hospital discharge or surgery, including clients with cognitive impairment or several long term conditions.
+Our work centres on neurological rehabilitation, falls and frailty, and recovery after hospital discharge or surgery, including clients with cognitive impairment or several long term conditions. My background is NHS community rehabilitation. Each client has one named clinician from assessment to discharge, and when a case needs extra capacity or a particular specialism we draw on an established network of physiotherapists, so capacity is not a barrier.
 
-For case managers I offer an initial assessment at home within ten working days of your go ahead, followed by a written report within five working days of the visit with baseline measures, goals and a costed plan for your approval. Treatment only starts once funding is confirmed, with progress and discharge reports at the points you set. All liaison is in writing, reports are sent as password protected PDFs, and invoices go to your organisation on 30 day terms.
+For case managers we offer an initial assessment at home within ten working days of your go ahead, followed by a written report within five working days of the visit with baseline measures, goals and a costed plan for your approval. Treatment starts once funding is confirmed, with progress and discharge reports at the points you set. All liaison is in writing, reports are sent as password protected PDFs, and invoices go to your organisation on 30 day terms.
 
-I have attached my referral pack, which sets out fees, timescales, outcome measures and a sample report. If it would be useful to have me on your list of treating therapists for South West London, I would be happy to send my CV, HCPC confirmation and insurance certificates.
+I have attached our referral pack, which sets out fees, timescales, outcome measures and a sample report. If it would be useful to have Community Care Physio on your list of treating therapists for South West London, I would be glad to send my CV, HCPC confirmation and insurance certificates.
 
 Kind regards,
 
@@ -50,13 +50,13 @@ W: www.communitycarephysio.co.uk
 
 Hello,
 
-My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) providing home visit rehabilitation across South West London. I am writing in case your rehabilitation coordinators, or the case managers you instruct, need a treating physiotherapist for clients in the SW postcodes, Kingston or Richmond.
+My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) and the lead clinician at Community Care Physio, which provides home visit rehabilitation across South West London. I am writing in case your rehabilitation coordinators, or the case managers you instruct, need a treating physiotherapist for clients in the SW postcodes, Kingston or Richmond.
 
-I work as a treating therapist only, in line with the Rehabilitation Code 2015, and do not provide expert witness reports. I keep my caseload deliberately small so that each client keeps one clinician throughout. My background is NHS community rehabilitation, and my main areas are neurological and orthopaedic rehabilitation at home, falls, and clients with complex needs.
+We work as treating therapists only, in line with the Rehabilitation Code 2015, and do not provide expert witness reports. Our work centres on neurological and orthopaedic rehabilitation at home, falls, and clients with complex needs. My background is NHS community rehabilitation. Each client has one named clinician throughout, and when a case needs extra capacity or a particular specialism we draw on an established network of physiotherapists.
 
 The assessment report stands on its own, with baseline measures, goals and a costed plan for approval, followed by progress and discharge reports at agreed points. All liaison is in writing, reports are sent as password protected PDFs, and invoices go to the instructing organisation on 30 day terms.
 
-I have attached my referral pack with fees, timescales and a sample report. I would be glad to send a CV and certificates if you keep a panel of treating therapists.
+I have attached our referral pack with fees, timescales and a sample report. I would be glad to send a CV and certificates if you keep a panel of treating therapists.
 
 Kind regards,
 
@@ -94,4 +94,12 @@ W: www.communitycarephysio.co.uk
 
 | Date | Organisation | To | Template | Reply? |
 |---|---|---|---|---|
-| | | | | |
+| 20 Oct 2026 08:30 (scheduled 19 Oct) | Bush & Co | hello@bushco.co.uk | A | |
+| 20 Oct 2026 08:30 (scheduled 19 Oct) | Independent Living Solutions | support@indliv.co.uk | A | |
+| 20 Oct 2026 08:30 (scheduled 19 Oct) | Corporé / The Treatment Network | info@corpore.co.uk, expertliaision@thetreatmentnetwork.co.uk | A | |
+| 20 Oct 2026 08:30 (scheduled 19 Oct) | Harrison Associates | info@harrison.associates | A | |
+| 20 Oct 2026 08:30 (scheduled 19 Oct) | Rehab Without Walls | info@rehabwithoutwalls.co.uk | A | |
+| 20 Oct 2026 08:30 (scheduled 19 Oct) | Anglia Case Management | admin@angliacasemanagement.co.uk | A | |
+| 20 Oct 2026 08:30 (scheduled 19 Oct) | Stewarts | injury@stewartslaw.com | B (plain "Hello,") | |
+
+All seven carry the rebuilt `assets/referral-pack.pdf` (19 Oct, team voice) and the Gmail signature. Scheduled through Gmail Schedule send in the infoccphysio account; cancel from the Scheduled folder before 08:30 if needed.
