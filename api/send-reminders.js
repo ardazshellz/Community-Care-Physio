@@ -23,6 +23,7 @@ import { supabase } from '../lib/supabase.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
 import nodemailer from 'nodemailer';
 import { ABANDON_AFTER_MS, abandonedAlert } from '../lib/abandoned.js';
+import { isSecured } from '../lib/reminders.js';
 
 const FROM_EMAIL = 'infoccphysio@gmail.com';
 const ADMIN_EMAIL = 'infoccphysio@gmail.com';
@@ -144,6 +145,7 @@ async function handleCron(req, res) {
   // ---- TOMORROW: send the patient their reminder (day before, outside the
   //      24-hour window), mark it sent, and collect a line for Zakery. ----
   for (const b of bookings) {
+    if (!isSecured(b)) continue; // unpaid checkout: no patient reminder, no digest line
     try {
       const name = b.name || 'there';
       const email = String(b.email || '').trim();
@@ -198,6 +200,7 @@ async function handleCron(req, res) {
   // ---- TODAY: heads-up for Zakery only (patients were reminded yesterday). ----
   const todayDigest = [];
   for (const b of bookings) {
+    if (!isSecured(b)) continue;
     const name = b.name || 'there';
     const status = String(b.status || '').toLowerCase();
     if (b.booked_date === today && !DEAD.includes(status)) {
