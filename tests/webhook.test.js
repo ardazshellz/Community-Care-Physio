@@ -85,3 +85,38 @@ test('custom sessions block each date and detect a clash on a later session', as
   assert.equal(ctx.db.tables.blocked_slots.filter(row => row.booking_date === '2099-10-04').length, 4);
   assert.ok(ctx.mail[0].text.startsWith(warning));
 });
+
+test('expired checkout: abandoned, resume link saved, customer emailed once, lead_emails 1', async () => {
+  const ctx = setup();
+  const url = 'https://checkout.stripe.com/c/pay/recover_abc';
+  const expire = async () => {
+    const req = Readable.from([Buffer.from('{}')]); req.method = 'POST'; req.headers = {};
+    const res = response();
+    const handler = loadHandler('stripe-webhook', { db: ctx.db, mail: ctx.mail, logs: ctx.logs,
+      stripe: { webhooks: { constructEvent() { return { type: 'checkout.session.expired', data: { object: { metadata: { booking_id: booking.id }, after_expiration: { recovery: { url } } } } }; } } } });
+    await handler(req, res); return res;
+  };
+  assert.equal((await expire()).statusCode, 200);
+  const row = ctx.db.tables.bookings[0];
+  assert.equal(row.status, 'abandoned');
+  assert.equal(row.recovery_url, url);
+  assert.equal(row.lead_emails, 1);
+  assert.equal(ctx.mail.length, 2, 'clinician alert + customer email');
+  assert.equal(ctx.mail[1].to, booking.email);
+  assert.ok(ctx.mail[1].text.includes(url));
+  assert.equal((await expire()).statusCode, 200);
+  assert.equal(ctx.mail.length, 2, 'a Stripe retry sends nothing more');
+});
+
+test('paying later revives an abandoned or lead booking and blocks its slots', async () => {
+  for (const status of ['abandoned', 'lead']) {
+    const ctx = setup({ bookings: [{ ...booking, status, lead_emails: 2 }] });
+    assert.equal((await ctx.deliver()).statusCode, 200);
+    const row = ctx.db.tables.bookings[0];
+    assert.equal(row.paid, true);
+    assert.equal(row.confirmed, true);
+    assert.equal(row.status, null, status);
+    assert.equal(ctx.db.tables.blocked_slots.filter(r => r.booking_id === booking.id).length, 4, '60 min visit + 45 min buffer');
+    assert.equal(ctx.mail.length, 2);
+  }
+});

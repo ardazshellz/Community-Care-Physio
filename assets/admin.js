@@ -219,7 +219,7 @@ function getAdminOperationalMetrics(){
   bookings.forEach(b=>{
     if(!b||b.activeOnly) return;
     const bStatus=String(b.status||'').toLowerCase();
-    const inactive=['cancelled','expired'].includes(bStatus);
+    const inactive=['cancelled','expired','lead'].includes(bStatus);
     const clinicallyClosed=['completed','dna'].includes(bStatus);
     const isPkg=typeof aIsPackage==='function'&&aIsPackage(b);
     const key=patientKey(b);
@@ -607,7 +607,11 @@ function renderDashboard(){
     ${box(m.totalBookings,'Total bookings')}
   </div>`;
   // Abandoned checkouts: started on the website, never paid. Leads to chase.
-  const followUp=bookings.filter(b=>b&&!b.activeOnly&&b.paid===false&&b.confirmed===false&&(b.status==='abandoned'||(!b.status&&b.createdAt&&Date.now()-new Date(b.createdAt)>45*60*1000)));
+  const ageMs=b=>b.createdAt?Date.now()-new Date(b.createdAt):0;
+  const unpaidStart=b=>b&&!b.activeOnly&&b.paid===false&&b.confirmed===false&&b.bookingFor!=='enquiry';
+  const followUp=bookings.filter(b=>unpaidStart(b)&&ageMs(b)<7*86400000&&(b.status==='abandoned'||(!b.status&&ageMs(b)>45*60*1000)));
+  // Day 7 (cron) or "Mark contacted": the row leaves Follow up for the leads list below.
+  const leads=bookings.filter(b=>unpaidStart(b)&&(b.status==='lead'||(b.status==='abandoned'&&ageMs(b)>=7*86400000)));
   if(followUp.length){
     html+=`<div class="dash-sub" style="font-weight:600;color:#b45309;font-size:13px;margin-top:6px">⚠️ Follow up · ${followUp.length} unpaid booking${followUp.length>1?'s':''} started on the website</div>`;
     html+=followUp.map(b=>{
@@ -625,7 +629,7 @@ function renderDashboard(){
         <div style="display:flex;gap:8px;margin-top:6px;flex-wrap:wrap">
           ${mail?`<a class="recent-chase-btn" href="${mail}" target="_blank" rel="noopener" style="padding:5px 10px;border-radius:7px;background:var(--forest);color:#fff;text-decoration:none;font-size:12px">✉️ Chase by email</a>`:''}
           ${b.phone?`<a href="https://wa.me/${aEsc(String(b.phone).replace(/\D/g,'').replace(/^0/,'44'))}" target="_blank" rel="noopener" style="padding:5px 10px;border-radius:7px;background:#25d366;color:#fff;text-decoration:none;font-size:12px">💬 WhatsApp</a>`:''}
-          <button type="button" onclick="aPurgeBooking(${idx})" style="padding:5px 10px;border-radius:7px;border:1px solid rgba(30,77,59,.2);background:#fff;font-size:12px;cursor:pointer">Done, remove</button>
+          <button type="button" onclick="aMarkLead(${idx})" title="Move to No completed payments now instead of waiting seven days" style="padding:5px 10px;border-radius:7px;border:1px solid rgba(30,77,59,.2);background:#fff;font-size:12px;cursor:pointer">Mark contacted</button>
         </div></div>`;
     }).join('');
   }
@@ -641,7 +645,56 @@ function renderDashboard(){
       return `<div class="recent-activity-row"><span>${aEsc(b.name||'—')} · ${aEsc(b.appointment||'')}</span><span class="recent-date" style="color:var(--muted)">${date}${b.paid===false?' · <span style="color:#c0392b">unpaid</span>':''}</span><button type="button" class="recent-delete-btn" onclick="aPurgeBooking(${idx})" title="Permanently remove this test or refunded record from patients, bookings, finance and Excel exports" aria-label="Permanently remove booking record">×</button></div>`;
     }).join('')
     :`<div class="dash-sub">No recent activity yet.</div>`;
+  // Leads: started a booking, never paid, past the chase window. Kept for promotional
+  // emails later (owner decision 19 Oct 2026). Restore when they pay another way.
+  html+=`<div class="dash-sub" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;font-weight:600;color:var(--char);font-size:13px;margin-top:16px"><span>No completed payments${leads.length?` · ${leads.length}`:''}</span>${leads.length?`<button type="button" onclick="exportLeadsCSV()" style="padding:4px 10px;border-radius:7px;border:1px solid rgba(30,77,59,.2);background:#fff;font-size:12px;font-weight:500;cursor:pointer">Export CSV</button>`:''}</div>`;
+  html+=leads.length
+    ?`<div style="overflow-x:auto"><table class="a-client-table" style="min-width:720px"><thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Postcode</th><th>Appointment</th><th>Requested</th><th>Started</th><th>Emails sent</th><th></th></tr></thead><tbody>${leads.sort((a,b)=>new Date(b.createdAt||0)-new Date(a.createdAt||0)).map(b=>{
+      const idx=adminBookings.indexOf(b);
+      const when=b.bookedDate?`${new Date(b.bookedDate+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}${b.bookedTime?' '+fmt12(b.bookedTime):''}`:'none';
+      const started=b.createdAt?new Date(b.createdAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}):'';
+      return `<tr><td>${aEsc(b.name||'—')}</td><td>${aEsc(b.email||'—')}</td><td>${aEsc(b.phone||'—')}</td><td>${aEsc(b.postcode||'—')}</td><td>${aEsc(b.appointment||'—')}${b.price?` £${aEsc(String(b.price))}`:''}</td><td>${aEsc(when)}</td><td>${aEsc(started)}</td><td style="text-align:center">${Number(b.leadEmails)||0}</td>
+        <td style="white-space:normal;min-width:150px"><button type="button" class="bi-btn" style="background:#e8f2ee;color:#1e4d3b;padding:4px 8px;font-size:11px" onclick="aRestoreLead(${idx})" title="Back to active patients as a confirmed booking (mark paid separately)">↩ Restore</button> <button type="button" class="bi-btn del" style="padding:4px 8px;font-size:11px" onclick="aPurgeBooking(${idx})">Delete</button></td></tr>`;
+    }).join('')}</tbody></table></div>`
+    :`<div class="dash-sub">Nobody here. Unpaid checkouts land here seven days after they were started, or when you mark them contacted.</div>`;
   el.innerHTML=html;
+}
+async function aLeadAction(i,action){
+  const b=adminBookings[i]; if(!b) return null;
+  try{
+    const res=await fetch('/api/update-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:adminSessionToken,action,bookingId:b.id})});
+    let data={}; try{data=await res.json();}catch(e){}
+    if(!res.ok||data.success!==true) throw new Error(data.error||('HTTP '+res.status));
+    return data;
+  }catch(err){ alert('That did not save. '+(err&&err.message?err.message:'Please try again.')); return null; }
+}
+async function aMarkLead(i){
+  const data=await aLeadAction(i,'markLead'); if(!data) return;
+  adminBookings[i].status='lead';
+  renderAdminBookings();
+}
+async function aRestoreLead(i){
+  const b=adminBookings[i]; if(!b) return;
+  if(!confirm(`Restore ${b.name||'this booking'} to active patients?\n\nIt becomes a confirmed booking${b.bookedDate?' and its slot is blocked again':''}. Mark it paid once the money is in.`)) return;
+  const data=await aLeadAction(i,'restore'); if(!data) return;
+  b.status=null; b.confirmed=true;
+  if(data.clash) alert('Restored, but the requested time now overlaps another booking. Reschedule it from the patient card.');
+  try{ await fetchBookedSlots(); }catch(e){}
+  renderAdminBookings();
+}
+// Mailing list export of the leads table (name, email, phone, postcode, started).
+function exportLeadsCSV(){
+  const now=Date.now();
+  const list=adminBookings.filter(b=>b&&!b.activeOnly&&b.paid===false&&b.confirmed===false&&b.bookingFor!=='enquiry'&&(b.status==='lead'||(b.status==='abandoned'&&b.createdAt&&now-new Date(b.createdAt)>=7*86400000)));
+  if(!list.length){ alert('No leads to export.'); return; }
+  const q=v=>{ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+  const rows=[['Name','Email','Phone','Postcode','Started']].concat(list.map(b=>[b.name,b.email,b.phone,b.postcode,b.createdAt?new Date(b.createdAt).toISOString().slice(0,10):'']));
+  const blob=new Blob(['\ufeff'+rows.map(r=>r.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`ccp-leads_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 function aApptType(name){
   if(!name)return{label:'Unknown',color:'var(--muted)'};
@@ -660,6 +713,7 @@ function aDismissBooking(id){
 function aStatus(b){
   if(b.status==='cancelled') return {label:'Cancelled', color:'#dc2626', bg:'#fef2f2'};
   if(b.status==='expired')   return {label:'Expired', color:'#b45309', bg:'#fffbeb'};
+  if(b.status==='lead')      return {label:'No completed payment', color:'#b45309', bg:'#fffbeb'};
   if(b.status==='completed') return {label:'Completed', color:'#0369a1', bg:'#e0f2fe'};
   if(b.status==='prepaid')   return {label:'Prepaid / Confirmed', color:'#16a34a', bg:'#f0fdf4'};
   if(b.status==='invoiced')  return {label:'Invoiced / Confirmed', color:'#16a34a', bg:'#f0fdf4'};
@@ -1502,7 +1556,7 @@ async function aPkgCancel(i){
 // package: completed count, next visit, one row per session.
 function aEpisodeSingle(b){
   const st=String(b.status||'').toLowerCase();
-  return b&&b.id&&!aIsPackage(b)&&!cbDismissed.includes(b.id)&&!['cancelled','expired','abandoned'].includes(st)&&!(b.paid===false&&b.confirmed===false);
+  return b&&b.id&&!aIsPackage(b)&&!cbDismissed.includes(b.id)&&!['cancelled','expired','abandoned','lead'].includes(st)&&!(b.paid===false&&b.confirmed===false);
 }
 function aEpisodes(){
   const map=new Map();
@@ -1587,8 +1641,8 @@ function renderAdminBookings(){
   const recent=[...adminBookings].reverse().filter(b=>{
     if(b.id&&cbDismissed.includes(b.id))return false;
     const recordStatus=String(b.status||'').toLowerCase();
-    if(aIsPackage(b)&&(aPkgIsArchived(b)||recordStatus==='cancelled'||recordStatus==='expired'))return false;
-    if(!aIsPackage(b)&&['completed','cancelled','expired','dna'].includes(recordStatus))return false;
+    if(aIsPackage(b)&&(aPkgIsArchived(b)||['cancelled','expired','abandoned','lead'].includes(recordStatus)))return false;
+    if(!aIsPackage(b)&&['completed','cancelled','expired','dna','abandoned','lead'].includes(recordStatus))return false;
     if(!aIsPackage(b)&&b.bookedDate&&b.bookedTime&&pkgSlots.has(b.bookedDate+'|'+b.bookedTime))return false;
     if(!aIsPackage(b)&&b.name&&pkgPatients.has(b.name.trim().toLowerCase()))return false;
     return true;

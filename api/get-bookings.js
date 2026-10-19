@@ -90,7 +90,8 @@ export default async function handler(req, res) {
         customSessions: (() => { try { return b.custom_sessions ? (typeof b.custom_sessions === 'string' ? JSON.parse(b.custom_sessions) : b.custom_sessions) : null; } catch (e) { return null; } })(),
         createdAt: b.created_at,
         bookingFor: b.booking_for,
-        status: b.status || null
+        status: b.status || null,
+        leadEmails: b.lead_emails || 0
       })),
       bookedSlots: bookedSlotsMap
     });

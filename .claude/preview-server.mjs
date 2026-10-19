@@ -4,8 +4,9 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = '/Users/ardazshellz/Documents/Community Care Physio';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PORT = Number(process.env.PORT || 4173);
 const types = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.webmanifest': 'application/manifest+json' };
 const d = (n) => { const x = new Date(); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
@@ -38,7 +39,13 @@ const bookings = [
   { id: 'demo-3', name: 'Robin Example', email: 'robin.example@example.com', phone: '07000 000004', appointment: 'Block of 4 Sessions', bookedDate: d(-40), bookedTime: '18:00', price: 295, paid: true, confirmed: true, postcode: 'SW19 3CC', address: '7 Sample Lane', createdAt: new Date().toISOString(), status: 'active',
     customSessions: [1, 2, 3, 4].map((n) => ({ label: 'Follow-up ' + n, date: d(-40 + n * 7), time: '18:00', length: 45, status: 'completed' })) },
   { id: 'demo-4', name: 'Kim Example', email: 'kim.e@example.com', phone: '07000 000005', appointment: 'Block of 4 Sessions', bookedDate: d(4), bookedTime: '18:00', price: 295, paid: true, confirmed: true, postcode: 'SW19 3CC', address: '7 Sample Lane', createdAt: new Date().toISOString(), status: 'active',
-    customSessions: [{ label: 'Follow-up 1', date: d(4), time: '18:00', length: 45, status: 'scheduled' }, { label: 'Follow-up 2', date: null, time: null, status: 'unscheduled' }, { label: 'Follow-up 3', date: null, time: null, status: 'unscheduled' }, { label: 'Follow-up 4', date: null, time: null, status: 'unscheduled' }] }
+    customSessions: [{ label: 'Follow-up 1', date: d(4), time: '18:00', length: 45, status: 'scheduled' }, { label: 'Follow-up 2', date: null, time: null, status: 'unscheduled' }, { label: 'Follow-up 3', date: null, time: null, status: 'unscheduled' }, { label: 'Follow-up 4', date: null, time: null, status: 'unscheduled' }] },
+  // Abandoned checkout pipeline, one row per stage (all fictional).
+  { id: 'lead-1', name: 'Morgan Unpaid', email: 'morgan@example.com', phone: '07000 000006', appointment: 'Initial Assessment', bookedDate: d(3), bookedTime: '18:30', price: 145, paid: false, confirmed: false, postcode: 'SW17 7AA', createdAt: new Date(Date.now() - 2 * 3600e3).toISOString(), status: 'abandoned', leadEmails: 1, bookingFor: 'A patient / resident', reason: 'Fictional: knee pain after a fall' },
+  { id: 'lead-2', name: 'Sam Dayfour', email: 'sam.d@example.com', phone: '07000 000007', appointment: 'Full Programme', bookedDate: d(5), bookedTime: '19:00', price: 615, paid: false, confirmed: false, postcode: 'SW16 1BB', createdAt: new Date(Date.now() - 4 * 86400e3).toISOString(), status: 'abandoned', leadEmails: 2, bookingFor: 'A family member' },
+  { id: 'lead-3', name: 'Jo Weekold', email: 'jo.w@example.com', phone: '07000 000008', appointment: 'Standard Session', bookedDate: d(-2), bookedTime: '18:00', price: 95, paid: false, confirmed: false, postcode: 'SW19 8CC', createdAt: new Date(Date.now() - 10 * 86400e3).toISOString(), status: 'lead', leadEmails: 2, bookingFor: 'A patient / resident' },
+  { id: 'lead-4', name: 'Alex Noemail', email: '', phone: '07000 000009', appointment: 'Initial Assessment', bookedDate: null, bookedTime: null, price: 145, paid: false, confirmed: false, postcode: 'SW18 2DD', createdAt: new Date(Date.now() - 9 * 86400e3).toISOString(), status: 'abandoned', leadEmails: 0, bookingFor: 'A patient / resident' },
+  { id: 'lead-5', name: 'Enquiry Hidden', email: 'e@example.com', phone: '', appointment: 'Initial Assessment', price: 145, paid: false, confirmed: false, createdAt: new Date(Date.now() - 12 * 86400e3).toISOString(), status: 'lead', leadEmails: 0, bookingFor: 'enquiry' }
 ];
 
 const json = (res, code, body) => { res.writeHead(code, { 'Content-Type': 'application/json' }); res.end(JSON.stringify(body)); };
@@ -70,6 +77,11 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/api/get-bookings') { const b = await readBody(req); if (b.action === 'enquiries') return json(res, 200, { enquiries: [] }); return json(res, 200, { bookings, bookedSlots: {} }); }
   if (url.pathname === '/api/availability') { const rota = {}; for (let i = 0; i < 40; i++) rota[d(i)] = ['18:00', '18:30', '19:00', '19:30']; return json(res, 200, { rota }); }
   if (url.pathname === '/api/get-slots') return json(res, 200, { bookedSlots: {} });
+  if (url.pathname === '/api/update-booking') { const b = await readBody(req); const row = bookings.find((x) => x.id === b.bookingId);
+    if (row && b.action === 'markLead') row.status = 'lead';
+    if (row && b.action === 'restore') { row.status = null; row.confirmed = true; return json(res, 200, { success: true, clash: row.id === 'lead-2' }); }
+    if (row && ['delete', 'purge'].includes(b.action)) bookings.splice(bookings.indexOf(row), 1);
+    return json(res, 200, { success: true }); }
   if (url.pathname.startsWith('/api/')) return json(res, 200, { success: true });
   if (url.pathname.startsWith('/_vercel/')) { res.writeHead(200, { 'Content-Type': 'text/javascript' }); return res.end(''); }
   let file = path.join(ROOT, decodeURIComponent(url.pathname === '/' ? '/index.html' : url.pathname.endsWith('/') ? url.pathname + 'index.html' : url.pathname));

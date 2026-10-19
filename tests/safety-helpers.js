@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import { durationMins, occupiedSlots, overlaps } from '../lib/slots.js';
+import { abandonedAlert, recoveryEmail } from '../lib/abandoned.js';
 
 export function response() {
   return {
@@ -26,6 +27,8 @@ export function fakeDb(initial = {}) {
         query.filters.push(row => parts.some(([key, op, value]) => op === 'is' ? row[key] == null : op === 'neq' ? row[key] !== value : row[key] === value));
         return chain;
       },
+      is(key, value) { query.filters.push(row => value === null ? row[key] == null : row[key] === value); return chain; },
+      lt(key, value) { query.filters.push(row => row[key] < value); return chain; },
       gt(key, value) { query.filters.push(row => row[key] > value); return chain; },
       gte(key, value) { query.filters.push(row => row[key] >= value); return chain; },
       in(key, values) { query.filters.push(row => values.includes(row[key])); return chain; },
@@ -82,7 +85,7 @@ export function loadHandler(name, { db, stripe = {}, mail = [], logs = [], Date:
   const context = vm.createContext({
     supabase: db, Stripe: function () { return stripe; },
     fakeNodemailer: { createTransport() { return { async sendMail(message) { mail.push(message); } }; } },
-    durationMins, occupiedSlots, overlaps, Date: clock, Buffer,
+    durationMins, occupiedSlots, overlaps, abandonedAlert, recoveryEmail, Date: clock, Buffer,
     process: { env: {} }, console: { log() {}, error(...args) { logs.push(args); } },
     checkoutQuote() { return { priceInPence: 10000, treatment: 10000, complexityFee: 0, travel: { total: 0 } }; },
     bookingFlags() { return []; }, TRIAGE_FLAGS: {}

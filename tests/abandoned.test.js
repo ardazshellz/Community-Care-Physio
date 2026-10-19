@@ -36,3 +36,33 @@ test('recovery email carries the resume link and no discount', async () => {
   assert.ok(!/discount|%/.test(m.text));
   assert.ok(!/;|–|—/.test(m.text));
 });
+
+test('cron stages: day 2 second email once, day 7 becomes a lead, nothing else', async () => {
+  const { leadStage, BOOK_URL } = await import('../lib/abandoned.js');
+  const ago = (days) => new Date(now - days * 86400000).toISOString();
+  const ab = (extra) => ({ ...base, status: 'abandoned', lead_emails: 1, ...extra });
+  assert.equal(leadStage(ab({ created_at: ago(1) }), now), null, 'day 1 waits');
+  assert.equal(leadStage(ab({ created_at: ago(2) }), now), 'second-email');
+  assert.equal(leadStage(ab({ created_at: ago(2), lead_emails: 0 }), now), 'second-email', 'webhook missed: still gets the day 2 email');
+  assert.equal(leadStage(ab({ created_at: ago(3), lead_emails: 2 }), now), null, 'already sent twice');
+  assert.equal(leadStage(ab({ created_at: ago(7) }), now), 'lead');
+  assert.equal(leadStage(ab({ created_at: ago(30), lead_emails: 2 }), now), 'lead');
+  assert.equal(leadStage({ ...base, created_at: ago(9) }, now), null, 'status null is the sweep\'s job first');
+  assert.equal(leadStage(ab({ created_at: ago(9), status: 'lead' }), now), null, 'idempotent');
+  assert.equal(leadStage(ab({ created_at: ago(9), booking_for: 'enquiry' }), now), null);
+  assert.equal(BOOK_URL, 'https://www.communitycarephysio.co.uk/?book=1');
+});
+
+test('day 2 email: lighter subject, plain booking link when no resume link was saved', async () => {
+  const { recoveryEmail, BOOK_URL } = await import('../lib/abandoned.js');
+  const row = { ...base, email: 'a@b.c', appointment: 'Initial Assessment', booked_date: '2026-10-20', booked_time: '18:30' };
+  const second = recoveryEmail(row, 'https://checkout.stripe.com/c/pay/recover_123', { followUp: true });
+  assert.match(second.subject, /^Still thinking about your booking/);
+  assert.ok(second.text.includes('already filled in'));
+  const plain = recoveryEmail(row, BOOK_URL, { followUp: true });
+  assert.ok(plain.text.includes(BOOK_URL));
+  assert.ok(!plain.text.includes('already filled in'));
+  assert.ok(!plain.text.includes('30 days'));
+  assert.ok(plain.html.includes(`href="${BOOK_URL}"`));
+  assert.ok(!/;|–|—/.test(plain.text));
+});

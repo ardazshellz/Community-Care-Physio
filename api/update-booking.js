@@ -87,6 +87,35 @@ export default async function handler(req, res) {
         .update({ status: 'confirmed' })
         .eq('id', bookingId);
       if (error) throw error;
+    } else if (action === 'markLead') {
+      // Dashboard "Mark contacted": file an abandoned checkout under "No completed
+      // payments" straight away instead of waiting for day 7.
+      const { error } = await supabase.from('bookings').update({ status: 'lead' })
+        .eq('id', bookingId).eq('paid', false).eq('confirmed', false);
+      if (error) throw error;
+    } else if (action === 'restore') {
+      // "Restore to active": the person paid or agreed another way. Back to a confirmed
+      // booking (status null, like a Stripe-paid one); the owner marks it paid himself.
+      // Its slots are blocked like the webhook does; a clash is reported, not refused.
+      const { data: row, error: readError } = await supabase.from('bookings')
+        .select('id,status,appointment,booked_date,booked_time').eq('id', bookingId).single();
+      if (readError) throw readError;
+      if (!['abandoned', 'lead'].includes(row?.status)) return res.status(409).json({ error: 'Only an abandoned or lead booking can be restored' });
+      let clash = false;
+      if (row.booked_date && row.booked_time) {
+        const slots = occupiedSlots(String(row.booked_time).slice(0, 5), durationMins(row.appointment));
+        const { error: slotError } = await supabase.from('blocked_slots').upsert(
+          slots.map(slot_time => ({ booking_date: row.booked_date, slot_time, booking_id: bookingId })),
+          { onConflict: 'booking_date,slot_time', ignoreDuplicates: true });
+        if (slotError) throw slotError;
+        const { data: taken, error: takenError } = await supabase.from('blocked_slots').select('slot_time')
+          .eq('booking_date', row.booked_date).in('slot_time', slots).or(`booking_id.is.null,booking_id.neq.${bookingId}`);
+        if (takenError) throw takenError;
+        clash = (taken || []).length > 0;
+      }
+      const { error } = await supabase.from('bookings').update({ status: null, confirmed: true }).eq('id', bookingId);
+      if (error) throw error;
+      return res.status(200).json({ success: true, clash });
     } else if (action === 'markPaid') {
       const { data: booking } = await supabase
         .from('bookings').select('paid').eq('id', bookingId).single();

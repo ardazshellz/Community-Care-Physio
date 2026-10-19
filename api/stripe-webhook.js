@@ -13,13 +13,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 async function markAbandoned(bookingId, recoveryUrl) {
   const { data: row } = await supabase.from('bookings').select('*').eq('id', bookingId).single();
   if (!row || row.paid || row.confirmed || row.status) return;
-  const { error } = await supabase.from('bookings').update({ status: 'abandoned' }).eq('id', bookingId).is('status', null);
+  // The resume link is kept so the day 2 email (send-reminders cron) can reuse it.
+  const { error } = await supabase.from('bookings').update({ status: 'abandoned', recovery_url: recoveryUrl || null }).eq('id', bookingId).is('status', null);
   if (error) throw error;
   const transporter = await gmailTransport();
   await transporter.sendMail({ from: '"CCP Bookings" <infoccphysio@gmail.com>', to: 'infoccphysio@gmail.com', ...abandonedAlert(row) });
   // Ask the person to finish the booking, with Stripe's resume link (same details prefilled).
   if (row.email && recoveryUrl) {
-    try { await transporter.sendMail({ from: '"Community Care Physio" <infoccphysio@gmail.com>', to: row.email, replyTo: 'infoccphysio@gmail.com', ...recoveryEmail(row, recoveryUrl) }); }
+    try {
+      await transporter.sendMail({ from: '"Community Care Physio" <infoccphysio@gmail.com>', to: row.email, replyTo: 'infoccphysio@gmail.com', ...recoveryEmail(row, recoveryUrl) });
+      await supabase.from('bookings').update({ lead_emails: 1 }).eq('id', bookingId);
+    }
     catch (err) { console.error('stripe-webhook', { action: 'recovery-email', code: err?.code || 'unknown' }); }
   }
 }
@@ -190,7 +194,12 @@ export default async function handler(req, res) {
       if (timeClash) console.error('stripe-webhook', { action: 'slot-clash', code: 'overlap' });
       const clashWarning = timeClash ? '⚠️ TIME CLASH: this paid booking overlaps another appointment — please rearrange.' : '';
 
-      const { error: paidError } = await supabase.from('bookings').update({ paid: true, confirmed: true }).eq('id', bookingId);
+      // Paying later through the recovery link (or a plain rebook) revives an abandoned
+      // lead: status back to null like any Stripe-paid booking. A slot taken in the
+      // meantime is caught by the clash check above and flagged in the clinician email.
+      const paidUpdate = { paid: true, confirmed: true };
+      if (['abandoned', 'lead'].includes(existing.status)) paidUpdate.status = null;
+      const { error: paidError } = await supabase.from('bookings').update(paidUpdate).eq('id', bookingId);
       if (paidError) throw paidError;
 
       await saveCard(session, bookingId);

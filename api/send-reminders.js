@@ -22,7 +22,7 @@
 import { supabase } from '../lib/supabase.js';
 import { verifyAdminToken } from '../lib/adminAuth.js';
 import nodemailer from 'nodemailer';
-import { ABANDON_AFTER_MS, abandonedAlert } from '../lib/abandoned.js';
+import { ABANDON_AFTER_MS, BOOK_URL, abandonedAlert, leadStage, recoveryEmail } from '../lib/abandoned.js';
 import { isSecured } from '../lib/reminders.js';
 
 const FROM_EMAIL = 'infoccphysio@gmail.com';
@@ -254,10 +254,30 @@ async function handleCron(req, res) {
     }
   } catch (e) { console.error('send-reminders: abandoned sweep failed', e && e.message); }
 
+  // Abandoned leads: day 2 "pick up where you left off" email (Stripe resume link when
+  // the webhook saved one, else the plain booking page), day 7 move to status 'lead'
+  // so the dashboard files them under "No completed payments". Both idempotent.
+  let secondEmails = 0, leads = 0;
+  try {
+    const { data: open } = await supabase.from('bookings').select('*').eq('status', 'abandoned');
+    for (const row of open || []) {
+      const stage = leadStage(row);
+      if (stage === 'lead') {
+        const { error } = await supabase.from('bookings').update({ status: 'lead' }).eq('id', row.id).eq('status', 'abandoned');
+        if (!error) leads++;
+      } else if (stage === 'second-email' && row.email) {
+        await makeTransport().sendMail({ from: `Community Care Physio <${FROM_EMAIL}>`, to: row.email, replyTo: FROM_EMAIL,
+          ...recoveryEmail(row, row.recovery_url || BOOK_URL, { followUp: true }) });
+        const { error } = await supabase.from('bookings').update({ lead_emails: 2 }).eq('id', row.id);
+        if (!error) secondEmails++;
+      }
+    }
+  } catch (e) { console.error('send-reminders: lead stage failed', e && e.message); }
+
   return res.status(200).json({
     ok: true, today, tomorrow,
     patientsSent, tomorrowCount: tomorrowDigest.length, todayCount: todayDigest.length,
-    missingEmail: noEmail.length, errors: errors.length, abandoned
+    missingEmail: noEmail.length, errors: errors.length, abandoned, secondEmails, leads
   });
 }
 
