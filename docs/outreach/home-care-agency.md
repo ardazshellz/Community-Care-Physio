@@ -12,7 +12,7 @@ Order of work: email or form first, then the call at 4:15 pm two working days la
 
 Hello [name],
 
-My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) and I run Community Care Physio, a home visit service across South West London, including [area].
+My name is Zakery Shelley. I am an HCPC registered physiotherapist (PH132358) and the lead clinician at Community Care Physio, a home visit practice across South West London, including [area].
 
 I am writing because your carers are often the first to notice when a client is slowing down, has had a fall or has come home from hospital weaker than before. When a family asks you who could help, I would like to be a name you can give them.
 
@@ -22,7 +22,7 @@ What I offer your clients:
 2. A written summary the family can share with the GP.
 3. A simple home programme, with the regular carer shown how to support it safely during normal visits if the family wishes.
 
-My background is NHS community rehabilitation. Most of my work is with older adults, with falls and frailty, neurological conditions such as stroke and Parkinson's, and recovery after hospital or surgery. Each client keeps the same physiotherapist from the first visit to the last. Visits are in the late afternoon, in the evening and at weekends, when relatives can usually be there.
+My background is NHS community rehabilitation. Most of my work is with older adults, with falls and frailty, neurological conditions such as stroke and Parkinson's, and recovery after hospital or surgery. Each client has one named clinician from assessment to discharge, and an established network of physiotherapists means capacity is not a barrier. Visits are in the late afternoon, in the evening and at weekends, when relatives can usually be there.
 
 There is no cost or commitment for the agency. Families book and pay directly, and prices are on the website. I am fully insured and hold an enhanced DBS, and I can send certificates if you would like them on file.
 
@@ -34,7 +34,7 @@ Kind regards,
 
 For the attention of [manager name], Registered Manager.
 
-I am Zakery Shelley, an HCPC registered physiotherapist (PH132358) running Community Care Physio, a home visit service across South West London including [area]. When a client has a fall, slows down or comes home from hospital weaker, families often ask their care agency who can help. I offer a falls and mobility assessment at home within ten working days, a written summary for the family and GP, and a home programme the regular carer can support. Families book and pay directly, so there is no cost to the agency. Could I send you a one page summary? You can reach me at infoccphysio@gmail.com or 07508 401627. www.communitycarephysio.co.uk
+I am Zakery Shelley, an HCPC registered physiotherapist (PH132358) and the lead clinician at Community Care Physio, a home visit practice across South West London including [area]. When a client has a fall, slows down or comes home from hospital weaker, families often ask their care agency who can help. I offer a falls and mobility assessment at home within ten working days, a written summary for the family and GP, and a home programme the regular carer can support. Families book and pay directly, so there is no cost to the agency. Could I send you a one page summary? You can reach me at infoccphysio@gmail.com or 07508 401627. www.communitycarephysio.co.uk
 
 ## D3. Call script, 4:15 pm
 
@@ -42,7 +42,7 @@ Aim of the call: a named person and permission to send one page. Not a sale. Two
 
 **Reception**
 
-"Good afternoon. My name is Zakery Shelley, I am a local physiotherapist. Could I speak to [manager name], or whoever looks after client care? It will take two minutes."
+"Good afternoon. My name is Zakery Shelley, I am the lead clinician at Community Care Physio. Could I speak to [manager name], or whoever looks after client care? It will take two minutes."
 
 If asked what it is about: "I do home visit physiotherapy in [area]. I sent a short note on [day] and wanted to put a voice to it."
 
@@ -59,7 +59,7 @@ Pause. Then one question:
 Listen. Then, to fit the answer:
 
 - **They have nobody:** "Then I may be useful. I assess at home within ten working days, leave the family a written summary for the GP, and show the regular carer the exercises if the family wants that. Families pay me directly, so there is nothing for you to arrange."
-- **They already use someone:** "That is good to hear. I would be glad to be a second name for when they are full or the client is in [area]. I keep a small caseload, so the client always sees me."
+- **They already use someone:** "That is good to hear. I would be glad to be a second name for when they need extra capacity or the client is in [area]. Each client has one named clinician from assessment to discharge, and an established network of physiotherapists means capacity is not a barrier."
 - **They send people to the GP or NHS:** "That is the right first step. I am the option for families who do not want to wait, or who want more visits than the NHS service can give."
 
 **Close**
@@ -72,7 +72,7 @@ If the manager is warm: "Would it be useful if I dropped in for ten minutes one 
 
 **Voicemail**
 
-"Hello, this is a message for [manager name]. My name is Zakery Shelley, a home visit physiotherapist covering [area]. I help older clients after falls or a hospital stay, and I would like to be a name you can give families who ask. My number is 07508 401627, and I will send a short email as well. Thank you."
+"Hello, this is a message for [manager name]. My name is Zakery Shelley, lead clinician at Community Care Physio, covering [area]. I help older clients after falls or a hospital stay, and I would like to be a name you can give families who ask. My number is 07508 401627, and I will send a short email as well. Thank you."
 
 **Common questions**
 

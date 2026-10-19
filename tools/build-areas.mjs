@@ -49,7 +49,7 @@ function travelLine(districts) {
 
 function page([slug, name, districts, local], all) {
   const title = `Home Visit Physiotherapy in ${name} (${districts.join('/')}) | Community Care Physio`;
-  const desc = `Physiotherapist home visits in ${name} and ${districts.join(', ')}. NHS-trained, HCPC registered. Initial assessment £100, follow-ups £75. Book online, no GP referral needed.`;
+  const desc = `Physiotherapist home visits in ${name} and ${districts.join(', ')}. One named clinician, HCPC registered. Initial assessment £100, follow-ups £75. Book online, no GP referral needed.`;
   const url = `${SITE}/areas/${slug}/`;
   const nearby = all.filter((a) => a[0] !== slug).slice(0, 8);
   const ld = [{
@@ -139,9 +139,9 @@ footer a{color:#fff}
 </nav>
 <main class="wrap">
   <header class="hero">
-    <div class="eyebrow">Accepting new patients · ${esc(districts.join(' · '))}</div>
+    <div class="eyebrow">Home visit physiotherapy · ${esc(districts.join(' · '))}</div>
     <h1>Home visit physiotherapy in <em>${esc(name)}</em></h1>
-    <p class="lead">An NHS-trained, HCPC registered physiotherapist comes to you at home in ${esc(local)}. One-to-one care, no waiting room, no GP referral needed.</p>
+    <p class="lead">An HCPC registered physiotherapist with an NHS community rehabilitation background comes to you at home in ${esc(local)}. One to one care from a named clinician, no waiting room, no GP referral needed.</p>
     <div class="cta"><a class="btn btn-p" href="/?book=1">Book a home visit</a><a class="btn btn-o" href="https://wa.me/447508401627?text=${encodeURIComponent('Hi, I’d like to book a home physio visit in ' + name)}" rel="noopener" target="_blank">WhatsApp us</a><a class="btn btn-o" href="/#referrers">Refer a client</a></div>
   </header>
 
@@ -165,7 +165,7 @@ footer a{color:#fff}
     <h2>How it works</h2>
     <ol>
       <li><b>Book online or by phone.</b> Pick a date and time that suits you; evenings and weekends are available.</li>
-      <li><b>We come to you.</b> Your physiotherapist assesses you in your own home, where you actually move and live.</li>
+      <li><b>We come to you.</b> Your named clinician assesses you in your own home, where you actually move and live.</li>
       <li><b>A plan you can follow.</b> Hands-on treatment, exercises and clear next steps, with follow-ups booked around you.</li>
     </ol>
   </section>

@@ -1,10 +1,10 @@
 # Headline
 
-Physiotherapist | I run Community Care Physio | Home visits across South West London | Neurological rehabilitation, falls and frailty | HCPC PH132358 | CSP member
+Lead clinician, Community Care Physio | Home visits across South West London | Neurological rehabilitation, falls and frailty | HCPC PH132358 | CSP member
 
 # About
 
-I’m Zakery Shelley, a UK physiotherapist and CSP member, registered with the HCPC under PH132358. I run Community Care Physio, providing home visits across South West London, including Wimbledon, Putney, Wandsworth, Kingston and Richmond. I have an NHS community rehabilitation background.
+I’m Zakery Shelley, a UK physiotherapist and CSP member, registered with the HCPC under PH132358. I am the lead clinician at Community Care Physio, which provides home visits across South West London, including Wimbledon, Putney, Wandsworth, Kingston and Richmond. Every client has one named clinician, supported by an established network of physiotherapists. I have an NHS community rehabilitation background.
 
 I work with case managers, personal injury rehabilitation coordinators and home care agency managers. My clinical work covers neurological rehabilitation, falls and frailty, recovery after hospital discharge and post-surgical recovery.
 

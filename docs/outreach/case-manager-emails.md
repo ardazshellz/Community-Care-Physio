@@ -75,9 +75,9 @@ W: www.communitycarephysio.co.uk
 
 Hello,
 
-Thank you for calling on Friday about the client in [area]. I could not take that case as a female clinician was needed, but I would like to be on your list for home visit physiotherapy across South West London for future cases.
+Thank you for calling on Friday about the client in [area]. That case needed a female clinician, and I would like Community Care Physio on your list for home visit physiotherapy across South West London for future cases. Where a female clinician is requested, I can arrange one through our established network of physiotherapists.
 
-I am HCPC registered (PH132358) with an enhanced DBS and professional indemnity and public liability insurance in place. I provide neurological, orthopaedic, falls and post discharge rehabilitation at home, with the same clinician throughout. My referral pack is attached with fees and timescales, and I can send a CV and certificates on request.
+I am the lead clinician at Community Care Physio, HCPC registered (PH132358), with an enhanced DBS and professional indemnity and public liability insurance in place. I provide neurological, orthopaedic, falls and post discharge rehabilitation at home, with one named clinician from assessment to discharge. My referral pack is attached with fees and timescales, and I can send a CV and certificates on request.
 
 Kind regards,
 
@@ -102,4 +102,4 @@ W: www.communitycarephysio.co.uk
 | 20 Oct 2026 08:30 (scheduled 19 Oct) | Anglia Case Management | admin@angliacasemanagement.co.uk | A | |
 | 20 Oct 2026 08:30 (scheduled 19 Oct) | Stewarts | injury@stewartslaw.com | B (plain "Hello,") | |
 
-All seven carry the rebuilt `assets/referral-pack.pdf` (19 Oct, team voice) and the Gmail signature. Scheduled through Gmail Schedule send in the infoccphysio account; cancel from the Scheduled folder before 08:30 if needed.
+All seven carry the final `assets/referral-pack.pdf` (19 Oct evening build: team voice, complex needs assessment report £75, voice audit wording) and the Gmail signature. Attachments were swapped on every scheduled message after the final rebuild (each cancelled, re-attached and rescheduled for 08:30). Scheduled through Gmail Schedule send in the infoccphysio account; cancel from the Scheduled folder before 08:30 if needed.
