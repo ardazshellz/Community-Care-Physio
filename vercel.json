@@ -65,6 +65,11 @@
   ],
   "redirects": [
     {
+      "source": "/privacy",
+      "destination": "/#privacy",
+      "permanent": false
+    },
+    {
       "source": "/review",
       "destination": "https://g.page/r/CTNprE1O874TEBl/review",
       "permanent": false
