@@ -68,4 +68,5 @@ test('day 2 email: lighter subject, plain booking link when no resume link was s
   assert.ok(!/;|–|—/.test(plain.text));
   for (const m of [second, plain]) assert.ok(m.text.includes('unsubscribe') && m.html.includes('privacy policy'), 'opt out line (PECR)');
   assert.match(plain.headers['List-Unsubscribe'], /^<mailto:infoccphysio@gmail.com/);
+  assert.ok(plain.html.includes('href="https://www.communitycarephysio.co.uk/#privacy"') && plain.text.includes('communitycarephysio.co.uk/#privacy'));
 });

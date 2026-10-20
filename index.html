@@ -2859,7 +2859,8 @@ function closeReferrers(){
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeReferrers(); });
 // Deep link for referrer emails and the area pages: /#referrers
 if(location.hash==='#referrers') window.addEventListener('DOMContentLoaded',openReferrers,{once:true});
-if(location.hash==='#privacy') window.addEventListener('DOMContentLoaded',()=>openLegal('privacy'),{once:true});
+// Deep link for any legal tab, e.g. /#privacy from the recovery emails (LEGAL is defined further down, so look it up on load)
+window.addEventListener('DOMContentLoaded',()=>{const k=location.hash.slice(1); if(k&&typeof LEGAL==='object'&&LEGAL[k]) openLegal(k);},{once:true});
 </script>
 
 <!-- LEGAL MODAL -->
