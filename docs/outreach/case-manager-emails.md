@@ -103,3 +103,13 @@ W: www.communitycarephysio.co.uk
 | 20 Oct 2026 08:30 (scheduled 19 Oct) | Stewarts | injury@stewartslaw.com | B (plain "Hello,") | |
 
 All seven carry the final `assets/referral-pack.pdf` (19 Oct final build, commit fa5d702: team voice, complex needs reports £75 for assessment, progress and discharge, voice audit wording) and the Gmail signature. Attachments were swapped on every scheduled message after the final rebuild (each cancelled, re-attached and rescheduled for 08:30). Scheduled through Gmail Schedule send in the infoccphysio account; cancel from the Scheduled folder before 08:30 if needed.
+
+## Send check, Tue 20 Oct 2026 (evening)
+
+All seven left the infoccphysio Sent folder at 08:30 with `referral-pack.pdf` attached: Stewarts, Harrison Associates, Rehab Without Walls, Anglia Case Management, ILS, Bush & Co, Corporé plus The Treatment Network. No reminder went to the abandoned 20 Oct booking (no 09:05 reminder in Sent today).
+
+Replies so far:
+
+- **Harrison Associates, 18:59, Dr Joanna Fletcher-Smith (Case Management Service Lead).** Positive. Email passed to her; she has copied Diane McKay (Operations Manager) who will send a due diligence checklist link that third party services complete before Harrison engage them. Once the checklist is done, with T&Cs and cost information, the service is shared with their Associate Case Managers. Action: watch for Diane's checklist email, complete it promptly, attach the pack, T&Cs and fees.
+- **The Treatment Network: bounce.** `expertliaision@thetreatmentnetwork.co.uk` returned "550 Invalid Recipient" (Mimecast). The Corporé copy to info@corpore.co.uk was delivered. Action: find a working Treatment Network address (their contact page or phone) and resend.
+- Stewarts, Rehab Without Walls, Anglia Case Management, ILS, Bush & Co: delivered, no reply yet.
