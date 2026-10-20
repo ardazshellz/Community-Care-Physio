@@ -1875,7 +1875,7 @@ textarea{resize:none;height:72px}
               <div id="complexNote" style="display:none;background:var(--fp);border-left:3px solid var(--forest);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;color:var(--muted);line-height:1.6">Based on your answers, this is treated as a complex case, which needs a longer, more thorough assessment and follow-ups. This session is priced accordingly.</div>
               <div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">We'll only assess the areas you've selected above at this price. If other issues are identified during your assessment, we'll always agree any change in price with you there and then — further charges will only ever be added if agreed and needed.</div>
             </div>
-            <div class="fn2">Your information is handled securely and in line with GDPR. We will only use your details to manage your appointment and care.</div>
+            <div class="fn2">Your information is handled securely and in line with GDPR. We use your details to manage your appointment and care, and to help you finish this booking if you leave before paying.</div>
           </div>
         </div>
         <div id="retF" style="display:none">
@@ -1918,7 +1918,7 @@ textarea{resize:none;height:72px}
           <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:8px">You'll be taken to Stripe's secure checkout to complete payment. All major cards, Apple Pay and Google Pay accepted.</div>
           <div class="stripe-note">🔒 Secured by Stripe · PCI compliant · Card details never stored</div>
         </div>
-        <div class="fn2" style="margin-bottom:10px">By continuing you agree to our 24-hour cancellation policy.</div>
+        <div class="fn2" style="margin-bottom:10px">By continuing you agree to our 24-hour cancellation policy. If you leave before paying we may email you to help you finish the booking. You can opt out of any email by replying to it. See our <a href="#" onclick="openLegal('privacy');return false">privacy policy</a>.</div>
         <button class="btn-full" onclick="submitB()" style="background:#1d4ed8">Pay securely via Stripe →</button>
         <div class="btn-row2" style="margin-top:8px">
           <button class="btn-back2" onclick="goS(2)">← Edit details</button>
@@ -2859,6 +2859,7 @@ function closeReferrers(){
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeReferrers(); });
 // Deep link for referrer emails and the area pages: /#referrers
 if(location.hash==='#referrers') window.addEventListener('DOMContentLoaded',openReferrers,{once:true});
+if(location.hash==='#privacy') window.addEventListener('DOMContentLoaded',()=>openLegal('privacy'),{once:true});
 </script>
 
 <!-- LEGAL MODAL -->
@@ -2900,7 +2901,7 @@ document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ var m=doc
 <script>
 const LEGAL={
   privacy:`<h2 style="font-family:'Playfair Display',serif;color:#1e4d3b;margin:0 0 20px">Privacy Policy</h2>
-<p style="font-size:12px;color:#888;margin-bottom:20px">Last updated: May 2026</p>
+<p style="font-size:12px;color:#888;margin-bottom:20px">Last updated: October 2026</p>
 <p>Community Care Physio ("we", "us") is committed to protecting your personal data. This policy explains how we collect, use and store your information.</p>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">What we collect</h3>
 <ul style="padding-left:20px;line-height:2">
@@ -2917,10 +2918,13 @@ const LEGAL={
 <li>To confirm and manage appointments</li>
 <li>To process payments securely via Stripe</li>
 <li>To send appointment reminders</li>
+<li>To follow up a booking you started online but did not complete, by email, so you can finish it or tell us the time no longer suits</li>
 <li>To comply with HCPC professional standards</li>
 </ul>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">Who we share it with</h3>
 <p>We do not sell your data. We may share it with: Stripe (payment processing), our hosting provider (Vercel), and your GP if clinically appropriate and with your consent.</p>
+<h3 style="margin:20px 0 8px;color:#1e4d3b">Emails about your booking and our services</h3>
+<p>If you start a booking online and leave before paying, we keep the details you entered and may email you to help you finish the booking. If you have booked or enquired with us, we may occasionally email you about our services. We do this under the "soft opt-in" rules for existing customers and we never share your details for anyone else's marketing. Every such email tells you how to opt out, and you can opt out at any time by replying to the email or writing to <a href="mailto:infoccphysio@gmail.com" style="color:#1e4d3b">infoccphysio@gmail.com</a>. Appointment reminders and messages about care you have booked are not marketing and continue while you are a patient.</p>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">How long we keep it</h3>
 <p>Clinical records are retained for 8 years in line with NHS and HCPC guidance. Booking data is retained for 2 years.</p>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">Your rights</h3>
@@ -2952,14 +2956,15 @@ const LEGAL={
 <p>infoccphysio@gmail.com · 07508 401627 · communitycarephysio.co.uk</p>`,
 
   gdpr:`<h2 style="font-family:'Playfair Display',serif;color:#1e4d3b;margin:0 0 20px">GDPR Statement</h2>
-<p style="font-size:12px;color:#888;margin-bottom:20px">Last updated: May 2026</p>
+<p style="font-size:12px;color:#888;margin-bottom:20px">Last updated: October 2026</p>
 <p>Community Care Physio processes personal data in compliance with the UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.</p>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">Lawful basis</h3>
 <ul style="padding-left:20px;line-height:2">
 <li><strong>Contract</strong> — processing necessary to provide the booked service</li>
 <li><strong>Legitimate interests</strong> — appointment reminders and clinical records</li>
 <li><strong>Legal obligation</strong> — HCPC record-keeping requirements</li>
-<li><strong>Consent</strong> — marketing communications (you can withdraw at any time)</li>
+<li><strong>Legitimate interests</strong> — emails to help you finish a booking you started, and occasional emails about our services to people who have booked or enquired, under the PECR soft opt-in (you can opt out at any time)</li>
+<li><strong>Consent</strong> — any other marketing communications (you can withdraw at any time)</li>
 </ul>
 <h3 style="margin:20px 0 8px;color:#1e4d3b">Special category data</h3>
 <p>Health information is special category data under UK GDPR. We process this under Article 9(2)(h) for the provision of healthcare and treatment.</p>

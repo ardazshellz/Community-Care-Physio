@@ -35,6 +35,7 @@ test('recovery email carries the resume link and no discount', async () => {
   assert.match(m.text, /Full Programme on Tue,? 20 Oct 2026 at 18:30/);
   assert.ok(!/discount|%/.test(m.text));
   assert.ok(!/;|–|—/.test(m.text));
+  assert.ok(m.text.includes('unsubscribe') && m.html.includes('unsubscribe'), 'opt out line (PECR)');
 });
 
 test('cron stages: day 2 second email once, day 7 becomes a lead, nothing else', async () => {
@@ -65,4 +66,5 @@ test('day 2 email: lighter subject, plain booking link when no resume link was s
   assert.ok(!plain.text.includes('30 days'));
   assert.ok(plain.html.includes(`href="${BOOK_URL}"`));
   assert.ok(!/;|–|—/.test(plain.text));
+  for (const m of [second, plain]) assert.ok(m.text.includes('unsubscribe') && m.html.includes('privacy policy'), 'opt out line (PECR)');
 });
