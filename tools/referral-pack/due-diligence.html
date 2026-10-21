@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Community Care Physio — Provider due diligence summary</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400&family=Outfit:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  /* Print source for assets/due-diligence.pdf. Build: node tools/referral-pack/build.mjs
+     One page provider due diligence summary for case management companies, solicitors and insurers. */
+  :root{--forest:#1e4d3b;--sage:#8aab97;--sage-text:#5f8a70;--cream:#f8f5f0;--char:#2b2b28;--muted:#5d5d57;--line:rgba(30,77,59,.14)}
+  @page{size:A4;margin:0}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:#fff;color:var(--char);font-family:Outfit,system-ui,sans-serif;font-weight:300;font-size:8.4pt;line-height:1.34;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .page{width:210mm;height:297mm;position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .top{background:#fbf9f6;padding:4mm 17mm 4.5mm;border-bottom:1px solid var(--line)}
+  .top img{width:52mm;display:block;margin:-2mm 0 0 -4mm}
+  .sl{font-size:8pt;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--sage-text);margin-bottom:2mm}
+  h1{font-family:'Playfair Display',Georgia,serif;font-weight:400;font-size:21pt;line-height:1.12;margin:0 0 2.5mm;color:var(--forest)}
+  .lead{font-size:10.6pt;color:var(--muted);margin:0;max-width:160mm}
+  .body{padding:4.5mm 17mm 0;flex:1}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:9mm}
+  h2{font-family:'Playfair Display',Georgia,serif;font-weight:400;font-size:13.5pt;color:var(--forest);margin:0 0 2mm}
+  ul{margin:0;padding:0;list-style:none}
+  li{padding-left:5.5mm;position:relative;margin-bottom:1.2mm}
+  li::before{content:"";position:absolute;left:0;top:.62em;width:2.2mm;height:2.2mm;border-radius:50%;background:var(--sage)}
+  ol{margin:0;padding:0;list-style:none;counter-reset:c}
+  ol li{counter-increment:c;padding-left:8mm;margin-bottom:1.4mm}
+  ol li::before{content:counter(c);background:none;top:0;width:auto;height:auto;font-family:'Playfair Display',Georgia,serif;font-size:13pt;line-height:1.2;color:var(--forest)}
+  b,strong{font-weight:500;color:var(--forest)}
+  .band{margin-top:3.5mm;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:3.5mm 0;display:grid;grid-template-columns:1.25fr 1fr;gap:9mm}
+  table{width:100%;border-collapse:collapse}
+  td{padding:1mm 0;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  td.r{text-align:right;white-space:nowrap;font-weight:500;color:var(--forest)}
+  .note{font-size:9pt;color:var(--muted);margin:2mm 0 0}
+  .who{margin-top:3.5mm;display:grid;grid-template-columns:1fr 1fr;gap:9mm}
+  .who p{margin:0}
+  .fill{color:var(--sage-text);font-weight:500}
+  td.k{width:38%;color:var(--muted);padding-right:3mm}
+  .foot{background:var(--forest);color:var(--cream);padding:4mm 17mm;display:flex;justify-content:space-between;align-items:flex-end;gap:8mm}
+  .foot .big{font-family:'Playfair Display',Georgia,serif;font-size:12.5pt;line-height:1.25}
+  .foot .small{font-size:8.6pt;opacity:.85;text-align:right;line-height:1.5}
+</style>
+</head>
+<body>
+<section class="page">
+  <div class="top">
+    <img src="../../assets/email-signature-cream.png" alt="CC Physio — Community Care Physiotherapy, South West London">
+    <div class="sl">Provider due diligence summary · for case management companies, solicitors and insurers</div>
+    <h1>Community Care Physio<br>at a glance</h1>
+    <p class="lead">The registrations, checks, insurance and governance behind our home visit physiotherapy service. Certificates and policies are sent on request.</p>
+  </div>
+
+  <div class="body">
+    <div class="cols">
+      <div>
+        <h2>The practice</h2>
+        <table>
+          <tr><td class="k">Trading name</td><td>Community Care Physio</td></tr>
+          <tr><td class="k">Lead clinician</td><td>Zakery Shelley, Physiotherapist</td></tr>
+          <tr><td class="k">Service</td><td>Home visit assessment and rehabilitation across South West London (SW postcodes, Morden, Mitcham, New Malden, north Kingston, Richmond)</td></tr>
+          <tr><td class="k">Specialism</td><td>Neurological rehabilitation, falls and frailty, recovery after hospital or surgery, including clients with cognitive impairment</td></tr>
+          <tr><td class="k">Capacity</td><td>One named clinician per client. An established network of physiotherapists covers extra capacity or specialism</td></tr>
+        </table>
+      </div>
+      <div>
+        <h2>Registration and checks</h2>
+        <table>
+          <tr><td class="k">HCPC</td><td>Physiotherapist PH132358, checkable at hcpc-uk.org</td></tr>
+          <tr><td class="k">Professional body</td><td>Chartered Society of Physiotherapy, member</td></tr>
+          <tr><td class="k">Insurance</td><td>Professional indemnity and public liability through CSP membership. Certificate: <span class="fill">[insurer, policy number, expiry]</span></td></tr>
+          <tr><td class="k">DBS</td><td>Enhanced DBS with adults barred list. Certificate dated <span class="fill">[date]</span></td></tr>
+          <tr><td class="k">Data protection</td><td>UK GDPR and Data Protection Act 2018. ICO registration <span class="fill">[number]</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="band">
+      <div>
+        <h2>Clinical governance</h2>
+        <ul>
+          <li><b>Standards:</b> HCPC standards of proficiency, conduct, performance and ethics, and the CSP code of professional values. Safeguarding, basic life support and manual handling training kept current</li>
+          <li><b>Records:</b> contemporaneous notes, kept 8 years, stored encrypted, reports sent password protected</li>
+          <li><b>Outcome measures:</b> TUG and Tinetti at baseline, Berg Balance Scale, Elderly Mobility Scale, Edmonton Frail Scale and 6CIT where indicated, repeated at review and discharge</li>
+          <li><b>Safety:</b> NEWS2 observations at the first three sessions and when indicated, written GP liaison when findings need medical review, escalation to 111 or 999</li>
+          <li><b>Consent and capacity:</b> written consent at the first visit, Mental Capacity Act principles applied</li>
+        </ul>
+      </div>
+      <div>
+        <h2>How we work with you</h2>
+        <ul>
+          <li>Referral acknowledged within one working day</li>
+          <li>Initial assessment at home within ten working days of your go ahead</li>
+          <li>Written assessment report within five working days of the visit, with a costed plan, then progress and discharge reports</li>
+                    <li>Fees, timescales and a sample report are in our referral pack; contractual terms are in our terms of engagement</li>
+          <li>Invoices numbered and itemised, 30 day terms, no fee for GP liaison</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="who">
+      <div>
+        <h2>Safeguarding and complaints</h2>
+        <p>Adults at risk are safeguarded under the Care Act 2014 and local procedures, with concerns raised with the case manager and the local safeguarding team the same day. Complaints are acknowledged within two working days and answered in writing within twenty, with the HCPC and ICO as independent routes. Lone working uses a check in and check out routine for every visit.</p>
+      </div>
+      <div>
+        <h2>Documents available on request</h2>
+        <ul>
+          <li>HCPC registration certificate and CSP membership</li>
+          <li>Insurance certificate and enhanced DBS certificate</li>
+          <li>Terms of engagement and fee schedule</li>
+          <li>Safeguarding adults policy, complaints procedure, privacy notice</li>
+          <li>Referral pack with sample assessment report</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div class="big">Zakery Shelley, lead clinician<br>07508 401627 · infoccphysio@gmail.com</div>
+    <div class="small">communitycarephysio.co.uk<br>Referral pack and terms of engagement accompany this summary</div>
+  </div>
+</section>
+</body>
+</html>
