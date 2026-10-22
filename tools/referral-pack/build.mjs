@@ -1,4 +1,4 @@
-// Prints the referral pack, the terms of engagement, the home care agency one-pager and the due diligence summary to assets/*.pdf with the
+// Prints the referral pack, the terms of engagement, the home care agency one-pager and the signed due diligence statement (source and output in _local-only, never in assets) to assets/*.pdf with the
 // installed Google Chrome. Run after editing fees or wording:
 //   node tools/referral-pack/build.mjs
 import { execFileSync } from 'node:child_process';
@@ -7,7 +7,7 @@ import path from 'node:path';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const jobs = [['index.html', 'referral-pack.pdf'], ['terms.html', 'terms-of-engagement.pdf'], ['agency.html', 'home-care-agencies.pdf'], ['due-diligence.html', 'due-diligence.pdf']];
+const jobs = [['index.html', 'referral-pack.pdf'], ['terms.html', 'terms-of-engagement.pdf'], ['agency.html', 'home-care-agencies.pdf'], ['../../_local-only/documents/due-diligence.html', '../_local-only/outputs/due-diligence-statement-signed.pdf']];
 
 for (const [html, pdf] of jobs) {
   const src = path.join(here, html);
