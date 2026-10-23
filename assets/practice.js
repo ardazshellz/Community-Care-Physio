@@ -78,9 +78,13 @@ function sessionsUsed(ref) {
 function referralFor(members) {
   const ids = new Set(members.map((b) => String(b.id)));
   const keys = new Set(members.flatMap((b) => (typeof aEpisodeKeys === 'function' ? aEpisodeKeys(b) : [])));
+  const reasons = members.map((b) => String(b.reason || '')).join('\n');
   const r = state.referrals.find((x) => {
-    const c = x.value.client || {};
-    return ids.has(String(x.value.bookingId)) || (typeof aEpisodeKeys === 'function' && aEpisodeKeys({ email: c.email, phone: c.phone || c.contactPhone, name: c.name }).some((k) => keys.has(k)));
+    const c = x.value.client || {}, refNo = String(x.value.ref || '').trim(), caseRef = String(x.value.funding?.caseRef || '').trim();
+    if (ids.has(String(x.value.bookingId))) return true;
+    // Sessions booked through the referral carry its reference in the reason.
+    if ((refNo && reasons.includes(refNo)) || (caseRef && reasons.includes(caseRef))) return true;
+    return typeof aEpisodeKeys === 'function' && [c.phone, c.contactPhone].some((ph) => aEpisodeKeys({ email: c.email, phone: ph, name: c.name }).some((k) => keys.has(k)));
   });
   if (!r) return null;
   const v = r.value;
@@ -641,5 +645,31 @@ async function saveGroups(value) {
   if (typeof renderAdminBookings === 'function') renderAdminBookings();
 }
 
-window.CCPPractice = { patientGroups, saveGroups, clear, load, referralFor, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
+function referralOptions() {
+  return state.referrals.map((r) => ({ key: r.key, label: `${r.value.client?.name || 'Unnamed'} · ${r.value.ref || ''} · ${r.value.funding?.payerName || r.value.referrer?.organisation || ''}`.replace(/( · )+$/, '') }));
+}
+// Add n authorised sessions to a referral (or start one from the episode) and link it to the booking.
+async function addFundedSessions({ refKey, bookingId, n, members }) {
+  if (!state.loaded) await load(true);
+  let r = refKey ? state.referrals.find((x) => x.key === refKey) : null;
+  if (refKey && !r) throw new Error('That referral is no longer listed. Refresh and try again.');
+  if (!r) {
+    const latest = members[members.length - 1] || {}, pick = (f) => (members.map((b) => String(b[f] || '').trim()).filter(Boolean).pop() || '');
+    r = { key: 'referral:' + crypto.randomUUID(), value: { status: 'accepted', ref: 'M-' + Date.now().toString(36).toUpperCase().slice(-6), submittedAt: new Date().toISOString(), source: 'clinician',
+      referrer: {}, client: { name: latest.name || '', email: pick('email'), phone: pick('phone'), address: pick('address'), postcode: pick('postcode') }, clinical: {}, service: {}, funding: { authorisedSessions: 0 }, reports: [] } };
+  }
+  const v = r.value; v.funding = v.funding || {};
+  v.funding.authorisedSessions = Number(v.funding.authorisedSessions || 0) + n;
+  if (!v.bookingId) v.bookingId = bookingId;
+  const d = await api('save', { key: r.key, value: v });
+  upsert('referrals', d); navBadge(); if (isVisible()) render();
+  return { key: d.key, ref: d.value.ref || '', authorised: Number(d.value.funding?.authorisedSessions || 0) };
+}
+async function openReferral(key) {
+  state.tab = 'referrals'; state.open = key; state.draft = null;
+  if (!state.loaded) await load();
+  if (typeof adminNav === 'function') adminNav('referrals');
+  render();
+}
+window.CCPPractice = { patientGroups, saveGroups, clear, load, referralFor, referralOptions, addFundedSessions, openReferral, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
 if (token()) load();

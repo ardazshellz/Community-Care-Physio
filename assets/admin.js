@@ -502,8 +502,9 @@ function initAdmin(){
   renderSettings();
   loadAdminAvailabilityStatus();
   adminNav('dashboard');   // open on the Dashboard view
-  // Auto-load bookings from Supabase
+  // Auto-load bookings from Supabase, and the referrals so funded cards show their funder.
   syncFromSupabase();
+  if(window.CCPPractice&&CCPPractice.load) CCPPractice.load(true).catch(()=>{});
 }
 
 // ── DASHBOARD NAVIGATION ──
@@ -1568,7 +1569,8 @@ function aEpisodeSingle(b){
 // with an email joins sessions created later with only a contact phone.
 function aEpisodeKeys(b){
   const email=(b.email||'').trim().toLowerCase();
-  const phone=(b.phone||'').replace(/\D/g,'');
+  // UK numbers: +44 7… and 07… are the same phone.
+  const phone=(b.phone||'').replace(/\D/g,'').replace(/^44(\d{10})$/,'0$1');
   const name=(b.name||'').trim().toLowerCase().replace(/\s+/g,' ');
   return [email&&'e:'+email, phone&&'p:'+phone, name&&'n:'+name].filter(Boolean);
 }
@@ -1673,9 +1675,49 @@ function aEpisodeCard(members){
         <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${latest.id}')">📋 Intake form</button>
         <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${latest.id}',${aEscJs(latest.name)})">💳 Charge fee</button>
         <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" title="File this patient with another patient's records" onclick="aLinkChooser(this,'${latest.id}')">🔗 Link to…</button>
+        ${funding?`<button class="bi-btn" style="background:var(--sage);color:#fff" title="Record more funded sessions on this patient's referral" onclick="aAddFundedSessions(this,'${latest.id}')">➕ Add funded sessions</button>
+        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" title="Open the referral to book an authorised visit" onclick="aOpenReferralFor('${latest.id}')">📅 Book session</button>`:''}
       </div>
+      <div class="episode-fund-form"></div>
     </div>
   </div>`;
+}
+// Inline form on a funded card: pick the referral (or make one) and add n authorised sessions.
+function aAddFundedSessions(btn,bookingId){
+  const card=btn.closest('.patient-card'), host=card&&card.querySelector('.episode-fund-form');
+  const pr=window.CCPPractice;
+  if(!host||!pr||!pr.addFundedSessions) return;
+  if(host.innerHTML){ host.innerHTML=''; return; }
+  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
+  const members=aEpisodeFor(b), matched=pr.referralFor(members);
+  const opts=(pr.referralOptions?pr.referralOptions():[]).map(o=>`<option value="${aEsc(o.key)}" ${matched&&matched.key===o.key?'selected':''}>${aEsc(o.label)}</option>`).join('');
+  host.innerHTML=`<div style="margin-top:10px;padding:10px;background:#fff;border:1px solid rgba(138,171,151,.5);border-radius:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px;flex:1;min-width:180px">Referral<select class="ef-ref" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"><option value="">New referral record for ${aEsc(b.name)}</option>${opts}</select></label>
+    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Sessions to add<input class="ef-n" type="number" min="1" max="50" step="1" value="1" list="efNums" style="width:90px;padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"><datalist id="efNums">${[1,2,3,4,5,6,7,8,9,10,12].map(n=>`<option value="${n}">`).join('')}</datalist></label>
+    <button class="bi-btn confirm" onclick="aSaveFundedSessions(this,'${aEsc(bookingId)}')">Save</button>
+    <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" onclick="this.closest('.episode-fund-form').innerHTML=''">Cancel</button>
+    <div class="ef-msg" style="width:100%;font-size:11px;color:#b45309"></div>
+  </div>`;
+  host.querySelector('.ef-n').focus();
+}
+async function aSaveFundedSessions(btn,bookingId){
+  const host=btn.closest('.episode-fund-form'), msg=host.querySelector('.ef-msg');
+  const n=Number(host.querySelector('.ef-n').value), refKey=host.querySelector('.ef-ref').value||null;
+  if(!Number.isInteger(n)||n<1){ msg.textContent='Enter how many sessions were funded.'; return; }
+  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
+  btn.disabled=true; btn.textContent='Saving…';
+  try{
+    const r=await CCPPractice.addFundedSessions({refKey,bookingId,n,members:aEpisodeFor(b)});
+    renderAdminBookings();
+    adminToast(`${r.authorised} sessions now authorised on referral ${r.ref||''}`.trim());
+  }catch(e){ btn.disabled=false; btn.textContent='Save'; msg.textContent=e.message||'Could not save.'; }
+}
+function aOpenReferralFor(bookingId){
+  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); const pr=window.CCPPractice;
+  if(!b||!pr||!pr.openReferral) return;
+  const ref=pr.referralFor(aEpisodeFor(b));
+  if(!ref){ adminToast('No referral record matched. Use Add funded sessions first.',false); return; }
+  pr.openReferral(ref.key);
 }
 
 // A record that belongs on the Active page (not dismissed, archived, finished or dead).
@@ -1932,13 +1974,13 @@ function renderArchivedPackages(){
   const badge=document.getElementById('aArchivedBadge');
   const episodes=aEpisodes(), drawnEp=new Set();
   const cards=archived.map(b=>{
+    // Linked household with a live member: this record already shows under that group on the Active page.
+    const g=aPatientGroup(b);
+    if(g&&adminBookings.some(x=>x!==b&&aPatientGroup(x)===g&&aIsLiveRecord(x))) return '';
     if(!aIsPackage(b)){
       const fam=aEpisodeFor(b,episodes);
       // Still has visits to come: the finished ones sit in the live episode card.
       if(aEpisodeOpen(fam)) return '';
-      // Linked household with a live member: this visit already shows under that group.
-      const g=aPatientGroup(b);
-      if(g&&adminBookings.some(x=>x!==b&&aPatientGroup(x)===g&&aIsLiveRecord(x))) return '';
       if(fam.length>1){ if(drawnEp.has(fam)) return ''; drawnEp.add(fam); return aEpisodeCard(fam); }
       return aArchivedSingleCard(b);
     }

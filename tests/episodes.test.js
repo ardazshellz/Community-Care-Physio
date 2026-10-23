@@ -55,3 +55,16 @@ test('case managed episode reports booked and used sessions against the authoris
  assert.equal(c.aEpisodeFunding(c.aEpisodeFor(initial)).authorised,0,'invoiced visits still mark the episode as case managed');
  assert.equal(c.aEpisodeFunding([other]),null,'a public booking is not case managed');
 });
+
+// Referral lookup in assets/practice.js: by linked booking id, the referral reference inside a visit's reason, or the client's contact details.
+test('referralFor matches a referral by reference in the reason or by contact details, never by a different client',()=>{
+ const psrc=readFileSync(new URL('../assets/practice.js',import.meta.url),'utf8');
+ const start=psrc.indexOf('function referralFor('); assert.ok(start>0);
+ const refs=[{key:'referral:1',value:{ref:'26074807',bookingId:null,client:{name:'Mrs L Marshall-Fictional',email:'',contactPhone:'07000 000010'},funding:{payerName:'Example Case Management',authorisedSessions:8}}},
+  {key:'referral:2',value:{ref:'R-OTHER',client:{name:'Pat Other',email:'pat@example.com'},funding:{authorisedSessions:2}}}];
+ const c=setup([]); vm.runInContext('const state={referrals:'+JSON.stringify(refs)+'};'+psrc.slice(start,psrc.indexOf('\n}\n',start)+2),c);
+ assert.equal(c.referralFor([{id:'x',name:'Leslie Fictional',email:'',phone:'',reason:'HCML 26074807, authorised session'}]).key,'referral:1','reference in the reason');
+ assert.equal(c.referralFor([{id:'y',name:'Leslie Fictional',email:'',phone:'+44 7000 000010',reason:''}]).key,'referral:1','contact phone');
+ assert.equal(c.referralFor([{id:'z',name:'Someone Else',email:'',phone:'',reason:''}]),null);
+ assert.equal(c.referralFor([{id:'w',name:'Pat Other',email:'',phone:'',reason:''}]).authorised,2,'client name');
+});
