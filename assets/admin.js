@@ -247,8 +247,10 @@ function getAdminOperationalMetrics(){
       });
     }else{
       // One patient, one count, even when visits were booked under different contact details.
-      const epKey=episodes?patientKey(aEpisodeFor(b,episodes)[0]||b):key;
-      if(!inactive&&!clinicallyClosed&&epKey) activePatientKeys.add(epKey);
+      const fam=episodes?aEpisodeFor(b,episodes):null;
+      const epKey=fam?patientKey(fam[0]||b):key;
+      const stillOpen=!clinicallyClosed||(fam&&typeof aEpisodeOpen==='function'&&aEpisodeOpen(fam));
+      if(!inactive&&stillOpen&&epKey) activePatientKeys.add(epKey);
       if(b.bookedDate&&b.bookedTime&&!['cancelled','expired','completed','dna','rescheduled'].includes(bStatus)){
         appts.push({date:b.bookedDate,time:b.bookedTime,name:b.name,label:b.appointment||'Appointment',patientKey:key});
       }
@@ -1090,6 +1092,7 @@ function aPackageCard(b){
       </div>
       <div style="font-size:11px;color:var(--muted);margin:10px 0 4px">Follow-up appointments</div>
       <div style="margin-bottom:6px">${rows}</div>
+      ${aAddSessionRow(b.id)}
       <div class="bi-actions">
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgReminder(${idx})">✉️ Reminder email</button>
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgExercise(${idx})">🏋️ Exercise email</button>
@@ -1103,9 +1106,7 @@ function aPackageCard(b){
              <span style="font-size:10.5px;color:#0369a1;align-self:center">Completed · archives in ${aPkgHoursToArchive(b)}h</span>`
           :`<button class="bi-btn confirm" onclick="aPkgComplete(${idx})">✓ Mark complete</button>`}
         <button class="bi-btn del" onclick="aPkgCancel(${idx})">✕ Cancel package</button>
-        <button class="bi-btn" style="background:var(--forest);color:#fff" title="Book a follow up visit on top of this package" onclick="aAddSession(this,'${b.id}')">➕ Add session</button>
       </div>
-      <div class="episode-add-form"></div>
     </div>
   </div>`;
 }
@@ -1118,27 +1119,52 @@ function aAddSessionPrice(type,complex,travel){
   const p=CB_PRICES[type==='Standard Session'?'standard':'extended'];
   return (complex?p.complex:p.normal)+(Number(travel)||0);
 }
+// Dashed row under a card's sessions, drawn like a funded slot, that opens the add on form.
+function aAddSessionRow(bookingId){
+  const m=aSessMeta('unscheduled');
+  return `<div class="episode-tobook" style="padding:8px 9px;border-radius:7px;background:rgba(255,255,255,.55);border:1px dashed rgba(138,171,151,.7);margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="color:${m.c};font-weight:700;width:16px;text-align:center">${m.i}</span>
+      <span style="flex:1;font-size:12px;color:var(--char)">Session<span style="color:var(--muted)"> · add another visit</span></span>
+      <button class="bi-btn" style="background:var(--forest);color:#fff;padding:4px 10px;font-size:10.5px" onclick="aAddSession(this,'${aEsc(bookingId)}')">➕ Add</button>
+    </div>
+    <div class="episode-add-form"></div>
+  </div>`;
+}
+// Work out which price list entries a past visit used, so the form opens on the same settings.
+function aAddSessionDefaults(last){
+  const type=last.appointment==='Standard Session'?'Standard Session':'Extended Session';
+  const p=CB_PRICES[type==='Standard Session'?'standard':'extended'];
+  const price=Number(last.price)||0;
+  for(const complex of [!!last.complexityFee,!last.complexityFee]){
+    for(const travel of [0,15,35]) if((complex?p.complex:p.normal)+travel===price) return {type,complex,travel};
+  }
+  return {type,complex:!!last.complexityFee,travel:0};
+}
 function aAddSession(btn,bookingId){
-  const card=btn.closest('.patient-card'), host=card&&card.querySelector('.episode-add-form');
+  const host=btn.closest('.episode-tobook')?.querySelector('.episode-add-form');
   if(!host) return;
   if(host.innerHTML){ host.innerHTML=''; return; }
   const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
   const members=aIsPackage(b)?[b]:aEpisodeFor(b);
+  const funding=aIsPackage(b)?null:aEpisodeFunding(members);
   const last=aIsPackage(b)?b:(aEpisodeVisitOrder(members).find(x=>!aIsInitialAssessment(x))||b);
   const lastTime=/^\d{2}:\d{2}/.test(last.bookedTime||'')?last.bookedTime.slice(0,5):'18:00';
   const times=Array.from({length:25},(_,i)=>{const mm=8*60+i*30;return `${String(Math.floor(mm/60)).padStart(2,'0')}:${mm%60?'30':'00'}`;});
-  const complex=!!(b.complexityFee||(b.concernAreas&&/complex/i.test(b.concernAreas)));
+  const d=aIsPackage(b)?{type:'Standard Session',complex:!!(b.complexityFee||(b.concernAreas&&/complex/i.test(b.concernAreas))),travel:0}:aAddSessionDefaults(last);
   const inp='padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px';
   const lab='font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px';
-  host.innerHTML=`<div style="margin-top:10px;padding:10px;background:#fff;border:1px solid rgba(30,77,59,.15);border-radius:8px">
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Add on follow up session for <strong style="color:var(--char)">${aEsc(b.name)}</strong>. Confirmed and invoiced, nothing sent to the patient. Mark paid when payment is taken.</div>
+  const note=funding?`Funded session for <strong style="color:var(--char)">${aEsc(b.name)}</strong>, invoiced to ${aEsc(funding.funder||'the funder')}, nothing sent to the patient.`
+    :`Add on follow up session for <strong style="color:var(--char)">${aEsc(b.name)}</strong>. Confirmed and invoiced, nothing sent to the patient. Mark paid when payment is taken.`;
+  host.innerHTML=`<div style="margin-top:8px;padding:10px;background:#fff;border:1px solid rgba(30,77,59,.15);border-radius:8px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${note}</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-      <label style="${lab}">Session<select class="as-type" style="${inp}" onchange="aAddSessionRecalc(this)"><option value="Standard Session">Follow up, 45 min</option><option value="Extended Session">Extended follow up, 60 min</option></select></label>
-      <label style="${lab}">Travel<select class="as-travel" style="${inp}" onchange="aAddSessionRecalc(this)">${ADD_SESSION_TRAVEL.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></label>
-      <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;padding-bottom:7px"><input class="as-complex" type="checkbox" ${complex?'checked':''} onchange="aAddSessionRecalc(this)">Complex needs (+£15)</label>
+      <label style="${lab}">Session<select class="as-type" style="${inp}" onchange="aAddSessionRecalc(this)"><option value="Standard Session" ${d.type==='Standard Session'?'selected':''}>Follow up, 45 min</option><option value="Extended Session" ${d.type==='Extended Session'?'selected':''}>Extended follow up, 60 min</option></select></label>
+      <label style="${lab}">Travel<select class="as-travel" style="${inp}" onchange="aAddSessionRecalc(this)">${ADD_SESSION_TRAVEL.map(([v,l])=>`<option value="${v}" ${Number(v)===d.travel?'selected':''}>${l}</option>`).join('')}</select></label>
+      <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;padding-bottom:7px"><input class="as-complex" type="checkbox" ${d.complex?'checked':''} onchange="aAddSessionRecalc(this)">Complex needs (+£15)</label>
       <label style="${lab}">Date<input class="as-date" type="date" min="${aDateKey(new Date())}" style="${inp}"></label>
       <label style="${lab}">Time<select class="as-time" style="${inp}">${times.map(t=>`<option ${t===lastTime?'selected':''}>${t}</option>`).join('')}</select></label>
-      <label style="${lab}">Price £<input class="as-price" type="number" min="0" step="1" value="${aAddSessionPrice('Standard Session',complex,0)}" style="width:80px;${inp}"></label>
+      <label style="${lab}">Price £<input class="as-price" type="number" min="0" step="1" value="${aAddSessionPrice(d.type,d.complex,d.travel)}" style="width:80px;${inp}"></label>
       <button class="bi-btn confirm" onclick="aSaveAddSession(this,'${aEsc(bookingId)}')">Book session</button>
       <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" onclick="this.closest('.episode-add-form').innerHTML=''">Cancel</button>
       <div class="as-msg" style="width:100%;font-size:11px;color:#b45309"></div>
@@ -1158,10 +1184,19 @@ async function aSaveAddSession(btn,bookingId){
   if(!bookedDate){ msg.textContent='Pick a date.'; return; }
   if(!Number.isFinite(price)||price<0){ msg.textContent='Enter the price.'; return; }
   btn.disabled=true; btn.textContent='Booking…';
+  const funding=aIsPackage(b)?null:aEpisodeFunding(aEpisodeFor(b));
+  const ref=funding&&window.CCPPractice&&CCPPractice.referralFor?CCPPractice.referralFor(aEpisodeFor(b)):null;
   const booking={ name:b.name, email:b.email||'', phone:b.phone||'', address:b.address||'', postcode:b.postcode||'',
     appointment:type, bookedDate, bookedTime, price, complexityFee:complex?15:0, patientType:'existing', bookingFor:'add-on session',
     concernAreas:b.concernAreas||'', reason:`Add on session after ${b.appointment||'previous visits'}.${complex?' Complex needs.':''}${travel?` Travel £${travel}.`:''} Booked from the admin, payment to be taken.` };
   try{
+    if(ref){
+      // Funded visit: same path as the Referrals editor, so the referral reference lands in the reason.
+      await CCPPractice.bookSession(ref.key,{bookedDate,bookedTime,appointment:type,price});
+      renderAdminBookings();
+      adminToast(`Session booked for ${aFmtDay(bookedDate,bookedTime)}, £${price}, invoiced to ${funding.funder||'the funder'}.`);
+      return;
+    }
     const r=await fetch('/api/update-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:adminSessionToken,action:'create',booking})});
     const d=await r.json().catch(()=>({}));
     if(!r.ok) throw new Error(d.error||'Could not book the session.');
@@ -1676,7 +1711,12 @@ function aEpisodeFor(b, episodes){
   for(const k of aEpisodeKeys(b||{})) if(map.has(k)) return map.get(k);
   return b&&b.id?[b]:[];
 }
-function aEpisodeOpen(members){ return members.some(b=>!aEpisodeDone(b)); }
+// Open while a visit is still to come, or while the funder has approved sessions not yet booked.
+function aEpisodeOpen(members){
+  if(members.some(b=>!aEpisodeDone(b))) return true;
+  const f=aEpisodeFunding(members);
+  return !!(f&&f.authorised>f.booked);
+}
 // Visits newest first so today's visit sits at the top and the initial assessment last.
 function aEpisodeVisitOrder(members){ return [...members].reverse(); }
 function aIsInitialAssessment(b){ return /initial assessment/i.test(String(b&&b.appointment||'')); }
@@ -1748,7 +1788,7 @@ function aEpisodeCard(members){
       </div>
       <div style="font-size:11px;color:var(--muted);margin:6px 0 4px">Sessions</div>
       ${rows}
-      ${funding?aEpisodeToBookRows(funding,latest):''}
+      ${funding?aEpisodeToBookRows(funding,latest):aAddSessionRow(latest.id)}
       <div class="bi-actions" style="margin-top:8px">
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aEpisodeReminder('${latest.id}')">✉️ Reminder email</button>
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgExercise(${adminBookings.indexOf(latest)})">🏋️ Exercise email</button>
@@ -1757,11 +1797,9 @@ function aEpisodeCard(members){
         <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${latest.id}',${aEscJs(latest.name)})">💳 Charge fee</button>
         <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" title="File this patient with another patient's records" onclick="aLinkChooser(this,'${latest.id}')">🔗 Link to…</button>
         ${funding?`<button class="bi-btn" style="background:var(--sage);color:#fff" title="Set how many sessions the funder has approved on this patient's referral" onclick="aAddFundedSessions(this,'${latest.id}')">➕ Funded sessions</button>
-        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" title="Open the referral to book an authorised visit" onclick="aOpenReferralFor('${latest.id}')">📅 Book session</button>`
-        :`<button class="bi-btn" style="background:var(--forest);color:#fff" title="Book another follow up visit for this patient" onclick="aAddSession(this,'${latest.id}')">➕ Add session</button>`}
+        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" title="Open the referral to book an authorised visit" onclick="aOpenReferralFor('${latest.id}')">📅 Book session</button>`:''}
       </div>
       <div class="episode-fund-form"></div>
-      <div class="episode-add-form"></div>
     </div>
   </div>`;
 }
@@ -1777,47 +1815,11 @@ function aEpisodeToBookRows(funding,latest){
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="color:${m.c};font-weight:700;width:16px;text-align:center">${m.i}</span>
         <span style="flex:1;font-size:12px;color:var(--char)">Session ${n} of ${funding.authorised}<span style="color:var(--muted)"> · not booked yet</span></span>
-        ${i===0?`<button class="bi-btn" style="background:var(--forest);color:#fff;padding:4px 10px;font-size:10.5px" onclick="aBookFundedSession(this,'${aEsc(latest.id)}')">📅 Book</button>`:`<span style="font-size:10px;color:var(--muted)">funded</span>`}
+        ${i===0?`<button class="bi-btn" style="background:var(--forest);color:#fff;padding:4px 10px;font-size:10.5px" onclick="aAddSession(this,'${aEsc(latest.id)}')">📅 Book</button>`:`<span style="font-size:10px;color:var(--muted)">funded</span>`}
       </div>
-      ${i===0?'<div class="episode-book-form"></div>':''}
+      ${i===0?'<div class="episode-add-form"></div>':''}
     </div>`;
   }).join('');
-}
-// Inline booking form on the first empty funded slot: date, half hour time, length, price.
-function aBookFundedSession(btn,bookingId){
-  const host=btn.closest('.episode-tobook').querySelector('.episode-book-form');
-  const pr=window.CCPPractice;
-  if(!host||!pr||!pr.bookSession) return;
-  if(host.innerHTML){ host.innerHTML=''; return; }
-  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
-  const members=aEpisodeFor(b), ref=pr.referralFor(members);
-  if(!ref){ adminToast('No referral record matched. Use Funded sessions first.',false); return; }
-  const last=aEpisodeVisitOrder(members).find(x=>!aIsInitialAssessment(x))||b;
-  const lastTime=/^\d{2}:\d{2}/.test(last.bookedTime||'')?last.bookedTime.slice(0,5):'16:00';
-  const times=Array.from({length:25},(_,i)=>{const mm=8*60+i*30;return `${String(Math.floor(mm/60)).padStart(2,'0')}:${mm%60?'30':'00'}`;});
-  const today=aDateKey(new Date());
-  host.innerHTML=`<div style="margin-top:8px;padding:10px;background:#fff;border:1px solid rgba(138,171,151,.5);border-radius:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Date<input class="eb-date" type="date" min="${today}" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"></label>
-    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Time<select class="eb-time" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px">${times.map(t=>`<option ${t===lastTime?'selected':''}>${t}</option>`).join('')}</select></label>
-    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Length<select class="eb-len" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"><option value="Extended Session" ${last.appointment!=='Standard Session'?'selected':''}>60 min</option><option value="Standard Session" ${last.appointment==='Standard Session'?'selected':''}>45 min</option></select></label>
-    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Price £<input class="eb-price" type="number" min="0" step="1" value="${Number(last.price)||125}" style="width:80px;padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"></label>
-    <button class="bi-btn confirm" onclick="aSaveFundedBooking(this,'${aEsc(ref.key)}')">Book session</button>
-    <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" onclick="this.closest('.episode-book-form').innerHTML=''">Cancel</button>
-    <div class="eb-msg" style="width:100%;font-size:11px;color:#b45309"></div>
-  </div>`;
-  host.querySelector('.eb-date').focus();
-}
-async function aSaveFundedBooking(btn,refKey){
-  const host=btn.closest('.episode-book-form'), msg=host.querySelector('.eb-msg');
-  const bookedDate=host.querySelector('.eb-date').value, bookedTime=host.querySelector('.eb-time').value;
-  const appointment=host.querySelector('.eb-len').value, price=Number(host.querySelector('.eb-price').value);
-  if(!bookedDate){ msg.textContent='Pick a date.'; return; }
-  btn.disabled=true; btn.textContent='Booking…';
-  try{
-    await CCPPractice.bookSession(refKey,{bookedDate,bookedTime,appointment,price});
-    renderAdminBookings();
-    adminToast(`Session booked for ${aFmtDay(bookedDate,bookedTime)}. Confirmed and invoiced, nothing sent to the patient.`);
-  }catch(e){ btn.disabled=false; btn.textContent='Book session'; msg.textContent=e.message||'Could not book the session.'; }
 }
 // Inline form on a funded card: pick the referral (or make one) and set the authorised total.
 function aAddFundedSessions(btn,bookingId){
@@ -1869,11 +1871,14 @@ function aCardSortKey(b,episodes){
   return {next,last};
 }
 // A record that belongs on the Active page (not dismissed, archived, finished or dead).
-function aIsLiveRecord(b){
+function aIsLiveRecord(b,episodes){
   if(!b||(b.id&&cbDismissed.includes(b.id)))return false;
   const st=String(b.status||'').toLowerCase();
   if(aIsPackage(b))return !aPkgIsArchived(b)&&!['cancelled','expired','abandoned','lead'].includes(st);
-  return !['completed','cancelled','expired','dna','abandoned','lead'].includes(st);
+  if(['cancelled','expired','abandoned','lead'].includes(st))return false;
+  // A finished visit stays live while its episode is open (more visits to come or funded slots left).
+  if(['completed','dna'].includes(st))return aEpisodeOpen(aEpisodeFor(b,episodes));
+  return true;
 }
 function renderAdminBookings(){
   renderClientList();
@@ -1890,8 +1895,9 @@ function renderAdminBookings(){
   const pkgSlots=new Set();
   adminBookings.forEach(pb=>{if(aIsPackage(pb)){aPkgSessions(pb).forEach(s=>{if(s.date&&s.time)pkgSlots.add(s.date+'|'+s.time);});}});
   const pkgPatients=new Set(adminBookings.filter(pb=>aIsPackage(pb)&&pb.name).map(pb=>pb.name.trim().toLowerCase()));
+  const episodes=aEpisodes();
   const recent=[...adminBookings].reverse().filter(b=>{
-    if(!aIsLiveRecord(b))return false;
+    if(!aIsLiveRecord(b,episodes))return false;
     if(!aIsPackage(b)&&b.bookedDate&&b.bookedTime&&pkgSlots.has(b.bookedDate+'|'+b.bookedTime))return false;
     if(!aIsPackage(b)&&b.name&&pkgPatients.has(b.name.trim().toLowerCase()))return false;
     return true;
@@ -1961,7 +1967,6 @@ function renderAdminBookings(){
   const drawn=new Set();
   // Several single bookings for one patient (same email, phone or name) draw as
   // one episode card with a session list, like a package, instead of a card each.
-  const episodes=aEpisodes();
   const drawnEp=new Set();
   const sortKeys=new Map(recent.map(b=>[b,aCardSortKey(b,episodes)]));
   recent.sort((x,y)=>{ const a=sortKeys.get(x), b=sortKeys.get(y); return a.next.localeCompare(b.next)||b.last.localeCompare(a.last); });
@@ -1969,7 +1974,7 @@ function renderAdminBookings(){
     const g=aPatientGroup(b);
     if(!g&&!aIsPackage(b)){
       const fam=episodes.get(b.id);
-      if(fam&&fam.length>1){ if(drawnEp.has(fam)) return ''; drawnEp.add(fam); return aEpisodeCard(fam); }
+      if(fam&&(fam.length>1||aEpisodeFunding(fam))){ if(drawnEp.has(fam)) return ''; drawnEp.add(fam); return aEpisodeCard(fam); }
     }
     if(!g) return cardFor(b);
     if(drawn.has(g.id)) return '';
@@ -2126,10 +2131,10 @@ function renderArchivedPackages(){
   const cards=archived.map(b=>{
     // Linked household with a live member: this record already shows under that group on the Active page.
     const g=aPatientGroup(b);
-    if(g&&adminBookings.some(x=>x!==b&&aPatientGroup(x)===g&&aIsLiveRecord(x))) return '';
+    if(g&&adminBookings.some(x=>x!==b&&aPatientGroup(x)===g&&aIsLiveRecord(x,episodes))) return '';
     if(!aIsPackage(b)){
       const fam=aEpisodeFor(b,episodes);
-      // Still has visits to come: the finished ones sit in the live episode card.
+      // Still has visits to come or funded slots to book: the finished ones sit in the live episode card.
       if(aEpisodeOpen(fam)) return '';
       if(fam.length>1){ if(drawnEp.has(fam)) return ''; drawnEp.add(fam); return aEpisodeCard(fam); }
       return aArchivedSingleCard(b);

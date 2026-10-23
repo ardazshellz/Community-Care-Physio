@@ -100,3 +100,20 @@ test('add on session price follows the public list: 45 or 60 min, complex needs 
  assert.equal(c.aAddSessionPrice('Extended Session',true,'15'),120);
  assert.equal(c.aAddSessionPrice('Standard Session',true,35),125);
 });
+
+test('a funded episode stays open after every visit is done while sessions remain to book',()=>{
+ const done=[initial,{...s1,status:'completed'},{...s2,status:'completed'},{...s3,status:'completed'}];
+ const c=setup(done);
+ c.window.CCPPractice={referralFor:()=>({ref:'R-DEMO03',funder:'Example Case Management',authorised:8})};
+ assert.equal(c.aEpisodeOpen(c.aEpisodeFor(initial)),true,'5 funded sessions left');
+ c.window.CCPPractice={referralFor:()=>({ref:'R-DEMO03',funder:'Example Case Management',authorised:3})};
+ assert.equal(c.aEpisodeOpen(c.aEpisodeFor(initial)),false,'all funded sessions booked and done');
+});
+test('add on form defaults recover the price list settings from the last visit',()=>{
+ const c=setup([]);
+ vm.runInContext(source('aAddSessionDefaults')+'const CB_PRICES={standard:{normal:75,complex:90},extended:{normal:90,complex:105}};',c);
+ assert.equal(JSON.stringify(c.aAddSessionDefaults({appointment:'Extended Session',price:140,complexityFee:15})),JSON.stringify({type:'Extended Session',complex:true,travel:35}));
+ assert.equal(JSON.stringify(c.aAddSessionDefaults({appointment:'Standard Session',price:90,complexityFee:15})),JSON.stringify({type:'Standard Session',complex:true,travel:0}));
+ assert.equal(JSON.stringify(c.aAddSessionDefaults({appointment:'Standard Session',price:90})),JSON.stringify({type:'Standard Session',complex:false,travel:15}),'no complexity fee recorded: read £90 as travel');
+ assert.equal(JSON.stringify(c.aAddSessionDefaults({appointment:'Standard Session',price:999})),JSON.stringify({type:'Standard Session',complex:false,travel:0}));
+});
