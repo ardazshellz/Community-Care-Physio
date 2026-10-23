@@ -1647,8 +1647,9 @@ function aEpisodeCard(members){
   // Contact details: the latest visit may carry only a phone, so fall back across the episode.
   const pick=f=>{ for(const b of aEpisodeVisitOrder(members)){ const v=String(b[f]||'').trim(); if(v) return v; } return ''; };
   const contact={phone:pick('phone'),email:pick('email'),address:pick('address'),postcode:pick('postcode'),reason:pick('reason')};
+  const toBook=funding?Math.max(0,funding.authorised-funding.booked):0;
   const allowance=funding?(funding.authorised
-    ?`${funding.booked} of ${funding.authorised} funded booked · ${funding.used} used`
+    ?`${funding.booked} of ${funding.authorised} booked · ${toBook} to book · ${funding.used} done`
     :`${funding.booked} booked · funding not set`):'';
   return `<div class="booking-item ${funding?'bcase':'bpkg'} patient-card is-collapsed" data-patient-key="${aEsc(patientKey(latest))}" data-booking-id="${aEsc(latest.id||'')}">
     <div class="patient-card-summary">
@@ -1675,7 +1676,7 @@ function aEpisodeCard(members){
         <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${latest.id}')">📋 Intake form</button>
         <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${latest.id}',${aEscJs(latest.name)})">💳 Charge fee</button>
         <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" title="File this patient with another patient's records" onclick="aLinkChooser(this,'${latest.id}')">🔗 Link to…</button>
-        ${funding?`<button class="bi-btn" style="background:var(--sage);color:#fff" title="Record more funded sessions on this patient's referral" onclick="aAddFundedSessions(this,'${latest.id}')">➕ Add funded sessions</button>
+        ${funding?`<button class="bi-btn" style="background:var(--sage);color:#fff" title="Set how many sessions the funder has approved on this patient's referral" onclick="aAddFundedSessions(this,'${latest.id}')">➕ Funded sessions</button>
         <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" title="Open the referral to book an authorised visit" onclick="aOpenReferralFor('${latest.id}')">📅 Book session</button>`:''}
       </div>
       <div class="episode-fund-form"></div>
@@ -1686,14 +1687,14 @@ function aEpisodeCard(members){
 function aAddFundedSessions(btn,bookingId){
   const card=btn.closest('.patient-card'), host=card&&card.querySelector('.episode-fund-form');
   const pr=window.CCPPractice;
-  if(!host||!pr||!pr.addFundedSessions) return;
+  if(!host||!pr||!pr.setFundedSessions) return;
   if(host.innerHTML){ host.innerHTML=''; return; }
   const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
   const members=aEpisodeFor(b), matched=pr.referralFor(members);
   const opts=(pr.referralOptions?pr.referralOptions():[]).map(o=>`<option value="${aEsc(o.key)}" ${matched&&matched.key===o.key?'selected':''}>${aEsc(o.label)}</option>`).join('');
   host.innerHTML=`<div style="margin-top:10px;padding:10px;background:#fff;border:1px solid rgba(138,171,151,.5);border-radius:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:end">
     <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px;flex:1;min-width:180px">Referral<select class="ef-ref" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"><option value="">New referral record for ${aEsc(b.name)}</option>${opts}</select></label>
-    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Sessions to add<input class="ef-n" type="number" min="1" max="50" step="1" value="1" list="efNums" style="width:90px;padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"><datalist id="efNums">${[1,2,3,4,5,6,7,8,9,10,12].map(n=>`<option value="${n}">`).join('')}</datalist></label>
+    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Sessions funded in total<input class="ef-n" type="number" min="0" max="50" step="1" value="${matched?Number(matched.authorised)||0:0}" list="efNums" style="width:90px;padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"><datalist id="efNums">${[1,2,3,4,5,6,7,8,9,10,12].map(n=>`<option value="${n}">`).join('')}</datalist></label>
     <button class="bi-btn confirm" onclick="aSaveFundedSessions(this,'${aEsc(bookingId)}')">Save</button>
     <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" onclick="this.closest('.episode-fund-form').innerHTML=''">Cancel</button>
     <div class="ef-msg" style="width:100%;font-size:11px;color:#b45309"></div>
@@ -1703,20 +1704,20 @@ function aAddFundedSessions(btn,bookingId){
 async function aSaveFundedSessions(btn,bookingId){
   const host=btn.closest('.episode-fund-form'), msg=host.querySelector('.ef-msg');
   const n=Number(host.querySelector('.ef-n').value), refKey=host.querySelector('.ef-ref').value||null;
-  if(!Number.isInteger(n)||n<1){ msg.textContent='Enter how many sessions were funded.'; return; }
+  if(!Number.isInteger(n)||n<0){ msg.textContent='Enter how many sessions the funder has approved in total.'; return; }
   const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
   btn.disabled=true; btn.textContent='Saving…';
   try{
-    const r=await CCPPractice.addFundedSessions({refKey,bookingId,n,members:aEpisodeFor(b)});
+    const r=await CCPPractice.setFundedSessions({refKey,bookingId,total:n,members:aEpisodeFor(b)});
     renderAdminBookings();
-    adminToast(`${r.authorised} sessions now authorised on referral ${r.ref||''}`.trim());
+    adminToast(`${r.authorised} sessions funded on referral ${r.ref||''}, ${Math.max(0,r.authorised-r.booked)} still to book`);
   }catch(e){ btn.disabled=false; btn.textContent='Save'; msg.textContent=e.message||'Could not save.'; }
 }
 function aOpenReferralFor(bookingId){
   const b=adminBookings.find(x=>String(x.id)===String(bookingId)); const pr=window.CCPPractice;
   if(!b||!pr||!pr.openReferral) return;
   const ref=pr.referralFor(aEpisodeFor(b));
-  if(!ref){ adminToast('No referral record matched. Use Add funded sessions first.',false); return; }
+  if(!ref){ adminToast('No referral record matched. Use Funded sessions first.',false); return; }
   pr.openReferral(ref.key);
 }
 

@@ -648,8 +648,8 @@ async function saveGroups(value) {
 function referralOptions() {
   return state.referrals.map((r) => ({ key: r.key, label: `${r.value.client?.name || 'Unnamed'} · ${r.value.ref || ''} · ${r.value.funding?.payerName || r.value.referrer?.organisation || ''}`.replace(/( · )+$/, '') }));
 }
-// Add n authorised sessions to a referral (or start one from the episode) and link it to the booking.
-async function addFundedSessions({ refKey, bookingId, n, members }) {
+// Set the total authorised sessions on a referral (or start one from the episode) and link it to the booking.
+async function setFundedSessions({ refKey, bookingId, total, members }) {
   if (!state.loaded) await load(true);
   let r = refKey ? state.referrals.find((x) => x.key === refKey) : null;
   if (refKey && !r) throw new Error('That referral is no longer listed. Refresh and try again.');
@@ -659,11 +659,12 @@ async function addFundedSessions({ refKey, bookingId, n, members }) {
       referrer: {}, client: { name: latest.name || '', email: pick('email'), phone: pick('phone'), address: pick('address'), postcode: pick('postcode') }, clinical: {}, service: {}, funding: { authorisedSessions: 0 }, reports: [] } };
   }
   const v = r.value; v.funding = v.funding || {};
-  v.funding.authorisedSessions = Number(v.funding.authorisedSessions || 0) + n;
+  v.funding.authorisedSessions = total;
   if (!v.bookingId) v.bookingId = bookingId;
   const d = await api('save', { key: r.key, value: v });
   upsert('referrals', d); navBadge(); if (isVisible()) render();
-  return { key: d.key, ref: d.value.ref || '', authorised: Number(d.value.funding?.authorisedSessions || 0) };
+  const booked = members.filter((b) => typeof aIsInitialAssessment !== 'function' || !aIsInitialAssessment(b)).length;
+  return { key: d.key, ref: d.value.ref || '', authorised: Number(d.value.funding?.authorisedSessions || 0), booked };
 }
 async function openReferral(key) {
   state.tab = 'referrals'; state.open = key; state.draft = null;
@@ -671,5 +672,5 @@ async function openReferral(key) {
   if (typeof adminNav === 'function') adminNav('referrals');
   render();
 }
-window.CCPPractice = { patientGroups, saveGroups, clear, load, referralFor, referralOptions, addFundedSessions, openReferral, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
+window.CCPPractice = { patientGroups, saveGroups, clear, load, referralFor, referralOptions, setFundedSessions, openReferral, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
 if (token()) load();
