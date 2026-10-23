@@ -79,3 +79,24 @@ test('a funded card draws one placeholder per unbooked funded session, the first
  assert.equal(c.aEpisodeToBookRows({authorised:3,booked:3,used:1},{id:'x'}),'','nothing left to book');
  assert.equal(c.aEpisodeToBookRows({authorised:0,booked:3,used:1},{id:'x'}),'','funding not set');
 });
+
+test('active cards sort by soonest upcoming visit, finished cards after by most recent visit',()=>{
+ const far=new Date(); far.setDate(far.getDate()+9); const soon=new Date(); soon.setDate(soon.getDate()+2);
+ const iso=d=>d.toISOString().slice(0,10);
+ const a={id:'a',name:'A',email:'a@example.com',appointment:'Standard Session',bookedDate:iso(far),status:null};
+ const b={id:'b',name:'B',email:'b@example.com',appointment:'Standard Session',bookedDate:iso(soon),status:null};
+ const done={id:'c',name:'C',email:'c@example.com',appointment:'Block of 4 Sessions',customSessions:[{date:'2026-01-05',status:'completed'},{date:'2026-02-01',status:'completed'}]};
+ const older={id:'d',name:'D',email:'d@example.com',appointment:'Block of 4 Sessions',customSessions:[{date:'2025-06-01',status:'completed'}]};
+ const c=setup([a,b,done,older]);
+ vm.runInContext(source('aCardSortKey')+'function aDateKey(d){return d.toISOString().slice(0,10);}function aPkgSessions(b){return b.customSessions;}',c);
+ const ep=c.aEpisodes();
+ const order=[a,b,done,older].map(x=>[x,c.aCardSortKey(x,ep)]).sort((x,y)=>x[1].next.localeCompare(y[1].next)||y[1].last.localeCompare(x[1].last)).map(x=>x[0].id);
+ assert.equal(order.join(','),'b,a,c,d');
+});
+test('add on session price follows the public list: 45 or 60 min, complex needs and travel band',()=>{
+ const c=setup([]);
+ vm.runInContext(source('aAddSessionPrice')+'const CB_PRICES={standard:{normal:75,complex:90},extended:{normal:90,complex:105}};',c);
+ assert.equal(c.aAddSessionPrice('Standard Session',false,0),75);
+ assert.equal(c.aAddSessionPrice('Extended Session',true,'15'),120);
+ assert.equal(c.aAddSessionPrice('Standard Session',true,35),125);
+});

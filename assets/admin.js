@@ -1103,9 +1103,86 @@ function aPackageCard(b){
              <span style="font-size:10.5px;color:#0369a1;align-self:center">Completed · archives in ${aPkgHoursToArchive(b)}h</span>`
           :`<button class="bi-btn confirm" onclick="aPkgComplete(${idx})">✓ Mark complete</button>`}
         <button class="bi-btn del" onclick="aPkgCancel(${idx})">✕ Cancel package</button>
+        <button class="bi-btn" style="background:var(--forest);color:#fff" title="Book a follow up visit on top of this package" onclick="aAddSession(this,'${b.id}')">➕ Add session</button>
       </div>
+      <div class="episode-add-form"></div>
     </div>
   </div>`;
+}
+// ── Add on session for any patient card ──
+// Books one more follow up visit (45 or 60 min, complex needs and travel fees
+// from the public price list) as a confirmed, invoiced single booking, and files
+// it with the card's patient so it draws under the same card.
+const ADD_SESSION_TRAVEL=[['0','Travel included (SW postcodes)'],['15','Nearby area, £15'],['35','Further out, £35']];
+function aAddSessionPrice(type,complex,travel){
+  const p=CB_PRICES[type==='Standard Session'?'standard':'extended'];
+  return (complex?p.complex:p.normal)+(Number(travel)||0);
+}
+function aAddSession(btn,bookingId){
+  const card=btn.closest('.patient-card'), host=card&&card.querySelector('.episode-add-form');
+  if(!host) return;
+  if(host.innerHTML){ host.innerHTML=''; return; }
+  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
+  const members=aIsPackage(b)?[b]:aEpisodeFor(b);
+  const last=aIsPackage(b)?b:(aEpisodeVisitOrder(members).find(x=>!aIsInitialAssessment(x))||b);
+  const lastTime=/^\d{2}:\d{2}/.test(last.bookedTime||'')?last.bookedTime.slice(0,5):'18:00';
+  const times=Array.from({length:25},(_,i)=>{const mm=8*60+i*30;return `${String(Math.floor(mm/60)).padStart(2,'0')}:${mm%60?'30':'00'}`;});
+  const complex=!!(b.complexityFee||(b.concernAreas&&/complex/i.test(b.concernAreas)));
+  const inp='padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px';
+  const lab='font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px';
+  host.innerHTML=`<div style="margin-top:10px;padding:10px;background:#fff;border:1px solid rgba(30,77,59,.15);border-radius:8px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Add on follow up session for <strong style="color:var(--char)">${aEsc(b.name)}</strong>. Confirmed and invoiced, nothing sent to the patient. Mark paid when payment is taken.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+      <label style="${lab}">Session<select class="as-type" style="${inp}" onchange="aAddSessionRecalc(this)"><option value="Standard Session">Follow up, 45 min</option><option value="Extended Session">Extended follow up, 60 min</option></select></label>
+      <label style="${lab}">Travel<select class="as-travel" style="${inp}" onchange="aAddSessionRecalc(this)">${ADD_SESSION_TRAVEL.map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></label>
+      <label style="font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px;padding-bottom:7px"><input class="as-complex" type="checkbox" ${complex?'checked':''} onchange="aAddSessionRecalc(this)">Complex needs (+£15)</label>
+      <label style="${lab}">Date<input class="as-date" type="date" min="${aDateKey(new Date())}" style="${inp}"></label>
+      <label style="${lab}">Time<select class="as-time" style="${inp}">${times.map(t=>`<option ${t===lastTime?'selected':''}>${t}</option>`).join('')}</select></label>
+      <label style="${lab}">Price £<input class="as-price" type="number" min="0" step="1" value="${aAddSessionPrice('Standard Session',complex,0)}" style="width:80px;${inp}"></label>
+      <button class="bi-btn confirm" onclick="aSaveAddSession(this,'${aEsc(bookingId)}')">Book session</button>
+      <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" onclick="this.closest('.episode-add-form').innerHTML=''">Cancel</button>
+      <div class="as-msg" style="width:100%;font-size:11px;color:#b45309"></div>
+    </div>
+  </div>`;
+  host.querySelector('.as-date').focus();
+}
+function aAddSessionRecalc(el){
+  const f=el.closest('.episode-add-form');
+  f.querySelector('.as-price').value=aAddSessionPrice(f.querySelector('.as-type').value,f.querySelector('.as-complex').checked,f.querySelector('.as-travel').value);
+}
+async function aSaveAddSession(btn,bookingId){
+  const f=btn.closest('.episode-add-form'), msg=f.querySelector('.as-msg');
+  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
+  const type=f.querySelector('.as-type').value, travel=Number(f.querySelector('.as-travel').value)||0, complex=f.querySelector('.as-complex').checked;
+  const bookedDate=f.querySelector('.as-date').value, bookedTime=f.querySelector('.as-time').value, price=Number(f.querySelector('.as-price').value);
+  if(!bookedDate){ msg.textContent='Pick a date.'; return; }
+  if(!Number.isFinite(price)||price<0){ msg.textContent='Enter the price.'; return; }
+  btn.disabled=true; btn.textContent='Booking…';
+  const booking={ name:b.name, email:b.email||'', phone:b.phone||'', address:b.address||'', postcode:b.postcode||'',
+    appointment:type, bookedDate, bookedTime, price, complexityFee:complex?15:0, patientType:'existing', bookingFor:'add-on session',
+    concernAreas:b.concernAreas||'', reason:`Add on session after ${b.appointment||'previous visits'}.${complex?' Complex needs.':''}${travel?` Travel £${travel}.`:''} Booked from the admin, payment to be taken.` };
+  try{
+    const r=await fetch('/api/update-booking',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:adminSessionToken,action:'create',booking})});
+    const d=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(d.error||'Could not book the session.');
+    // A package card has no episode, so file the new visit with it under the patient's name.
+    if(aIsPackage(b)&&d.bookingId) aLinkPatients(b.id,d.bookingId,b.name);
+    await syncFromSupabase();
+    adminToast(`Session booked for ${aFmtDay(bookedDate,bookedTime)}, £${price}.`);
+  }catch(e){ btn.disabled=false; btn.textContent='Book session'; msg.textContent=e.message||'Could not book the session.'; }
+}
+// Reminder email for an episode: lists every upcoming visit, same wording as the package reminder.
+function aEpisodeReminder(bookingId){
+  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
+  const today=aDateKey(new Date());
+  const upcoming=aEpisodeFor(b).filter(x=>!aEpisodeDone(x)&&x.bookedDate&&x.bookedDate>=today);
+  const first=(b.name||'there').split(' ')[0], plural=upcoming.length>1;
+  const lines=upcoming.map(x=>{ const d=new Date(x.bookedDate+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}); return `• ${d} at ${fmt12((x.bookedTime||'').slice(0,5))}`; }).join('\n');
+  const subject='Appointment reminder — Community Care Physio';
+  const body=`Dear ${first},\n\nThis is a reminder of your upcoming physiotherapy appointment${plural?'s':''} with Community Care Physio:\n\n${lines||'(no upcoming appointments scheduled)'}\n\nPlease wear comfortable clothing, and have any relevant letters, scan results or x-rays to hand.\n\nShould you need to rearrange, please reply to this email or contact us on WhatsApp at your earliest convenience. Please note that cancellations within 24 hours may be subject to a £50 fee.\n\nWe look forward to seeing you.\n\n${EMAIL_SIGNATURE}`;
+  const email=aEpisodeVisitOrder(aEpisodeFor(b)).map(x=>x.email).find(Boolean)||'';
+  if(email&&/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ emailSendDirect(email, subject, body).then(ok=>{ if(ok) alert('✓ Reminder sent from infoccphysio.'); }); return; }
+  window.open(gmailComposeUrl(email, subject, body), '_blank');
 }
 // Set one appointment's status (completed / dna / cancelled). Cancelled frees its slot.
 // Persist slot blocks/releases to Supabase (blocked_slots) so the PUBLIC homepage
@@ -1673,14 +1750,18 @@ function aEpisodeCard(members){
       ${rows}
       ${funding?aEpisodeToBookRows(funding,latest):''}
       <div class="bi-actions" style="margin-top:8px">
+        <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aEpisodeReminder('${latest.id}')">✉️ Reminder email</button>
+        <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgExercise(${adminBookings.indexOf(latest)})">🏋️ Exercise email</button>
         <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${latest.id}')">⭐ Review email</button>
         <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${latest.id}')">📋 Intake form</button>
         <button class="bi-btn" style="background:#fef2f2;color:#b91c1c" onclick="window.CCPPractice&&CCPPractice.chargeFee('${latest.id}',${aEscJs(latest.name)})">💳 Charge fee</button>
         <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" title="File this patient with another patient's records" onclick="aLinkChooser(this,'${latest.id}')">🔗 Link to…</button>
         ${funding?`<button class="bi-btn" style="background:var(--sage);color:#fff" title="Set how many sessions the funder has approved on this patient's referral" onclick="aAddFundedSessions(this,'${latest.id}')">➕ Funded sessions</button>
-        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" title="Open the referral to book an authorised visit" onclick="aOpenReferralFor('${latest.id}')">📅 Book session</button>`:''}
+        <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" title="Open the referral to book an authorised visit" onclick="aOpenReferralFor('${latest.id}')">📅 Book session</button>`
+        :`<button class="bi-btn" style="background:var(--forest);color:#fff" title="Book another follow up visit for this patient" onclick="aAddSession(this,'${latest.id}')">➕ Add session</button>`}
       </div>
       <div class="episode-fund-form"></div>
+      <div class="episode-add-form"></div>
     </div>
   </div>`;
 }
@@ -1776,6 +1857,17 @@ function aOpenReferralFor(bookingId){
   pr.openReferral(ref.key);
 }
 
+// Card order on the Active page: the soonest upcoming visit first; cards with
+// nothing booked sit below, most recent visit first.
+function aCardSortKey(b,episodes){
+  const today=aDateKey(new Date());
+  let dates;
+  if(aIsPackage(b)) dates=aPkgSessions(b).filter(s=>s&&s.date&&!['cancelled'].includes(s.status)).map(s=>({d:s.date,open:!['completed','dna'].includes(s.status)}));
+  else dates=((episodes&&episodes.get(b.id))||[b]).filter(x=>x.bookedDate).map(x=>({d:x.bookedDate,open:!aEpisodeDone(x)}));
+  const next=dates.filter(x=>x.open&&x.d>=today).map(x=>x.d).sort()[0]||'9999-99-99';
+  const last=dates.map(x=>x.d).sort().pop()||'';
+  return {next,last};
+}
 // A record that belongs on the Active page (not dismissed, archived, finished or dead).
 function aIsLiveRecord(b){
   if(!b||(b.id&&cbDismissed.includes(b.id)))return false;
@@ -1871,6 +1963,8 @@ function renderAdminBookings(){
   // one episode card with a session list, like a package, instead of a card each.
   const episodes=aEpisodes();
   const drawnEp=new Set();
+  const sortKeys=new Map(recent.map(b=>[b,aCardSortKey(b,episodes)]));
+  recent.sort((x,y)=>{ const a=sortKeys.get(x), b=sortKeys.get(y); return a.next.localeCompare(b.next)||b.last.localeCompare(a.last); });
   el.innerHTML=aLinkSuggestionsHtml(pool,recent)+recent.map(b=>{
     const g=aPatientGroup(b);
     if(!g&&!aIsPackage(b)){
