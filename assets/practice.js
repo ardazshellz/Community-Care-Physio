@@ -68,9 +68,23 @@ function linkedBooking(ref) { return bookings().find((b) => String(b.id) === Str
 function sessionsUsed(ref) {
   const b = linkedBooking(ref);
   if (!b || typeof aPkgSessions !== 'function') return Number(ref.value.sessionsUsedManual || 0);
-  // Packages list every visit (the first is the booked date); single bookings count once they are past and paid.
+  // Packages list every visit (the first is the booked date); single bookings count every
+  // completed treatment visit in the client's episode (the initial assessment is funded separately).
   if (typeof aIsPackage === 'function' && aIsPackage(b)) return aPkgSessions(b).filter((s) => ['completed', 'dna'].includes(s.status)).length;
+  if (typeof aEpisodeFor === 'function') return aEpisodeFor(b).filter((x) => !aIsInitialAssessment(x) && aEpisodeDone(x)).length;
   return b.paid && b.bookedDate && b.bookedDate < today() && !['cancelled', 'expired', 'refunded'].includes(b.status) ? 1 : 0;
+}
+// The referral behind an episode: linked by booking id, or the client's email, phone or name.
+function referralFor(members) {
+  const ids = new Set(members.map((b) => String(b.id)));
+  const keys = new Set(members.flatMap((b) => (typeof aEpisodeKeys === 'function' ? aEpisodeKeys(b) : [])));
+  const r = state.referrals.find((x) => {
+    const c = x.value.client || {};
+    return ids.has(String(x.value.bookingId)) || (typeof aEpisodeKeys === 'function' && aEpisodeKeys({ email: c.email, phone: c.phone || c.contactPhone, name: c.name }).some((k) => keys.has(k)));
+  });
+  if (!r) return null;
+  const v = r.value;
+  return { key: r.key, ref: v.ref || '', funder: v.funding?.payerName || v.referrer?.organisation || '', authorised: Number(v.funding?.authorisedSessions || 0) };
 }
 function referralAlerts(ref) {
   const v = ref.value, out = [];
@@ -627,5 +641,5 @@ async function saveGroups(value) {
   if (typeof renderAdminBookings === 'function') renderAdminBookings();
 }
 
-window.CCPPractice = { patientGroups, saveGroups, clear, load, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
+window.CCPPractice = { patientGroups, saveGroups, clear, load, referralFor, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
 if (token()) load();

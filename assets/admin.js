@@ -215,6 +215,7 @@ function getAdminOperationalMetrics(){
   let outstandingCount=0, outstandingTotal=0, sessionsToBook=0, activeProgrammeCount=0;
   const activePatientKeys=new Set();
   const activeProgrammeKeys=new Set();
+  const episodes=typeof aEpisodes==='function'?aEpisodes():null;
 
   bookings.forEach(b=>{
     if(!b||b.activeOnly) return;
@@ -245,7 +246,9 @@ function getAdminOperationalMetrics(){
         }
       });
     }else{
-      if(!inactive&&!clinicallyClosed&&key) activePatientKeys.add(key);
+      // One patient, one count, even when visits were booked under different contact details.
+      const epKey=episodes?patientKey(aEpisodeFor(b,episodes)[0]||b):key;
+      if(!inactive&&!clinicallyClosed&&epKey) activePatientKeys.add(epKey);
       if(b.bookedDate&&b.bookedTime&&!['cancelled','expired','completed','dna','rescheduled'].includes(bStatus)){
         appts.push({date:b.bookedDate,time:b.bookedTime,name:b.name,label:b.appointment||'Appointment',patientKey:key});
       }
@@ -1554,15 +1557,60 @@ async function aPkgCancel(i){
 // Case-managed and repeat patients get one booking per visit. Grouped by
 // patientKey (email, else phone, else name) so the Patients view reads like a
 // package: completed count, next visit, one row per session.
+function aEpisodeDone(b){ return ['completed','dna'].includes(String(b&&b.status||'').toLowerCase()); }
 function aEpisodeSingle(b){
   const st=String(b.status||'').toLowerCase();
-  return b&&b.id&&!aIsPackage(b)&&!cbDismissed.includes(b.id)&&!['cancelled','expired','abandoned','lead'].includes(st)&&!(b.paid===false&&b.confirmed===false);
+  // A pending unpaid checkout is not a visit, but a visit that happened (completed or DNA) always is.
+  return b&&b.id&&!aIsPackage(b)&&!cbDismissed.includes(b.id)&&!['cancelled','expired','abandoned','lead'].includes(st)&&!(b.paid===false&&b.confirmed===false&&!aEpisodeDone(b));
 }
+// Every identity a record carries: email, phone and name. Two bookings belong to
+// the same episode when they share ANY of them, so an initial assessment booked
+// with an email joins sessions created later with only a contact phone.
+function aEpisodeKeys(b){
+  const email=(b.email||'').trim().toLowerCase();
+  const phone=(b.phone||'').replace(/\D/g,'');
+  const name=(b.name||'').trim().toLowerCase().replace(/\s+/g,' ');
+  return [email&&'e:'+email, phone&&'p:'+phone, name&&'n:'+name].filter(Boolean);
+}
+// Map of booking id and identity key ('e:', 'p:', 'n:') to the shared, date
+// sorted member array of that patient's episode.
+// ponytail: rebuilt on every render, fine for one practice's booking count.
 function aEpisodes(){
+  const singles=adminBookings.filter(aEpisodeSingle);
+  const parent=singles.map((_,i)=>i);
+  const find=i=>{ while(parent[i]!==i){ parent[i]=parent[parent[i]]; i=parent[i]; } return i; };
+  const seen=new Map();
+  singles.forEach((b,i)=>aEpisodeKeys(b).forEach(k=>{ if(seen.has(k)) parent[find(i)]=find(seen.get(k)); else seen.set(k,i); }));
+  const groups=new Map();
+  singles.forEach((b,i)=>{ const r=find(i); if(!groups.has(r)) groups.set(r,[]); groups.get(r).push(b); });
   const map=new Map();
-  adminBookings.filter(aEpisodeSingle).forEach(b=>{const k=patientKey(b); if(!map.has(k)) map.set(k,[]); map.get(k).push(b);});
-  map.forEach(list=>list.sort((x,y)=>((x.bookedDate||'')+(x.bookedTime||'')).localeCompare((y.bookedDate||'')+(y.bookedTime||''))));
+  groups.forEach(list=>{
+    list.sort((x,y)=>((x.bookedDate||'')+(x.bookedTime||'')).localeCompare((y.bookedDate||'')+(y.bookedTime||'')));
+    list.forEach(b=>{ map.set(b.id,list); aEpisodeKeys(b).forEach(k=>map.set(k,list)); });
+  });
   return map;
+}
+// Members of the episode a booking (or any {email, phone, name}) belongs to.
+function aEpisodeFor(b, episodes){
+  const map=episodes||aEpisodes();
+  if(b&&b.id&&map.has(b.id)) return map.get(b.id);
+  for(const k of aEpisodeKeys(b||{})) if(map.has(k)) return map.get(k);
+  return b&&b.id?[b]:[];
+}
+function aEpisodeOpen(members){ return members.some(b=>!aEpisodeDone(b)); }
+// Visits newest first so today's visit sits at the top and the initial assessment last.
+function aEpisodeVisitOrder(members){ return [...members].reverse(); }
+function aIsInitialAssessment(b){ return /initial assessment/i.test(String(b&&b.appointment||'')); }
+// Case managed (insurer or case manager funded): a referral record matches, or a
+// visit was created through the invoiced path rather than the public form.
+function aEpisodeFunding(members){
+  const pr=window.CCPPractice;
+  const ref=pr&&pr.referralFor?pr.referralFor(members):null;
+  const invoiced=members.some(b=>b.bookingFor==='referral'||String(b.status||'').toLowerCase()==='invoiced');
+  if(!ref&&!invoiced) return null;
+  const treatment=members.filter(b=>!aIsInitialAssessment(b));
+  return { funder:ref&&ref.funder||'', ref:ref&&ref.ref||'', authorised:ref?Number(ref.authorised)||0:0,
+    booked:treatment.length, used:treatment.filter(aEpisodeDone).length };
 }
 function aEpisodeCard(members){
   const latest=members[members.length-1];
@@ -1573,7 +1621,8 @@ function aEpisodeCard(members){
   const st=aStatus(next||latest);
   const prices=[...new Set(members.map(b=>b.price).filter(Boolean))];
   const types=[...new Set(members.map(b=>aApptType(b.appointment).label))];
-  const rows=members.map(b=>{
+  const funding=aEpisodeFunding(members);
+  const rows=aEpisodeVisitOrder(members).map(b=>{
     const idx=adminBookings.indexOf(b);
     const done=b.status==='completed', dna=b.status==='dna';
     const m=aSessMeta(done?'completed':dna?'dna':'scheduled');
@@ -1593,23 +1642,29 @@ function aEpisodeCard(members){
       <div style="display:flex;gap:6px;flex-wrap:wrap;padding-left:24px">${actions}</div>
     </div>`;
   }).join('');
-  return `<div class="booking-item bpkg patient-card is-collapsed" data-patient-key="${aEsc(patientKey(latest))}" data-booking-id="${aEsc(latest.id||'')}">
+  // Contact details: the latest visit may carry only a phone, so fall back across the episode.
+  const pick=f=>{ for(const b of aEpisodeVisitOrder(members)){ const v=String(b[f]||'').trim(); if(v) return v; } return ''; };
+  const contact={phone:pick('phone'),email:pick('email'),address:pick('address'),postcode:pick('postcode'),reason:pick('reason')};
+  const allowance=funding?(funding.authorised
+    ?`${funding.booked} of ${funding.authorised} funded booked · ${funding.used} used`
+    :`${funding.booked} booked · funding not set`):'';
+  return `<div class="booking-item ${funding?'bcase':'bpkg'} patient-card is-collapsed" data-patient-key="${aEsc(patientKey(latest))}" data-booking-id="${aEsc(latest.id||'')}">
     <div class="patient-card-summary">
       <div class="patient-summary-main">
-        <div class="patient-summary-name">${aEsc(latest.name)||'Unknown patient'}</div>
+        <div class="patient-summary-name">${aEsc([...new Set(members.map(b=>String(b.name||'').trim()).filter(Boolean))].join(' & '))||'Unknown patient'}${funding?` <span class="case-chip" title="${aEsc(funding.ref?'Referral '+funding.ref:'Invoiced to the funder, not the patient')}">Case managed${funding.funder?' · '+aEsc(funding.funder):''}</span>`:''}</div>
         <div class="patient-summary-type">${aEsc(types.join(' / '))} × ${total} · <span style="font-weight:600;color:${st.color}">${st.label}</span>${prices.length===1?` · £${aEsc(String(prices[0]))} each`:''}</div>
       </div>
       <div class="patient-summary-metric"><div class="patient-summary-label">Completed</div><div class="patient-summary-value">${done} of ${total}</div></div>
-      <div class="patient-summary-metric"><div class="patient-summary-label">Remaining</div><div class="patient-summary-value">${remaining} session${remaining===1?'':'s'}</div></div>
+      <div class="patient-summary-metric"><div class="patient-summary-label">${funding?'Funded sessions':'Remaining'}</div><div class="patient-summary-value">${funding?aEsc(allowance):`${remaining} session${remaining===1?'':'s'}`}</div></div>
       <div class="patient-summary-metric"><div class="patient-summary-label">Next appointment</div><div class="patient-summary-value">${next?aFmtDay(next.bookedDate,next.bookedTime):'Not booked yet'}</div></div>
       <button class="patient-card-toggle" onclick="togglePatientCard(this)" aria-expanded="false">View details</button>
     </div>
     <div class="patient-card-details">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px;padding:10px;background:#fff;border-radius:8px;border:1px solid rgba(30,77,59,.06)">
-        <div style="font-size:11px;color:var(--muted)">📞 <strong style="color:var(--char)">${aEsc(latest.phone)||'—'}</strong></div>
-        <div style="font-size:11px;color:var(--muted)">✉️ <strong style="color:var(--char)">${aEsc(latest.email)||'—'}</strong></div>
-        <div style="font-size:11px;color:var(--muted);grid-column:1/-1">📍 <strong style="color:var(--char)">${aEsc(latest.address)||'—'}, ${aEsc(latest.postcode)||''}</strong></div>
-        ${latest.reason?`<div style="font-size:11px;color:var(--muted);grid-column:1/-1">📋 <strong style="color:var(--char)">Reason:</strong> ${aEsc(latest.reason)}</div>`:''}
+        <div style="font-size:11px;color:var(--muted)">📞 <strong style="color:var(--char)">${aEsc(contact.phone)||'—'}</strong></div>
+        <div style="font-size:11px;color:var(--muted)">✉️ <strong style="color:var(--char)">${aEsc(contact.email)||'—'}</strong></div>
+        <div style="font-size:11px;color:var(--muted);grid-column:1/-1">📍 <strong style="color:var(--char)">${aEsc(contact.address)||'—'}, ${aEsc(contact.postcode)||''}</strong></div>
+        ${contact.reason?`<div style="font-size:11px;color:var(--muted);grid-column:1/-1">📋 <strong style="color:var(--char)">Reason:</strong> ${aEsc(contact.reason)}</div>`:''}
       </div>
       <div style="font-size:11px;color:var(--muted);margin:6px 0 4px">Sessions</div>
       ${rows}
@@ -1623,6 +1678,13 @@ function aEpisodeCard(members){
   </div>`;
 }
 
+// A record that belongs on the Active page (not dismissed, archived, finished or dead).
+function aIsLiveRecord(b){
+  if(!b||(b.id&&cbDismissed.includes(b.id)))return false;
+  const st=String(b.status||'').toLowerCase();
+  if(aIsPackage(b))return !aPkgIsArchived(b)&&!['cancelled','expired','abandoned','lead'].includes(st);
+  return !['completed','cancelled','expired','dna','abandoned','lead'].includes(st);
+}
 function renderAdminBookings(){
   renderClientList();
   renderArchivedPackages();
@@ -1639,10 +1701,7 @@ function renderAdminBookings(){
   adminBookings.forEach(pb=>{if(aIsPackage(pb)){aPkgSessions(pb).forEach(s=>{if(s.date&&s.time)pkgSlots.add(s.date+'|'+s.time);});}});
   const pkgPatients=new Set(adminBookings.filter(pb=>aIsPackage(pb)&&pb.name).map(pb=>pb.name.trim().toLowerCase()));
   const recent=[...adminBookings].reverse().filter(b=>{
-    if(b.id&&cbDismissed.includes(b.id))return false;
-    const recordStatus=String(b.status||'').toLowerCase();
-    if(aIsPackage(b)&&(aPkgIsArchived(b)||['cancelled','expired','abandoned','lead'].includes(recordStatus)))return false;
-    if(!aIsPackage(b)&&['completed','cancelled','expired','dna','abandoned','lead'].includes(recordStatus))return false;
+    if(!aIsLiveRecord(b))return false;
     if(!aIsPackage(b)&&b.bookedDate&&b.bookedTime&&pkgSlots.has(b.bookedDate+'|'+b.bookedTime))return false;
     if(!aIsPackage(b)&&b.name&&pkgPatients.has(b.name.trim().toLowerCase()))return false;
     return true;
@@ -1717,8 +1776,8 @@ function renderAdminBookings(){
   el.innerHTML=aLinkSuggestionsHtml(pool,recent)+recent.map(b=>{
     const g=aPatientGroup(b);
     if(!g&&!aIsPackage(b)){
-      const k=patientKey(b), fam=episodes.get(k);
-      if(fam&&fam.length>1){ if(drawnEp.has(k)) return ''; drawnEp.add(k); return aEpisodeCard(fam); }
+      const fam=episodes.get(b.id);
+      if(fam&&fam.length>1){ if(drawnEp.has(fam)) return ''; drawnEp.add(fam); return aEpisodeCard(fam); }
     }
     if(!g) return cardFor(b);
     if(drawn.has(g.id)) return '';
@@ -1871,19 +1930,16 @@ function renderArchivedPackages(){
   const el=document.getElementById('aArchivedList'); if(!el) return;
   const archived=adminBookings.filter(b=>aIsPackage(b) ? aPkgIsArchived(b) : ['completed','dna'].includes(String(b.status||'').toLowerCase()));
   const badge=document.getElementById('aArchivedBadge');
-  if(badge) badge.textContent = archived.length ? '· '+archived.length : '';
-  if(!archived.length){
-    el.innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px 0">No archived patients yet.</div>';
-    return;
-  }
-
   const episodes=aEpisodes(), drawnEp=new Set();
-  el.innerHTML=archived.map(b=>{
+  const cards=archived.map(b=>{
     if(!aIsPackage(b)){
-      const k=patientKey(b), fam=episodes.get(k)||[];
+      const fam=aEpisodeFor(b,episodes);
       // Still has visits to come: the finished ones sit in the live episode card.
-      if(fam.some(x=>!['completed','dna'].includes(String(x.status||'').toLowerCase()))) return '';
-      if(fam.length>1){ if(drawnEp.has(k)) return ''; drawnEp.add(k); return aEpisodeCard(fam); }
+      if(aEpisodeOpen(fam)) return '';
+      // Linked household with a live member: this visit already shows under that group.
+      const g=aPatientGroup(b);
+      if(g&&adminBookings.some(x=>x!==b&&aPatientGroup(x)===g&&aIsLiveRecord(x))) return '';
+      if(fam.length>1){ if(drawnEp.has(fam)) return ''; drawnEp.add(fam); return aEpisodeCard(fam); }
       return aArchivedSingleCard(b);
     }
     const sessions=aPkgSessions(b);
@@ -1957,7 +2013,10 @@ function renderArchivedPackages(){
         </div>
       </div>
     </div>`;
-  }).join('');
+  }).filter(Boolean);
+  // Badge counts cards actually drawn, not visits that still sit in a live episode.
+  if(badge) badge.textContent = cards.length ? '· '+cards.length : '';
+  el.innerHTML=cards.join('')||'<div style="font-size:12px;color:var(--muted);padding:4px 0">No archived patients yet.</div>';
 }
 // Completed single bookings (an initial assessment seen once, say) keep their
 // record, notes and intake reachable here instead of vanishing from Patients.

@@ -20,6 +20,12 @@ put('referral:11111111-1111-4111-8111-111111111111', 'referral', { status: 'acti
   service: { type: 'assessment-treatment', urgency: 'routine' },
   funding: { caseRef: 'CASE-0001', payerName: 'Example Case Management', invoiceEmail: 'accounts@example.com', invoiceAddress: '2 Example Street, London', authorisedSessions: 4, poNumber: 'PO-77' },
   reports: [{ label: 'Initial assessment report', due: d(-1), done: false }, { label: 'Progress report', due: d(20), done: false }] });
+put('referral:66666666-6666-4666-8666-666666666666', 'referral', { status: 'active', ref: 'R-DEMO03', submittedAt: new Date().toISOString(), bookingId: 'cm-1',
+  referrer: { name: 'Casey Manager', organisation: 'Example Case Management', role: 'Case Manager', email: 'casey@example.com' },
+  client: { name: 'Jordan Fictional', email: 'jordan.f@example.com', postcode: 'SW19 4DD', address: '9 Example Avenue', contactName: 'Casey Fictional', contactPhone: '07000 000010' },
+  clinical: { condition: 'Fictional example: deconditioning after a hospital stay.' }, service: { type: 'assessment-treatment', urgency: 'routine' },
+  funding: { caseRef: 'CASE-0003', payerName: 'Example Case Management', invoiceEmail: 'accounts@example.com', authorisedSessions: 8 },
+  reports: [{ label: 'Progress report', due: d(5), done: false }, { label: 'Discharge report', due: d(40), done: false }] });
 put('referral:22222222-2222-4222-8222-222222222222', 'referral', { status: 'new', ref: 'R-DEMO02', submittedAt: new Date().toISOString(),
   referrer: { name: 'Jo Sample', organisation: 'Sample Insurance', email: 'jo@example.com' }, client: { name: 'Chris Fictional' },
   clinical: { condition: 'Fictional example: post-operative knee rehabilitation.' }, service: { type: 'assessment-report', urgency: 'urgent' }, funding: { authorisedSessions: null }, reports: [] });
@@ -40,6 +46,15 @@ const bookings = [
     customSessions: [1, 2, 3, 4].map((n) => ({ label: 'Follow-up ' + n, date: d(-40 + n * 7), time: '18:00', length: 45, status: 'completed' })) },
   { id: 'demo-4', name: 'Kim Example', email: 'kim.e@example.com', phone: '07000 000005', appointment: 'Block of 4 Sessions', bookedDate: d(4), bookedTime: '18:00', price: 295, paid: true, confirmed: true, postcode: 'SW19 3CC', address: '7 Sample Lane', createdAt: new Date().toISOString(), status: 'active',
     customSessions: [{ label: 'Follow-up 1', date: d(4), time: '18:00', length: 45, status: 'scheduled' }, { label: 'Follow-up 2', date: null, time: null, status: 'unscheduled' }, { label: 'Follow-up 3', date: null, time: null, status: 'unscheduled' }, { label: 'Follow-up 4', date: null, time: null, status: 'unscheduled' }] },
+  // Case managed episode (fictional): initial assessment booked with an email, three
+  // invoiced sessions created with only the contact phone. Must draw as ONE card.
+  { id: 'cm-0', name: 'Jordan Fictional', email: 'jordan.f@example.com', phone: '', appointment: 'Initial Assessment', bookedDate: d(-15), bookedTime: '11:00', price: 130, paid: true, confirmed: true, postcode: 'SW19 4DD', address: '9 Example Avenue', createdAt: new Date().toISOString(), status: 'completed', bookingFor: 'A patient / resident' },
+  ...[[-7, 'completed'], [-1, 'completed'], [0, 'invoiced']].map(([n, status], i) => ({ id: 'cm-' + (i + 1), name: 'Jordan Fictional', email: '', phone: '07000 000010', appointment: 'Extended Session', bookedDate: d(n), bookedTime: '16:00', price: 140, paid: false, confirmed: true, postcode: 'SW19 4DD', address: '9 Example Avenue', createdAt: new Date().toISOString(), status, bookingFor: 'referral', patientType: 'existing', reason: 'Example Case Management R-DEMO03, case ref CASE-0003. Authorised session, invoice Example Case Management, not the client. Appointments via Casey Fictional.' })),
+  // Household (fictional): two family members booked with one email. The older
+  // completed visit belongs in the live card, never in the archive.
+  { id: 'hh-1', name: 'Lee Household', email: 'household@example.com', phone: '07000 000011', appointment: 'Standard Session', bookedDate: d(-90), bookedTime: '14:00', price: 95, paid: true, confirmed: true, postcode: 'SW20 1EE', address: '4 Sample Row', createdAt: new Date().toISOString(), status: 'completed' },
+  { id: 'hh-2', name: 'Lee Household', email: 'household@example.com', phone: '07000 000011', appointment: 'Standard Session', bookedDate: d(6), bookedTime: '14:00', price: 95, paid: true, confirmed: true, postcode: 'SW20 1EE', address: '4 Sample Row', createdAt: new Date().toISOString(), status: null },
+  { id: 'hh-3', name: 'Ash Household', email: 'household@example.com', phone: '07000 000012', appointment: 'Initial Assessment', bookedDate: d(6), bookedTime: '15:00', price: 145, paid: true, confirmed: true, postcode: 'SW20 1EE', address: '4 Sample Row', createdAt: new Date().toISOString(), status: null },
   // Abandoned checkout pipeline, one row per stage (all fictional).
   { id: 'lead-1', name: 'Morgan Unpaid', email: 'morgan@example.com', phone: '07000 000006', appointment: 'Initial Assessment', bookedDate: d(3), bookedTime: '18:30', price: 145, paid: false, confirmed: false, postcode: 'SW17 7AA', createdAt: new Date(Date.now() - 2 * 3600e3).toISOString(), status: 'abandoned', leadEmails: 1, bookingFor: 'A patient / resident', reason: 'Fictional: knee pain after a fall' },
   { id: 'lead-2', name: 'Sam Dayfour', email: 'sam.d@example.com', phone: '07000 000007', appointment: 'Full Programme', bookedDate: d(5), bookedTime: '19:00', price: 615, paid: false, confirmed: false, postcode: 'SW16 1BB', createdAt: new Date(Date.now() - 4 * 86400e3).toISOString(), status: 'abandoned', leadEmails: 2, bookingFor: 'A family member' },

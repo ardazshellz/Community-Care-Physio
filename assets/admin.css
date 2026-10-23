@@ -47,6 +47,9 @@ body.admin-active .chat-win{display:none!important}
 .booking-item{padding:14px;border-radius:10px;border:1px solid rgba(30,77,59,.1);margin-bottom:10px;background:var(--warm)}
 .booking-item.bnew{border-left:3px solid var(--forest)}
 .booking-item.bpkg{border-left:3px solid var(--gold)}
+/* Case managed (insurer or case manager funded) episode: sage tint so funded patients stand out */
+.booking-item.bcase{border-left:3px solid var(--sage);background:#edf3ef;border-color:rgba(138,171,151,.55)}
+.case-chip{display:block;width:fit-content;max-width:100%;margin:4px 0 0;padding:2px 8px;border-radius:999px;background:var(--sage);color:#fff;font-size:9.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;line-height:1.4}
 .bi-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
 .bi-name{font-size:14px;font-weight:500;color:var(--char)}
 .bi-appt{font-size:11px;font-weight:500;padding:3px 9px;border-radius:20px;background:var(--fp);color:var(--forest)}
