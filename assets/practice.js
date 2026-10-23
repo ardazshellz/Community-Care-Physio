@@ -491,19 +491,9 @@ document.addEventListener('click', (ev) => {
     render(); return;
   }
   if (a === 'book-session' && ref) return run(async () => {
-    const v = readReferral(ref), c = v.client || {}, f = v.funding || {};
-    const bookedDate = $('prBookDate').value, bookedTime = $('prBookTime').value, price = Number($('prBookPrice').value);
-    if (!c.name) throw new Error('Enter the client name first.');
-    if (!bookedDate) throw new Error('Pick a date.');
-    const booking = {
-      name: c.name, email: c.email || '', phone: c.contactPhone || c.phone || '', address: c.address || '', postcode: c.postcode || '',
-      appointment: $('prBookLen').value, bookedDate, bookedTime, price, complexityFee: 0, patientType: 'existing', bookingFor: 'referral',
-      reason: `${v.referrer?.organisation || v.referrer?.name || 'Referral'} ${v.ref || ''}${f.caseRef ? `, case ref ${f.caseRef}` : ''}. Authorised session, invoice ${f.payerName || 'the referrer'}, not the client.${c.contactName ? ` Appointments via ${c.contactName}.` : ''}`
-    };
-    const r = await fetch('/api/update-booking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token(), action: 'create', booking }) });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(d.error || 'Could not book the session.');
-    if (typeof syncFromSupabase === 'function') syncFromSupabase();
+    ref.value = readReferral(ref);
+    const bookedDate = $('prBookDate').value, bookedTime = $('prBookTime').value;
+    await bookAuthorisedSession(ref.value, { bookedDate, bookedTime, appointment: $('prBookLen').value, price: Number($('prBookPrice').value) });
     status(`✓ Session booked for ${ukDate(bookedDate)} at ${bookedTime}. It shows under Bookings and Patients.`);
   });
   if (a === 'save-ref' && ref) run(async () => { const d = await api('save', { key: ref.key, value: readReferral(ref) }); upsert('referrals', d); render(); navBadge(); status('Referral saved.'); });
@@ -666,11 +656,34 @@ async function setFundedSessions({ refKey, bookingId, total, members }) {
   const booked = members.filter((b) => typeof aIsInitialAssessment !== 'function' || !aIsInitialAssessment(b)).length;
   return { key: d.key, ref: d.value.ref || '', authorised: Number(d.value.funding?.authorisedSessions || 0), booked };
 }
+// One authorised visit for a referral's client: a confirmed, invoiced booking with no payment link and no email.
+async function bookAuthorisedSession(v, { bookedDate, bookedTime, appointment, price }) {
+  const c = v.client || {}, f = v.funding || {};
+  if (!c.name) throw new Error('Enter the client name on the referral first.');
+  if (!bookedDate) throw new Error('Pick a date.');
+  if (!Number.isFinite(price) || price < 0) throw new Error('Enter the price per visit.');
+  const booking = {
+    name: c.name, email: c.email || '', phone: c.contactPhone || c.phone || '', address: c.address || '', postcode: c.postcode || '',
+    appointment, bookedDate, bookedTime, price, complexityFee: 0, patientType: 'existing', bookingFor: 'referral',
+    reason: `${v.referrer?.organisation || v.referrer?.name || 'Referral'} ${v.ref || ''}${f.caseRef ? `, case ref ${f.caseRef}` : ''}. Authorised session, invoice ${f.payerName || 'the referrer'}, not the client.${c.contactName ? ` Appointments via ${c.contactName}.` : ''}`
+  };
+  const r = await fetch('/api/update-booking', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token: token(), action: 'create', booking }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Could not book the session.');
+  if (typeof syncFromSupabase === 'function') await syncFromSupabase();
+  return d;
+}
+async function bookSession(refKey, opts) {
+  if (!state.loaded) await load(true);
+  const r = state.referrals.find((x) => x.key === refKey);
+  if (!r) throw new Error('Referral not found. Refresh and try again.');
+  return bookAuthorisedSession(r.value, opts);
+}
 async function openReferral(key) {
   state.tab = 'referrals'; state.open = key; state.draft = null;
   if (!state.loaded) await load();
   if (typeof adminNav === 'function') adminNav('referrals');
   render();
 }
-window.CCPPractice = { patientGroups, saveGroups, clear, load, referralFor, referralOptions, setFundedSessions, openReferral, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
+window.CCPPractice = { patientGroups, saveGroups, clear, load, referralFor, referralOptions, setFundedSessions, openReferral, bookSession, render: () => { if (!state.loaded) load(); else render(); }, chargeFee, notesFor, intakeFor, cardBadge, alerts: allAlerts };
 if (token()) load();

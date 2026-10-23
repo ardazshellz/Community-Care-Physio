@@ -68,3 +68,14 @@ test('referralFor matches a referral by reference in the reason or by contact de
  assert.equal(c.referralFor([{id:'z',name:'Someone Else',email:'',phone:'',reason:''}]),null);
  assert.equal(c.referralFor([{id:'w',name:'Pat Other',email:'',phone:'',reason:''}]).authorised,2,'client name');
 });
+
+test('a funded card draws one placeholder per unbooked funded session, the first with a Book button',()=>{
+ const c=setup([]);
+ vm.runInContext(source('aEpisodeToBookRows')+'function aSessMeta(){return {i:"○",c:"#000"};}function aEsc(x){return String(x);}',c);
+ const html=c.aEpisodeToBookRows({authorised:8,booked:3,used:3},{id:'x'});
+ assert.equal((html.match(/episode-tobook/g)||[]).length,5);
+ assert.equal((html.match(/📅 Book/g)||[]).length,1);
+ assert.ok(html.includes('Session 4 of 8'));
+ assert.equal(c.aEpisodeToBookRows({authorised:3,booked:3,used:1},{id:'x'}),'','nothing left to book');
+ assert.equal(c.aEpisodeToBookRows({authorised:0,booked:3,used:1},{id:'x'}),'','funding not set');
+});

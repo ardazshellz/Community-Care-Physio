@@ -93,6 +93,7 @@ http.createServer(async (req, res) => {
   if (url.pathname === '/api/availability') { const rota = {}; for (let i = 0; i < 40; i++) rota[d(i)] = ['18:00', '18:30', '19:00', '19:30']; return json(res, 200, { rota }); }
   if (url.pathname === '/api/get-slots') return json(res, 200, { bookedSlots: {} });
   if (url.pathname === '/api/update-booking') { const b = await readBody(req); const row = bookings.find((x) => x.id === b.bookingId);
+    if (b.action === 'create' && b.booking) { const nb = { ...b.booking, id: 'new-' + Date.now().toString(36), paid: false, confirmed: true, status: 'invoiced', createdAt: new Date().toISOString() }; bookings.push(nb); return json(res, 200, { success: true, bookingId: nb.id }); }
     if (row && b.action === 'markLead') row.status = 'lead';
     if (row && b.action === 'restore') { row.status = null; row.confirmed = true; return json(res, 200, { success: true, clash: row.id === 'lead-2' }); }
     if (row && ['delete', 'purge'].includes(b.action)) bookings.splice(bookings.indexOf(row), 1);

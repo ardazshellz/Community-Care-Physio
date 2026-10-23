@@ -1671,6 +1671,7 @@ function aEpisodeCard(members){
       </div>
       <div style="font-size:11px;color:var(--muted);margin:6px 0 4px">Sessions</div>
       ${rows}
+      ${funding?aEpisodeToBookRows(funding,latest):''}
       <div class="bi-actions" style="margin-top:8px">
         <button class="bi-btn" style="background:#fff7ed;color:#b45309" onclick="openReviewRequestForBooking('${latest.id}')">⭐ Review email</button>
         <button class="bi-btn" style="background:#e8f2ee;color:#1e4d3b" onclick="window.CCPPractice&&CCPPractice.intakeFor('${latest.id}')">📋 Intake form</button>
@@ -1683,7 +1684,61 @@ function aEpisodeCard(members){
     </div>
   </div>`;
 }
-// Inline form on a funded card: pick the referral (or make one) and add n authorised sessions.
+// Funded sessions not yet booked, drawn like a package's empty slots so the next
+// visit is always visible under the completed ones. Session n counts treatment visits only.
+function aEpisodeToBookRows(funding,latest){
+  const toBook=Math.max(0,funding.authorised-funding.booked);
+  if(!toBook) return '';
+  const m=aSessMeta('unscheduled');
+  return Array.from({length:toBook},(_,i)=>{
+    const n=funding.booked+i+1;
+    return `<div class="episode-tobook" style="padding:8px 9px;border-radius:7px;background:rgba(255,255,255,.55);border:1px dashed rgba(138,171,151,.7);margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="color:${m.c};font-weight:700;width:16px;text-align:center">${m.i}</span>
+        <span style="flex:1;font-size:12px;color:var(--char)">Session ${n} of ${funding.authorised}<span style="color:var(--muted)"> · not booked yet</span></span>
+        ${i===0?`<button class="bi-btn" style="background:var(--forest);color:#fff;padding:4px 10px;font-size:10.5px" onclick="aBookFundedSession(this,'${aEsc(latest.id)}')">📅 Book</button>`:`<span style="font-size:10px;color:var(--muted)">funded</span>`}
+      </div>
+      ${i===0?'<div class="episode-book-form"></div>':''}
+    </div>`;
+  }).join('');
+}
+// Inline booking form on the first empty funded slot: date, half hour time, length, price.
+function aBookFundedSession(btn,bookingId){
+  const host=btn.closest('.episode-tobook').querySelector('.episode-book-form');
+  const pr=window.CCPPractice;
+  if(!host||!pr||!pr.bookSession) return;
+  if(host.innerHTML){ host.innerHTML=''; return; }
+  const b=adminBookings.find(x=>String(x.id)===String(bookingId)); if(!b) return;
+  const members=aEpisodeFor(b), ref=pr.referralFor(members);
+  if(!ref){ adminToast('No referral record matched. Use Funded sessions first.',false); return; }
+  const last=aEpisodeVisitOrder(members).find(x=>!aIsInitialAssessment(x))||b;
+  const lastTime=/^\d{2}:\d{2}/.test(last.bookedTime||'')?last.bookedTime.slice(0,5):'16:00';
+  const times=Array.from({length:25},(_,i)=>{const mm=8*60+i*30;return `${String(Math.floor(mm/60)).padStart(2,'0')}:${mm%60?'30':'00'}`;});
+  const today=aDateKey(new Date());
+  host.innerHTML=`<div style="margin-top:8px;padding:10px;background:#fff;border:1px solid rgba(138,171,151,.5);border-radius:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Date<input class="eb-date" type="date" min="${today}" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"></label>
+    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Time<select class="eb-time" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px">${times.map(t=>`<option ${t===lastTime?'selected':''}>${t}</option>`).join('')}</select></label>
+    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Length<select class="eb-len" style="padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"><option value="Extended Session" ${last.appointment!=='Standard Session'?'selected':''}>60 min</option><option value="Standard Session" ${last.appointment==='Standard Session'?'selected':''}>45 min</option></select></label>
+    <label style="font-size:11px;color:var(--muted);display:flex;flex-direction:column;gap:3px">Price £<input class="eb-price" type="number" min="0" step="1" value="${Number(last.price)||125}" style="width:80px;padding:6px;border-radius:6px;border:1px solid rgba(30,77,59,.2);font-size:12px"></label>
+    <button class="bi-btn confirm" onclick="aSaveFundedBooking(this,'${aEsc(ref.key)}')">Book session</button>
+    <button class="bi-btn" style="background:#f5f3ef;color:var(--muted)" onclick="this.closest('.episode-book-form').innerHTML=''">Cancel</button>
+    <div class="eb-msg" style="width:100%;font-size:11px;color:#b45309"></div>
+  </div>`;
+  host.querySelector('.eb-date').focus();
+}
+async function aSaveFundedBooking(btn,refKey){
+  const host=btn.closest('.episode-book-form'), msg=host.querySelector('.eb-msg');
+  const bookedDate=host.querySelector('.eb-date').value, bookedTime=host.querySelector('.eb-time').value;
+  const appointment=host.querySelector('.eb-len').value, price=Number(host.querySelector('.eb-price').value);
+  if(!bookedDate){ msg.textContent='Pick a date.'; return; }
+  btn.disabled=true; btn.textContent='Booking…';
+  try{
+    await CCPPractice.bookSession(refKey,{bookedDate,bookedTime,appointment,price});
+    renderAdminBookings();
+    adminToast(`Session booked for ${aFmtDay(bookedDate,bookedTime)}. Confirmed and invoiced, nothing sent to the patient.`);
+  }catch(e){ btn.disabled=false; btn.textContent='Book session'; msg.textContent=e.message||'Could not book the session.'; }
+}
+// Inline form on a funded card: pick the referral (or make one) and set the authorised total.
 function aAddFundedSessions(btn,bookingId){
   const card=btn.closest('.patient-card'), host=card&&card.querySelector('.episode-fund-form');
   const pr=window.CCPPractice;
