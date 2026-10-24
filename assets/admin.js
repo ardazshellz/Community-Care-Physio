@@ -486,8 +486,13 @@ document.addEventListener('visibilitychange',()=>{
 });
 // A payment webhook can confirm any enquiry while the clinician stays on the
 // homepage. Refresh the dashboard even when no individual enquiry is selected.
+// Skipped while a card form (Add, Book, Funded sessions, Link to) is open, so a redraw never wipes half typed input.
+function aCardFormOpen(){
+  return !!document.querySelector('.episode-add-form:not(:empty), .episode-fund-form:not(:empty)')
+    || !!document.querySelector('#aBookingsList select, #aBookingsList input:not([type=checkbox])');
+}
 setInterval(()=>{
-  if(document.visibilityState==='visible' && ['dashboard','patients'].includes(ADMIN_SEC)){
+  if(document.visibilityState==='visible' && ['dashboard','patients'].includes(ADMIN_SEC) && !aCardFormOpen()){
     refreshAdminFromServerIfVisible(false);
   }
 },30000);
