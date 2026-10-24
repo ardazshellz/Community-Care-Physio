@@ -1091,8 +1091,8 @@ function aPackageCard(b){
         <div style="height:8px;background:#ede9e3;border-radius:5px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#1e4d3b"></div></div>
       </div>
       <div style="font-size:11px;color:var(--muted);margin:10px 0 4px">Follow-up appointments</div>
-      <div style="margin-bottom:6px">${rows}</div>
       ${aAddSessionRow(b.id)}
+      <div style="margin-bottom:6px">${rows}</div>
       <div class="bi-actions">
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgReminder(${idx})">✉️ Reminder email</button>
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgExercise(${idx})">🏋️ Exercise email</button>
@@ -1787,8 +1787,8 @@ function aEpisodeCard(members){
         ${contact.reason?`<div style="font-size:11px;color:var(--muted);grid-column:1/-1">📋 <strong style="color:var(--char)">Reason:</strong> ${aEsc(contact.reason)}</div>`:''}
       </div>
       <div style="font-size:11px;color:var(--muted);margin:6px 0 4px">Sessions</div>
-      ${rows}
       ${funding?aEpisodeToBookRows(funding,latest):aAddSessionRow(latest.id)}
+      ${rows}
       <div class="bi-actions" style="margin-top:8px">
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aEpisodeReminder('${latest.id}')">✉️ Reminder email</button>
         <button class="bi-btn" style="background:#eef2ff;color:#4338ca" onclick="aPkgExercise(${adminBookings.indexOf(latest)})">🏋️ Exercise email</button>
@@ -1803,23 +1803,21 @@ function aEpisodeCard(members){
     </div>
   </div>`;
 }
-// Funded sessions not yet booked, drawn like a package's empty slots so the next
-// visit is always visible under the completed ones. Session n counts treatment visits only.
+// The next funded session to book, one dashed row at the top of the list (the
+// newest thing on the card). Once booked, the following one takes its place.
+// Session n counts treatment visits only.
 function aEpisodeToBookRows(funding,latest){
   const toBook=Math.max(0,funding.authorised-funding.booked);
   if(!toBook) return '';
-  const m=aSessMeta('unscheduled');
-  return Array.from({length:toBook},(_,i)=>{
-    const n=funding.booked+i+1;
-    return `<div class="episode-tobook" style="padding:8px 9px;border-radius:7px;background:rgba(255,255,255,.55);border:1px dashed rgba(138,171,151,.7);margin-bottom:6px">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-        <span style="color:${m.c};font-weight:700;width:16px;text-align:center">${m.i}</span>
-        <span style="flex:1;font-size:12px;color:var(--char)">Session ${n} of ${funding.authorised}<span style="color:var(--muted)"> · not booked yet</span></span>
-        ${i===0?`<button class="bi-btn" style="background:var(--forest);color:#fff;padding:4px 10px;font-size:10.5px" onclick="aAddSession(this,'${aEsc(latest.id)}')">📅 Book</button>`:`<span style="font-size:10px;color:var(--muted)">funded</span>`}
-      </div>
-      ${i===0?'<div class="episode-add-form"></div>':''}
-    </div>`;
-  }).join('');
+  const m=aSessMeta('unscheduled'), n=funding.booked+1;
+  return `<div class="episode-tobook" style="padding:8px 9px;border-radius:7px;background:rgba(255,255,255,.55);border:1px dashed rgba(138,171,151,.7);margin-bottom:6px">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <span style="color:${m.c};font-weight:700;width:16px;text-align:center">${m.i}</span>
+      <span style="flex:1;font-size:12px;color:var(--char)">Session ${n} of ${funding.authorised}<span style="color:var(--muted)"> · not booked yet${toBook>1?` · ${toBook-1} more funded after this`:' · last funded session'}</span></span>
+      <button class="bi-btn" style="background:var(--forest);color:#fff;padding:4px 10px;font-size:10.5px" onclick="aAddSession(this,'${aEsc(latest.id)}')">📅 Book</button>
+    </div>
+    <div class="episode-add-form"></div>
+  </div>`;
 }
 // Inline form on a funded card: pick the referral (or make one) and set the authorised total.
 function aAddFundedSessions(btn,bookingId){
