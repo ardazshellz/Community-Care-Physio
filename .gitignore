@@ -7,3 +7,9 @@ node_modules/
 supabase/.temp/
 
 .claude/settings.local.json
+
+# Local only: scratch previews, tool caches, browser snapshots, old site copy with its own .git
+.claude/previews/
+.impeccable/
+.playwright-mcp/
+facebook-organic-poster-local/
